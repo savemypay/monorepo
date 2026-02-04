@@ -24,6 +24,8 @@ class VendorRepository:
         phone_number: str,
         country_code: str | None,
         address: str | None,
+        category_id: int | None,
+        comments: str | None,
     ) -> Vendor:
         logger.debug("Persisting vendor email=%s phone=%s", email, phone_number)
         vendor = Vendor(
@@ -32,6 +34,8 @@ class VendorRepository:
             phone_number=phone_number,
             country_code=country_code,
             address=address,
+            category_id=category_id,
+            comments=comments,
         )
         db.add(vendor)
         db.commit()

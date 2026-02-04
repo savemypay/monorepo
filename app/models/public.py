@@ -13,3 +13,5 @@ class VendorCreate(BaseModel):
     phone_number: str
     country_code: str | None = Field(default=None, max_length=10)
     address: str | None = Field(default=None, max_length=500)
+    category_id: int
+    comments: str | None = Field(default=None, max_length=1000)
