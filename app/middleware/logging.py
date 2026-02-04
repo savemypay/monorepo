@@ -3,7 +3,8 @@ import time
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
-logger = logging.getLogger("uvicorn.access")
+# Use a dedicated logger to avoid uvicorn.access format requirements
+logger = logging.getLogger("app.request")
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
