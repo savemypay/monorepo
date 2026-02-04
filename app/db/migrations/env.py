@@ -7,11 +7,13 @@ from alembic import context
 import sys
 from pathlib import Path
 
-
-
-# Add project root to PYTHONPATH
+# Ensure project root on PYTHONPATH before importing app modules
 BASE_DIR = Path(__file__).resolve().parents[3]
-sys.path.append(str(BASE_DIR))
+if str(BASE_DIR) not in sys.path:
+    sys.path.append(str(BASE_DIR))
+
+from app.core.config import DATABASE_URL
+from app.db.base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -22,11 +24,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -46,6 +44,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
+    config.set_main_option("sqlalchemy.url", DATABASE_URL)
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -65,6 +64,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    config.set_main_option("sqlalchemy.url", DATABASE_URL)
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
