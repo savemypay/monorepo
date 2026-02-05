@@ -11,9 +11,9 @@ def capture_customer_interest(db: Session, payload: CustomerInterestCreate):
     logger.debug("Creating customer interest email=%s phone=%s", payload.email, payload.phone_number)
     interest = CustomerInterestRepository.create(
         db=db,
+        name=payload.name,
         email=payload.email,
         phone_number=payload.phone_number,
-        country_code=payload.country_code,
     )
     logger.debug("Created customer interest id=%s", interest.id)
     return interest

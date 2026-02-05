@@ -7,6 +7,6 @@ from app.entities.base import BaseModelMixin
 class CustomerInterest(BaseModelMixin, Base):
     __tablename__ = "customer_interests"
 
+    name = Column(String(255), nullable=True)
     email = Column(String(255), nullable=False, index=True)
     phone_number = Column(String(30), nullable=True, index=True)
-    country_code = Column(String(10), nullable=True)

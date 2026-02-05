@@ -23,3 +23,12 @@ ALLOWED_HOSTS = os.getenv(
     "ALLOWED_HOSTS",
     "localhost,127.0.0.1"
 ).split(",")
+
+# Notification settings
+SMS_PROVIDER = os.getenv("SMS_PROVIDER", "console")  # options: sns, smscountry, console
+EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "console")  # options: ses, console
+
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+
+SMSCOUNTRY_API_KEY = os.getenv("SMSCOUNTRY_API_KEY", "")
+SMSCOUNTRY_SENDER = os.getenv("SMSCOUNTRY_SENDER", "")
