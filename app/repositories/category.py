@@ -15,3 +15,7 @@ class CategoryRepository:
         db.commit()
         db.refresh(category)
         return category
+
+    @staticmethod
+    def list_all(db: Session) -> list[Category]:
+        return db.query(Category).order_by(Category.name.asc()).all()

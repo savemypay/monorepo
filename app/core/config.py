@@ -4,9 +4,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 APPLICATION_HOST = os.getenv("APPLICATION_HOST", "0.0.0.0")
-APPLICATION_PORT = int(os.getenv("APPLICATION_PORT", "8000"))
+APPLICATION_PORT = int(os.getenv("APPLICATION_PORT", "8001"))
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+
+ROOT_PATH = os.getenv("ROOT_PATH", "")
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change_me")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")

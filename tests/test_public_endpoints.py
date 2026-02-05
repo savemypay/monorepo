@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from sqlalchemy.orm import Session
 
 
 def test_capture_interest_success(client):
@@ -15,6 +16,18 @@ def test_capture_interest_missing_email_validation_error(client):
     payload = {"phone_number": "12345"}
     res = client.post("/api/v1/interest", json=payload)
     assert res.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_list_categories(client, test_db: Session):
+    create_category(test_db, "Auto")
+    create_category(test_db, "Insurance")
+    res = client.get("/api/v1/categories")
+    assert res.status_code == HTTPStatus.OK
+    body = res.json()
+    assert body["success"] is True
+    names = [c["name"] for c in body["data"]]
+    assert "Auto" in names
+    assert "Insurance" in names
 
 
 def test_onboard_vendor_success(client, test_db):

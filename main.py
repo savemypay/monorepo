@@ -8,6 +8,7 @@ from app.core.config import (
     APPLICATION_HOST,
     ALLOWED_ORIGINS,
     ALLOWED_HOSTS,
+    ROOT_PATH,
 )
 from app.utils.response import error_response
 from fastapi import Request, HTTPException
@@ -15,7 +16,7 @@ from fastapi.responses import JSONResponse
 from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 
-app = FastAPI()
+app = FastAPI(root_path=ROOT_PATH)
 
 # Middlewares
 app.add_middleware(RequestLoggingMiddleware)
