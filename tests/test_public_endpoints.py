@@ -37,7 +37,6 @@ def test_onboard_vendor_success(client, test_db):
         "name": "Acme Co",
         "email": "vendor@example.com",
         "phone_number": "999999",
-        "country_code": "+1",
         "category": "Automobile",
         "comments": "Interested in partnership",
     }
@@ -55,7 +54,6 @@ def test_onboard_vendor_conflict_email(client, test_db):
         "name": "Acme Co",
         "email": "dup@example.com",
         "phone_number": "111",
-        "country_code": "+1",
         "category": "Auto",
         "comments": "First vendor",
     }
@@ -73,7 +71,6 @@ def test_onboard_vendor_conflict_phone(client, test_db):
         "name": "Vendor A",
         "email": "a@example.com",
         "phone_number": "222",
-        "country_code": "+1",
         "category": "Auto2",
         "comments": "Vendor A",
     }
@@ -81,7 +78,6 @@ def test_onboard_vendor_conflict_phone(client, test_db):
         "name": "Vendor B",
         "email": "b@example.com",
         "phone_number": "222",
-        "country_code": "+1",
         "category": "Auto2",
         "comments": "Vendor B",
     }
@@ -97,7 +93,6 @@ def test_onboard_vendor_validation_error_missing_phone(client, test_db):
     payload = {
         "name": "NoPhone",
         "email": "nophone@example.com",
-        "country_code": "+1",
         "category": "NoPhoneCat",
         "comments": "No phone supplied",
     }
