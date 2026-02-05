@@ -22,7 +22,6 @@ class VendorRepository:
         name: str,
         email: str,
         phone_number: str,
-        country_code: str | None,
         category: str,
         comments: str | None,
     ) -> Vendor:
@@ -31,7 +30,6 @@ class VendorRepository:
             name=name,
             email=email,
             phone_number=phone_number,
-            country_code=country_code,
             category=category,
             comments=comments,
         )

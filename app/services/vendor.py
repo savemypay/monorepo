@@ -21,7 +21,6 @@ def onboard_vendor(db: Session, payload: VendorCreate):
         name=payload.name,
         email=payload.email,
         phone_number=payload.phone_number,
-        country_code=payload.country_code,
         category=payload.category,
         comments=payload.comments,
     )
