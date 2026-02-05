@@ -18,6 +18,6 @@ def create_interest(payload: CustomerInterestCreate, db: Session = Depends(get_d
     interest = capture_customer_interest(db, payload)
     logger.info("Stored interest id=%s email=%s", interest.id, interest.email)
     return success_response(
-        data={"id": interest.id, "email": interest.email},
+        data={"id": interest.id, "name": interest.name, "email": interest.email},
         message="Customer interest recorded",
     )

@@ -3,13 +3,14 @@ from sqlalchemy.orm import Session
 
 
 def test_capture_interest_success(client):
-    payload = {"email": "alice@example.com", "phone_number": "12345", "country_code": "+1"}
+    payload = {"name": "Alice", "email": "alice@example.com", "phone_number": "12345"}
     res = client.post("/api/v1/interest", json=payload)
     assert res.status_code == HTTPStatus.CREATED
     body = res.json()
     assert body["success"] is True
     assert body["data"]["email"] == payload["email"]
     assert body["data"]["id"] > 0
+    assert body["data"]["name"] == payload["name"]
 
 
 def test_capture_interest_missing_email_validation_error(client):
@@ -31,14 +32,13 @@ def test_list_categories(client, test_db: Session):
 
 
 def test_onboard_vendor_success(client, test_db):
-    category_id = create_category(test_db, "Automobile")
+    create_category(test_db, "Automobile")
     payload = {
         "name": "Acme Co",
         "email": "vendor@example.com",
         "phone_number": "999999",
         "country_code": "+1",
-        "address": "123 Main",
-        "category_id": category_id,
+        "category": "Automobile",
         "comments": "Interested in partnership",
     }
     res = client.post("/api/v1/vendors", json=payload)
@@ -50,14 +50,13 @@ def test_onboard_vendor_success(client, test_db):
 
 
 def test_onboard_vendor_conflict_email(client, test_db):
-    category_id = create_category(test_db, "Auto")
+    create_category(test_db, "Auto")
     payload = {
         "name": "Acme Co",
         "email": "dup@example.com",
         "phone_number": "111",
         "country_code": "+1",
-        "address": "123",
-        "category_id": category_id,
+        "category": "Auto",
         "comments": "First vendor",
     }
     client.post("/api/v1/vendors", json=payload)
@@ -69,14 +68,13 @@ def test_onboard_vendor_conflict_email(client, test_db):
 
 
 def test_onboard_vendor_conflict_phone(client, test_db):
-    category_id = create_category(test_db, "Auto2")
+    create_category(test_db, "Auto2")
     first = {
         "name": "Vendor A",
         "email": "a@example.com",
         "phone_number": "222",
         "country_code": "+1",
-        "address": "123",
-        "category_id": category_id,
+        "category": "Auto2",
         "comments": "Vendor A",
     }
     second = {
@@ -84,8 +82,7 @@ def test_onboard_vendor_conflict_phone(client, test_db):
         "email": "b@example.com",
         "phone_number": "222",
         "country_code": "+1",
-        "address": "456",
-        "category_id": category_id,
+        "category": "Auto2",
         "comments": "Vendor B",
     }
     client.post("/api/v1/vendors", json=first)
@@ -101,29 +98,11 @@ def test_onboard_vendor_validation_error_missing_phone(client, test_db):
         "name": "NoPhone",
         "email": "nophone@example.com",
         "country_code": "+1",
-        "address": "123",
-        "category_id": create_category(test_db, "NoPhoneCat"),
+        "category": "NoPhoneCat",
         "comments": "No phone supplied",
     }
     res = client.post("/api/v1/vendors", json=payload)
     assert res.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-def test_onboard_vendor_invalid_category(client):
-    payload = {
-        "name": "BadCat",
-        "email": "badcat@example.com",
-        "phone_number": "333",
-        "country_code": "+1",
-        "address": "123",
-        "category_id": 9999,
-        "comments": "Invalid category",
-    }
-    res = client.post("/api/v1/vendors", json=payload)
-    assert res.status_code == HTTPStatus.BAD_REQUEST
-    body = res.json()
-    assert body["success"] is False
-    assert body["error"]["code"] == "invalid_category"
 
 
 def create_category(db_session, name):

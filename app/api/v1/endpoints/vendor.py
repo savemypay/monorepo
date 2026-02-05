@@ -19,12 +19,11 @@ def create_vendor(payload: VendorCreate, db: Session = Depends(get_db)):
         vendor = onboard_vendor(db, payload)
     except ValueError as exc:
         logger.warning("Vendor onboarding error email=%s phone=%s: %s", payload.email, payload.phone_number, exc)
-        status_code = status.HTTP_409_CONFLICT if "exists" in str(exc) else status.HTTP_400_BAD_REQUEST
         raise HTTPException(
-            status_code=status_code,
+            status_code=status.HTTP_409_CONFLICT,
             detail=error_response(
-                message="Vendor already exists" if status_code == status.HTTP_409_CONFLICT else "Invalid category",
-                code="vendor_conflict" if status_code == status.HTTP_409_CONFLICT else "invalid_category",
+                message="Vendor already exists",
+                code="vendor_conflict",
                 details=str(exc),
             ),
         ) from exc
@@ -35,7 +34,7 @@ def create_vendor(payload: VendorCreate, db: Session = Depends(get_db)):
             "id": vendor.id,
             "email": vendor.email,
             "name": vendor.name,
-            "category_id": vendor.category_id,
+            "category": vendor.category,
             "comments": vendor.comments,
         },
         message="Vendor onboarded",

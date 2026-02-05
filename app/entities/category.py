@@ -12,4 +12,4 @@ class Category(BaseModelMixin, Base):
     name = Column(String(100), unique=True, nullable=False, index=True)
     description = Column(String(255), nullable=True)
 
-    vendors = relationship("Vendor", back_populates="category")
+    # vendors = relationship("Vendor", back_populates="category")
