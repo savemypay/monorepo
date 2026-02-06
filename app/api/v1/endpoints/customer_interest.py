@@ -8,11 +8,11 @@ from app.models.public import CustomerInterestCreate
 from app.services.customer_interest import capture_customer_interest
 from app.utils.response import success_response
 
-router = APIRouter(prefix="/interest", tags=["public"])
+router = APIRouter(prefix="/customer", tags=["public"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("/interest", status_code=status.HTTP_201_CREATED)
 def create_interest(payload: CustomerInterestCreate, db: Session = Depends(get_db)):
     logger.info("Received interest submission email=%s phone=%s", payload.email, payload.phone_number)
     interest = capture_customer_interest(db, payload)

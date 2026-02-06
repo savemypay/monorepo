@@ -24,7 +24,8 @@ from app.entities.customer_interest import CustomerInterest
 from app.entities.login_otp import LoginOtp
 from app.entities.user import User
 from app.entities.refresh_token import RefreshToken
-from app.entities.vendor import Vendor
+from app.entities.vendor import VendorInterest
+from app.entities.vendor_account import VendorAccount
 from app.models.auth import LoginRequest, OTPVerifyRequest
 from app.notifications.notifier import send_email_async, send_sms_async
 from app.utils.response import error_response
@@ -82,35 +83,6 @@ def _get_identifier(payload: LoginRequest | OTPVerifyRequest) -> str:
     return payload.identifier
 
 
-def _require_principal(db: Session, audience: Audience, identifier: str):
-    if audience == "customer":
-        exists = (
-            db.query(CustomerInterest)
-            .filter(
-                (CustomerInterest.email == identifier)
-                | (CustomerInterest.phone_number == identifier)
-            )
-            .first()
-        )
-    else:
-        exists = (
-            db.query(Vendor)
-            .filter(
-                (Vendor.email == identifier)
-                | (Vendor.phone_number == identifier)
-            )
-            .first()
-        )
-    if not exists:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=error_response(
-                message=f"{audience.title()} not found",
-                code=f"{audience}_not_found",
-            ),
-        )
-
-
 def _latest_active(db: Session, audience: Audience, identifier: str) -> LoginOtp | None:
     now = _now()
     return (
@@ -136,7 +108,6 @@ def _revoke_previous_active(db: Session, audience: Audience, identifier: str, ti
 
 async def issue_otp(db: Session, audience: Audience, payload: LoginRequest) -> int:
     identifier = _get_identifier(payload)
-    _require_principal(db, audience, identifier)
 
     now = _now()
     existing = _latest_active(db, audience, identifier)
@@ -201,7 +172,6 @@ def _get_latest_or_error(db: Session, audience: Audience, identifier: str) -> Lo
 
 def verify_otp(db: Session, audience: Audience, payload: OTPVerifyRequest) -> None:
     identifier = _get_identifier(payload)
-    _require_principal(db, audience, identifier)
     otp = _get_latest_or_error(db, audience, identifier)
     now = _now()
 
@@ -235,6 +205,8 @@ def verify_otp(db: Session, audience: Audience, payload: OTPVerifyRequest) -> No
     db.commit()
 
     user = _ensure_user_record(db, payload, audience)
+    if audience == "vendor":
+        _ensure_vendor_account(db, payload)
     tokens = _issue_tokens(db, user)
     return tokens
 
@@ -281,6 +253,42 @@ def _ensure_user_record(db: Session, payload: LoginRequest | OTPVerifyRequest, a
     db.commit()
     db.refresh(user)
     return user
+
+
+def _ensure_vendor_account(db: Session, payload: LoginRequest | OTPVerifyRequest) -> VendorAccount:
+    vendor = db.query(VendorAccount)
+    if payload.email:
+        vendor = vendor.filter(VendorAccount.email == payload.email)
+    if payload.phone_number:
+        vendor = vendor.filter(VendorAccount.phone_number == payload.phone_number)
+    vendor = vendor.first()
+
+    if vendor:
+        changed = False
+        if payload.email and not vendor.email:
+            vendor.email = payload.email
+            changed = True
+        if payload.phone_number and not vendor.phone_number:
+            vendor.phone_number = payload.phone_number
+            changed = True
+        if not vendor.is_active:
+            vendor.is_active = True
+            changed = True
+        if changed:
+            db.add(vendor)
+            db.commit()
+            db.refresh(vendor)
+        return vendor
+
+    vendor = VendorAccount(
+        email=payload.email,
+        phone_number=payload.phone_number,
+        is_active=True,
+    )
+    db.add(vendor)
+    db.commit()
+    db.refresh(vendor)
+    return vendor
 
 
 def _issue_tokens(db: Session, user: User) -> dict:
