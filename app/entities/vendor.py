@@ -4,8 +4,8 @@ from app.db.base import Base
 from app.entities.base import BaseModelMixin
 
 
-class Vendor(BaseModelMixin, Base):
-    __tablename__ = "vendors"
+class VendorInterest(BaseModelMixin, Base):
+    __tablename__ = "vendor_interests"
 
     name = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False, unique=True, index=True)

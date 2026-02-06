@@ -12,7 +12,7 @@ router = APIRouter(prefix="/vendors", tags=["public"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("/interest", status_code=status.HTTP_201_CREATED)
 def create_vendor(payload: VendorCreate, db: Session = Depends(get_db)):
     logger.info("Onboarding vendor email=%s phone=%s", payload.email, payload.phone_number)
     try:
@@ -30,12 +30,12 @@ def create_vendor(payload: VendorCreate, db: Session = Depends(get_db)):
 
     logger.info("Vendor onboarded id=%s email=%s", vendor.id, vendor.email)
     return success_response(
-        data={
+        data=[{
             "id": vendor.id,
             "email": vendor.email,
             "name": vendor.name,
             "category": vendor.category,
             "comments": vendor.comments,
-        },
+        }],
         message="Vendor onboarded",
     )
