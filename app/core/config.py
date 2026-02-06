@@ -29,6 +29,7 @@ SMS_PROVIDER = os.getenv("SMS_PROVIDER", "console")  # options: sns, smscountry,
 EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "console")  # options: ses, console
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+FROM_EMAIL = os.getenv("FROM_EMAIL", "")
 
 SMSCOUNTRY_API_KEY = os.getenv("SMSCOUNTRY_API_KEY", "")
 SMSCOUNTRY_SENDER = os.getenv("SMSCOUNTRY_SENDER", "")
