@@ -45,3 +45,17 @@ OTP_PEPPER = os.getenv("OTP_PEPPER", "")
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
 REFRESH_TOKEN_PEPPER = os.getenv("REFRESH_TOKEN_PEPPER", "")
+
+# Payment providers
+PAYMENT_PROVIDER = os.getenv("PAYMENT_PROVIDER", "mock")  # options: stripe, razorpay, adyen, mock
+PAYMENT_IDEMPOTENCY_HEADER = os.getenv("PAYMENT_IDEMPOTENCY_HEADER", "Idempotency-Key")
+PAYMENT_CURRENCY = os.getenv("PAYMENT_CURRENCY", "USD")
+
+# Stripe settings
+STRIPE_API_KEY = os.getenv("STRIPE_API_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+
+# Razorpay settings
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
+RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")

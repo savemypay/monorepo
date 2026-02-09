@@ -57,3 +57,7 @@ class LoginResponse(ApiResponse[LoginResponseData]):
 
 class VerifyResponse(ApiResponse[VerifyResponseData]):
     pass
+
+
+class LogoutRequest(BaseModel):
+    refresh_token: str = Field(..., min_length=10)

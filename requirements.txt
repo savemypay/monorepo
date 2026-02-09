@@ -27,3 +27,5 @@ email-validator==2.1.0.post1
 # Notifications
 boto3==1.34.80
 requests==2.32.3
+stripe==8.8.0
+razorpay==1.4.2

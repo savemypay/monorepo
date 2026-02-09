@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
-from app.models.auth import LoginRequest, OTPVerifyRequest, LoginResponse, VerifyResponse
-from app.services.auth import issue_otp, verify_otp
+from app.models.auth import LoginRequest, OTPVerifyRequest, LoginResponse, VerifyResponse, LogoutRequest
+from app.services.auth import issue_otp, verify_otp, logout
 from app.utils.response import success_response
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -38,3 +38,10 @@ async def vendor_verify(payload: OTPVerifyRequest, db: Session = Depends(get_db)
     tokens = verify_otp(db, "vendor", payload)
     logger.info("Vendor OTP validated identifier=%s", payload.identifier)
     return success_response(message="OTP verified", data=[{"identifier": payload.identifier, **tokens}])
+
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout_user(payload: LogoutRequest, db: Session = Depends(get_db)):
+    logout(db, payload.refresh_token)
+    logger.info("Logout succeeded for provided refresh token")
+    return success_response(message="Logged out", data=[])

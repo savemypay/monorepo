@@ -317,3 +317,21 @@ def _issue_tokens(db: Session, user: User) -> dict:
             "is_active": user.is_active,
         },
     }
+
+
+def logout(db: Session, refresh_token: str) -> None:
+    token_hash = _hash_refresh(refresh_token)
+    rt = (
+        db.query(RefreshToken)
+        .filter(RefreshToken.token_hash == token_hash, RefreshToken.revoked_at.is_(None))
+        .first()
+    )
+    if not rt:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="Invalid refresh token", code="invalid_token"),
+        )
+    now = _now()
+    rt.revoked_at = now
+    db.add(rt)
+    db.commit()
