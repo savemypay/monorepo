@@ -31,7 +31,11 @@ class VerifyResponseData(BaseModel):
     refresh_token: str
     refresh_token_expires_in: int
     token_type: str
-    user: dict
+    user: dict | None = None
+    role: str
+    user_id: str
+    vendor_id: str | None = None
+    vendor: dict | None = None
 
 
 class ErrorPayload(BaseModel):
