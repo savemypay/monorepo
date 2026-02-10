@@ -29,7 +29,7 @@ export interface LoginParams {
     success: boolean;
     message: string;
     data: AuthData[]; // It's an array of AuthData
-    error: any;
+    error: string | null;
   }
   
   //Set Base URL
@@ -53,9 +53,13 @@ export interface LoginParams {
       }
   
       return data;
-    } catch (error: any) {
-      throw new Error(error.message || "Network error");
-    }
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+          throw new Error(error.message);
+        }
+        throw new Error("Network error");
+      }
+      
   };
   
   //API FUNCTIONS

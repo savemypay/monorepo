@@ -74,9 +74,14 @@ export default function AuthModal() {
       setStep('otp');
       setTimeout(() => otpRefs.current[0]?.focus(), 100);
 
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong");
+      }
+    }
+     finally {
       setIsLoading(false);
     }
   };
@@ -113,11 +118,14 @@ export default function AuthModal() {
       login(inputValue); 
       closeLoginModal();
 
-    } catch (err: any) {
-      setError(err.message);
-      setOtp(['', '', '', '', '', '']);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+    
+      setError(message);
+      setOtp(["", "", "", "", "", ""]);
       otpRefs.current[0]?.focus();
-    } finally {
+    }
+     finally {
       setIsLoading(false);
     }
   };
