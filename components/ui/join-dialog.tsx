@@ -12,6 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { submitCustomer, submitVendor } from "@/lib/api/join";
 
+type JoinForm = {
+  name?: string;
+  email?: string;
+  phone_number?: string;
+  category?: string;
+  comments?: string;
+};
 
 type DialogType = "customer" | "vendor" | null;
 
@@ -33,7 +40,7 @@ export function JoinDialog({
   onOpenChange: (open: boolean) => void;
   type: DialogType;
 }) {
-  const [form, setForm] = useState<any>({});
+  const [form, setForm] = useState<JoinForm>({});
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -53,14 +60,11 @@ export function JoinDialog({
 
   if (!type) return null;
 
-  const update = (key: string, value: string) =>
+  const update = (key: keyof JoinForm, value: string) =>
     setForm({ ...form, [key]: value });
 
   const validate = () => {
     if (!form.name) return "Name is required";
-    // if (!form.email || !form.email.includes("@"))
-    //   return "Valid email is required";
-    // if (!form.phone_number) return "Phone number is required";
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!form.email || !emailRegex.test(form.email))
@@ -76,6 +80,35 @@ export function JoinDialog({
     return "";
   };
 
+  // const handleSubmit = async () => {
+  //   setError("");
+  //   const validationError = validate();
+  //   if (validationError) {
+  //     setError(validationError);
+  //     return;
+  //   }
+  
+  //   setLoading(true);
+  //   try {
+  //     const res =
+  //       type === "customer"
+  //         ? await submitCustomer(form)
+  //         : await submitVendor(form);
+  //     console.log("res",res)
+  //     if (res.success) {
+  //       setSuccess(true);
+  //     } else {
+  //       setError(res.message || "Submission failed");
+  //     }
+  //   } catch (err: unknown) {
+  //     const message = err instanceof Error ? err.message : "Server error";
+  //     setError(message);
+  //   }
+  //    finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async () => {
     setError("");
     const validationError = validate();
@@ -85,23 +118,52 @@ export function JoinDialog({
     }
   
     setLoading(true);
+  
     try {
-      const res =
-        type === "customer"
-          ? await submitCustomer(form)
-          : await submitVendor(form);
-      console.log("res",res)
+      // const payload = form as {
+      //   name: string;
+      //   email: string;
+      //   phone_number: string;
+      //   category?: string;
+      //   comments?: string;
+      // };
+  
+      // const res =
+      //   type === "customer"
+      //     ? await submitCustomer(payload)
+      //     : await submitVendor(payload);
+
+      let res;
+
+      if (type === "customer") {
+        res = await submitCustomer(form as {
+          name: string;
+          email: string;
+          phone_number: string;
+        });
+      } else {
+        res = await submitVendor(form as {
+          name: string;
+          email: string;
+          phone_number: string;
+          category: string;
+          comments?: string;
+        });
+      }
+
       if (res.success) {
         setSuccess(true);
       } else {
         setError(res.message || "Submission failed");
       }
-    } catch (err: any) {
-      setError(err.message || "Server error");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Server error";
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
+  
   
 
   return (
