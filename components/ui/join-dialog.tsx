@@ -55,13 +55,20 @@ export function JoinDialog({
 
   const update = (key: string, value: string) =>
     setForm({ ...form, [key]: value });
-    console.log(form)
 
   const validate = () => {
     if (!form.name) return "Name is required";
-    if (!form.email || !form.email.includes("@"))
+    // if (!form.email || !form.email.includes("@"))
+    //   return "Valid email is required";
+    // if (!form.phone_number) return "Phone number is required";
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!form.email || !emailRegex.test(form.email))
       return "Valid email is required";
-    if (!form.phone_number) return "Phone number is required";
+
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!form.phone_number || !phoneRegex.test(form.phone_number))
+      return "Phone number must be 10 digits";
 
     if (type === "vendor" && !form.category)
       return "Please select a category";
@@ -83,7 +90,7 @@ export function JoinDialog({
         type === "customer"
           ? await submitCustomer(form)
           : await submitVendor(form);
-      console.log("fetch")
+      console.log("res",res)
       if (res.success) {
         setSuccess(true);
       } else {
@@ -125,11 +132,20 @@ export function JoinDialog({
               </Field>
 
               <Field label="Email">
-                <Input onChange={(e) => update("email", e.target.value)} />
+                <Input type="email" onChange={(e) => update("email", e.target.value)} />
               </Field>
 
               <Field label="Phone">
-                <Input onChange={(e) => update("phone_number", e.target.value)} />
+                {/* <Input onChange={(e) => update("phone_number", e.target.value)} /> */}
+
+                <Input
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  value={form.phone_number ?? ""}
+                  onChange={(e) => update("phone_number", e.target.value)}
+                />
+
               </Field>
 
               {type === "vendor" && (

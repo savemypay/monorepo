@@ -6,13 +6,15 @@ export async function submitCustomer(data: {
     email: string;
     phone_number: string;
   }) {
-    const res = await fetch(`${BASE_API}/api/v1/interest`, {
+    const res = await fetch(`${BASE_API}/api/v1/customer/interest`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
+
+    console.log("resp",res)
   
     if (!res.ok) {
       throw new Error("Customer submission failed");
@@ -28,7 +30,7 @@ export async function submitCustomer(data: {
     category: string;
     comments?: string;
   }) {
-    const res = await fetch(`${BASE_API}/api/v1/vendors`, {
+    const res = await fetch(`${BASE_API}/api/v1/vendors/interest`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
