@@ -27,43 +27,6 @@ export default function Hero() {
             Join forces with other buyers to unlock massive discounts on everything from insurance to cars. Collective buying power means better deals for everyone.
           </p>
 
-          {/* <div className="mt-10 flex gap-6 flex-wrap">
-            <a
-              href="#join"
-              className="
-                w-full sm:w-auto text-center
-                relative overflow-hidden
-                px-8 py-4 rounded-full
-                bg-gradient-to-br from-[var(--accent)] to-[#00FFF0]
-                text-[var(--primary)] font-semibold
-                shadow-lg shadow-[rgba(0,229,200,0.4)]
-                transition-all duration-300 ease-out
-
-                hover:-translate-y-1 hover:scale-105
-                hover:shadow-xl hover:shadow-[rgba(0,229,200,0.6)]
-
-                active:scale-95
-              "
-            >
-              Start Saving Now
-            </a>
-            <a
-              href="#vendor"
-              className="
-                w-full sm:w-auto text-center px-8 py-4 rounded-full
-                border-2 border-white text-white font-semibold
-                transition-all duration-300 ease-out
-
-                hover:bg-white hover:text-[var(--primary)]
-                hover:-translate-y-1 hover:scale-105
-                hover:shadow-xl
-
-                active:scale-95
-              "
-            >
-              Partner With Us
-            </a>
-          </div> */}
           <div className="mt-10 flex gap-6 flex-wrap">
               <button
                 onClick={() => setDialogType("customer")}
