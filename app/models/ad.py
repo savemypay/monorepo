@@ -37,6 +37,11 @@ class AdCreate(BaseModel):
             raise ValueError("Tier seq values must be unique")
         if total_qty and sum(t.qty for t in v) != total_qty:
             raise ValueError("Sum of tier qty must equal total_qty")
+        token_amounts = [t.token_amount for t in v if t.token_amount is not None]
+        if not token_amounts:
+            raise ValueError("token_amount is required for all tiers")
+        if len(set(token_amounts)) != 1 or any(t.token_amount is None for t in v):
+            raise ValueError("token_amount must be present and identical across all tiers")
         return v
 
 
