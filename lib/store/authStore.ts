@@ -1,9 +1,8 @@
-// store/useAuthStore.ts
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
-// 1. Define the User Type based on your API response
-interface User {
+// 1. Define User Interface based on API response
+export interface User {
   id: number;
   email: string | null;
   phone_number: string;
@@ -11,14 +10,20 @@ interface User {
 }
 
 interface AuthState {
+  // Data
   accessToken: string | null;
   refreshToken: string | null;
+  user: User | null;
   isAuthenticated: boolean;
-  user: User | null; // Added User object
+
+  // UI State
+  isLoginModalOpen: boolean;
 
   // Actions
   setAuth: (accessToken: string, refreshToken: string, user: User) => void;
-  clearAuth: () => void;
+  logout: () => void;
+  openLoginModal: () => void;
+  closeLoginModal: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -27,8 +32,9 @@ export const useAuthStore = create<AuthState>()(
       // Initial State
       accessToken: null,
       refreshToken: null,
-      isAuthenticated: false,
       user: null,
+      isAuthenticated: false,
+      isLoginModalOpen: false,
 
       // Actions
       setAuth: (accessToken, refreshToken, user) => {
@@ -37,19 +43,33 @@ export const useAuthStore = create<AuthState>()(
           refreshToken,
           user,
           isAuthenticated: true,
+          isLoginModalOpen: false, // Auto-close modal on success
         });
       },
 
-      clearAuth: () =>
+      logout: () => {
         set({
           accessToken: null,
           refreshToken: null,
           user: null,
           isAuthenticated: false,
-        }),
+        });
+        localStorage.removeItem('auth-storage');
+      },
+
+      openLoginModal: () => set({ isLoginModalOpen: true }),
+      closeLoginModal: () => set({ isLoginModalOpen: false }),
     }),
     {
-      name: 'auth-storage', // saves to localStorage
+      name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
+      // Only persist auth data, not the modal open state
+      partialize: (state) => ({ 
+        accessToken: state.accessToken, 
+        refreshToken: state.refreshToken, 
+        user: state.user,
+        isAuthenticated: state.isAuthenticated 
+      }),
     }
   )
 );

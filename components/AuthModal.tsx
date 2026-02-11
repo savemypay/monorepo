@@ -2,16 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X, ArrowRight, Smartphone, Mail, Loader2, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/app/context/AuthContext';
 import { sendLoginOtp, verifyLoginOtp } from '@/lib/api/auth'; 
-import { useAuthStore } from '@/lib/store/authStore';
+import { useAuthStore } from '@/lib/store/authStore'; // Import Store
 
 export default function AuthModal() {
-  const { isLoginModalOpen, closeLoginModal, login } = useAuth();
-
-  const setAuth = useAuthStore(state=>state.setAuth)
+  // 1. Use Zustand Store for Modal State and Actions
+  const { isLoginModalOpen, closeLoginModal, setAuth } = useAuthStore();
   
-  // State
+  // Local Component State
   const [step, setStep] = useState<'input' | 'otp'>('input');
   const [inputValue, setInputValue] = useState('');
   const [inputType, setInputType] = useState<'email' | 'phone' | null>(null);
@@ -23,6 +21,7 @@ export default function AuthModal() {
   const inputRef = useRef<HTMLInputElement>(null);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // Reset logic when modal opens
   useEffect(() => {
     if (isLoginModalOpen) {
       setStep('input');
@@ -51,7 +50,7 @@ export default function AuthModal() {
     setInputType(validateInput(val));
   };
 
-  // --- HANDLERS ---
+  // --- API HANDLERS ---
 
   const handleSendOtp = async () => {
     const type = validateInput(inputValue);
@@ -64,24 +63,16 @@ export default function AuthModal() {
     setError(null);
 
     try {
-      // 1. Call the API function from auth.ts
       await sendLoginOtp({
         email: type === 'email' ? inputValue : undefined,
         phone_number: type === 'phone' ? inputValue : undefined,
       });
 
-      // 2. Success logic
       setStep('otp');
       setTimeout(() => otpRefs.current[0]?.focus(), 100);
-
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Something went wrong");
-      }
-    }
-     finally {
+      setError(err instanceof Error ? err.message : "Failed to send OTP");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -97,35 +88,31 @@ export default function AuthModal() {
     setError(null);
 
     try {
-      // 1. Call the API function from auth.ts
       const response = await verifyLoginOtp({
         email: inputType === 'email' ? inputValue : undefined,
         phone_number: inputType === 'phone' ? inputValue : undefined,
         code: enteredOtp
       });
 
-      const authData = response.data[0]
+      // Extract the first item from the data array
+      const authData = response.data?.[0];
 
-      if(authData){
-        //Save to Zustand store
-        setAuth(authData.access_token,
+      if (authData) {
+        // 2. Update Zustand Store (This automatically closes the modal via logic in store)
+        setAuth(
+          authData.access_token,
           authData.refresh_token,
           authData.user
-        )
+        );
+      } else {
+        throw new Error("Invalid response format from server");
       }
-      
-      // 2. Success logic (Use response data if needed, e.g., response.token)
-      login(inputValue); 
-      closeLoginModal();
 
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Something went wrong";
-    
-      setError(message);
-      setOtp(["", "", "", "", "", ""]);
+      setError(err instanceof Error ? err.message : "Verification failed");
+      setOtp(["", "", "", "", "", ""]); // Clear OTP
       otpRefs.current[0]?.focus();
-    }
-     finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -144,11 +131,13 @@ export default function AuthModal() {
     if (e.key === 'Enter' && index === 5) handleVerify();
   };
 
+  // --- UI RENDER ---
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeLoginModal}></div>
+      
       <div className="relative bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-        <button onClick={closeLoginModal} className="absolute top-5 right-2 p-2 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors z-10"><X size={20} /></button>
+        <button onClick={closeLoginModal} className="absolute top-5 right-2 p-2 bg-gray-400 hover:bg-gray-600 rounded-full text-white transition-colors z-10"><X size={20} /></button>
 
         <div className="p-8 pt-10">
           <div className="text-center mb-8">
