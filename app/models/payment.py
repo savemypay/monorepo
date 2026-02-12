@@ -1,6 +1,7 @@
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field
+from datetime import datetime
 
 from app.models.auth import ApiResponse
 
@@ -27,4 +28,22 @@ class PaymentResponseData(BaseModel):
 
 
 class PaymentInitResponse(ApiResponse[PaymentResponseData]):
+    pass
+
+
+class PaidUserEntry(BaseModel):
+    payment_id: int
+    deal_ref: Optional[str]
+    customer_ref: Optional[str]
+    amount: int
+    currency: str
+    status: str
+    created_at: datetime
+    ad: Optional[dict] = None
+
+    class Config:
+        orm_mode = True
+
+
+class PaidUsersResponse(ApiResponse[PaidUserEntry]):
     pass

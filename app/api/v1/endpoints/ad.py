@@ -5,7 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
-from app.api.security import get_current_vendor_id, get_current_admin_or_vendor
+from app.api.security import (
+    get_current_vendor_id,
+    get_current_admin_or_vendor,
+    get_current_user,
+)
 from app.models.ad import AdCreate, AdListResponse, AdResponse
 from app.services.ad import create_ad, list_ads, get_ad, publish_ad
 from app.utils.response import success_response
@@ -38,13 +42,17 @@ def create_ad_endpoint(
 def list_ads_endpoint(
     db: Session = Depends(get_db),
     vendor_id: Optional[int] = Query(default=None),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    actor: dict = Depends(get_current_user),
 ):
     role = actor["role"]
     effective_vendor_id = vendor_id
+    active_only = False
     if role == "vendor":
         effective_vendor_id = int(actor.get("vendor_id") or actor.get("sub"))
-    ads = list_ads(db, effective_vendor_id)
+    elif role == "customer":
+        active_only = True
+        # customer can optionally filter by vendor_id; if none provided, see all active ads
+    ads = list_ads(db, effective_vendor_id, active_only=active_only)
     return success_response(message="Ads fetched", data=ads)
 
 

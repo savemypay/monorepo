@@ -29,7 +29,6 @@ def create_ad(db: Session, vendor_id: int, payload: AdCreate) -> Ad:
             "seq": t.seq,
             "qty": t.qty,
             "discount_pct": t.discount_pct,
-            "token_amount": t.token_amount,
             "label": t.label,
         }
         for t in payload.tiers
@@ -40,6 +39,7 @@ def create_ad(db: Session, vendor_id: int, payload: AdCreate) -> Ad:
         title=payload.title,
         product_name=payload.product_name,
         original_price=payload.original_price,
+        token_amount=payload.token_amount,
         total_qty=payload.total_qty,
         images=payload.images,
         description=payload.description,
@@ -47,13 +47,17 @@ def create_ad(db: Session, vendor_id: int, payload: AdCreate) -> Ad:
         valid_from=payload.valid_from,
         valid_to=payload.valid_to,
         tiers=tiers_payload,
+        category=payload.category,
     )
 
 
-def list_ads(db: Session, vendor_id: int | None) -> List[Ad]:
-    if vendor_id is None:
-        return db.query(Ad).order_by(Ad.created_at.desc()).all()
-    return AdRepository.list_by_vendor(db, vendor_id)
+def list_ads(db: Session, vendor_id: int | None, active_only: bool = False) -> List[Ad]:
+    q = db.query(Ad)
+    if vendor_id is not None:
+        q = q.filter(Ad.vendor_id == vendor_id)
+    if active_only:
+        q = q.filter(Ad.status == "active")
+    return q.order_by(Ad.created_at.desc()).all()
 
 
 def get_ad(db: Session, ad_id: int, vendor_id: int) -> Ad | None:

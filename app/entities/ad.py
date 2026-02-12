@@ -13,9 +13,11 @@ class Ad(BaseModelMixin, Base):
     title = Column(String(255), nullable=False)
     product_name = Column(String(255), nullable=True)
     original_price = Column(Numeric(12, 2), nullable=False)
+    token_amount = Column(Numeric(12, 2), nullable=False)
     total_qty = Column(Integer, nullable=False)
     slots_remaining = Column(Integer, nullable=False)
     status = Column(String(20), nullable=False, default="draft", index=True)  # draft, active, filled, expired, canceled
+    category = Column(String(100), nullable=False, default="")
     description = Column(Text, nullable=True)
     terms = Column(Text, nullable=True)
     images = Column(JSONB, nullable=True)  # list of URLs

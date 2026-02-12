@@ -10,7 +10,6 @@ class AdTierIn(BaseModel):
     seq: conint(ge=1)
     qty: conint(ge=1)
     discount_pct: confloat(ge=0, le=100) = 0
-    token_amount: Optional[float] = None
     label: Optional[str] = None
 
 
@@ -18,8 +17,10 @@ class AdCreate(BaseModel):
     title: str = Field(..., max_length=255)
     product_name: Optional[str] = Field(default=None, max_length=255)
     original_price: float = Field(..., gt=0)
+    token_amount: float = Field(..., gt=0)
     total_qty: conint(ge=1)
     tiers: List[AdTierIn]
+    category: str = Field(..., max_length=100)
     images: Optional[List[str]] = None
     description: Optional[str] = None
     terms: Optional[str] = None
@@ -37,11 +38,6 @@ class AdCreate(BaseModel):
             raise ValueError("Tier seq values must be unique")
         if total_qty and sum(t.qty for t in v) != total_qty:
             raise ValueError("Sum of tier qty must equal total_qty")
-        token_amounts = [t.token_amount for t in v if t.token_amount is not None]
-        if not token_amounts:
-            raise ValueError("token_amount is required for all tiers")
-        if len(set(token_amounts)) != 1 or any(t.token_amount is None for t in v):
-            raise ValueError("token_amount must be present and identical across all tiers")
         return v
 
 
@@ -50,7 +46,6 @@ class AdTierOut(BaseModel):
     seq: int
     qty: int
     discount_pct: float
-    token_amount: Optional[float]
     label: Optional[str]
 
     class Config:
@@ -61,6 +56,8 @@ class AdOut(BaseModel):
     id: int
     title: str
     product_name: Optional[str]
+    category: str
+    token_amount: float
     original_price: float
     total_qty: int
     slots_remaining: int

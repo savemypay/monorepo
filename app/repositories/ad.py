@@ -15,6 +15,7 @@ class AdRepository:
         title: str,
         product_name: str | None,
         original_price: float,
+        token_amount: float,
         total_qty: int,
         images: list[str] | None,
         description: str | None,
@@ -22,12 +23,14 @@ class AdRepository:
         valid_from,
         valid_to,
         tiers: list[dict],
+        category: str,
     ) -> Ad:
         ad = Ad(
             vendor_id=vendor_id,
             title=title,
             product_name=product_name,
             original_price=original_price,
+            token_amount=token_amount,
             total_qty=total_qty,
             slots_remaining=total_qty,
             images=images,
@@ -36,6 +39,7 @@ class AdRepository:
             valid_from=valid_from,
             valid_to=valid_to,
             status="draft",
+            category=category,
         )
         db.add(ad)
         db.flush()
@@ -48,7 +52,6 @@ class AdRepository:
                     seq=t["seq"],
                     qty=t["qty"],
                     discount_pct=t["discount_pct"],
-                    token_amount=t.get("token_amount"),
                     label=t.get("label"),
                 )
             )

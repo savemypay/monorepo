@@ -12,7 +12,6 @@ class AdTier(BaseModelMixin, Base):
     seq = Column(Integer, nullable=False)  # ordering of tiers
     qty = Column(Integer, nullable=False)
     discount_pct = Column(Numeric(5, 2), nullable=False, default=0)
-    token_amount = Column(Numeric(12, 2), nullable=True)
     label = Column(String(255), nullable=True)
 
     ad = relationship("Ad", back_populates="tiers")

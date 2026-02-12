@@ -53,3 +53,22 @@ def get_current_admin_or_vendor(
             detail=error_response(message="Admin or vendor token required", code="invalid_token"),
         )
     return payload
+
+
+def get_current_user(
+    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> dict:
+    """Allow any authenticated role (customer/vendor/admin)."""
+    return decode_token(creds.credentials)
+
+
+def get_current_customer(
+    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> dict:
+    payload = decode_token(creds.credentials)
+    if payload.get("role") != "customer":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=error_response(message="Customer token required", code="invalid_token"),
+        )
+    return payload
