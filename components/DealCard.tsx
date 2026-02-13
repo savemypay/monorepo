@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter, usePathname } from 'next/navigation'; // Added imports
 import { Clock, Users, Heart, ArrowRight } from "lucide-react";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuthStore } from "@/lib/store/authStore"; // Use Store
 
 interface DealCardProps {
   id: number | string;
@@ -26,7 +27,9 @@ export default function DealCard({
   target,
   endsIn,
 }: DealCardProps) {
-  const { user, openLoginModal } = useAuth();
+  const router = useRouter()
+  const pathname = usePathname();
+  const { user } = useAuthStore(); // Changed from useAuth to useAuthStore
 
   const progress = Math.min((joined / target) * 100, 100);
   const isFillingFast = progress >= 70;
@@ -34,7 +37,7 @@ export default function DealCard({
   const handleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!user) openLoginModal();
+    if (!user) router.push(`/login?redirect=${pathname}`);
     else alert("Added to favorites!");
   };
 

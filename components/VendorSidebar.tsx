@@ -6,7 +6,7 @@ import { LayoutDashboard, ShoppingBag, Users, DollarSign, LogOut } from "lucide-
 
 const sidebarItems = [
   { label: "Overview", href: "/vendor", icon: LayoutDashboard },
-  { label: "My Pools", href: "/vendor/pools", icon: ShoppingBag },
+  { label: "My Deals", href: "/vendor/my-deals", icon: ShoppingBag },
   { label: "Leads", href: "/vendor/leads", icon: Users },
   { label: "Earnings", href: "/vendor/earnings", icon: DollarSign },
 ];

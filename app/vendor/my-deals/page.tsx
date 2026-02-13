@@ -18,7 +18,7 @@ export default function MyPoolsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-           <h1 className="text-2xl font-bold text-gray-800">My Deals & Pools</h1>
+           <h1 className="text-2xl font-bold text-gray-800">My Deals</h1>
            <p className="text-sm text-gray-500">Manage your active and past group offers.</p>
         </div>
         <button 
@@ -26,7 +26,7 @@ export default function MyPoolsPage() {
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all"
         >
           <Plus size={18} />
-          Create New Pool
+          Create New Deal
         </button>
       </div>
 

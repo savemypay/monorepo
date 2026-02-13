@@ -83,7 +83,7 @@ export default function CustomerNavbar() {
                   {isProfileOpen && (
                     <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2">
                       <div className="px-5 py-3 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-900 truncate">User #{user.id}</p>
+                        <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
                         <p className="text-xs text-gray-500 truncate">{user.email || user.phone_number}</p>
                       </div>
                       <div className="py-2">
@@ -105,12 +105,12 @@ export default function CustomerNavbar() {
               </>
             ) : (
               /* GUEST VIEW */
-              <button 
-                onClick={openLoginModal}
+              <Link 
+                href="/login"
                 className="bg-gray-900 text-white px-6 py-2.5 rounded-full font-medium text-sm hover:bg-gray-800 transition-all shadow-md active:scale-95"
               >
                 Login
-              </button>
+              </Link>
             )}
           </div>
 
@@ -162,13 +162,13 @@ export default function CustomerNavbar() {
                  </button>
               </div>
             ) : (
-              <div className="pt-2 pb-2">
-                <button 
-                  onClick={() => { openLoginModal(); setIsMenuOpen(false); }}
-                  className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold shadow-md"
-                >
-                  Login / Signup
-                </button>
+              <div className="pt-2 pb-2 w-full">
+                <Link 
+                href="/login"
+                className="w-full px-6 py-4 text-sm transition-all active:scale-95 bg-blue-600 text-white rounded-xl font-bold shadow-md"
+              >
+                Login / Signup
+              </Link>
               </div>
             )}
           </div>

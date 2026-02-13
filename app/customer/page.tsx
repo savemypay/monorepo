@@ -4,10 +4,10 @@ import DealCard from '@/components/DealCard';
 import {Sparkles } from 'lucide-react';
 
 const activeDeals = [
-  { id: 1, title: "2024 Tesla Model Y", image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800", discount: "15%", price: "$42,000", joined: 5, target: 10, endsIn: "2 days" },
-  { id: 2, title: "Max Life Insurance Plan", image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=800", discount: "20%", price: "$999", joined: 10, target: 50, endsIn: "5 hours" },
-  { id: 3, title: "Luxury Maldives Trip", image:  "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800", discount: "30%", price: "$2,500", joined: 2, target: 5, endsIn: "1 week" },
-  { id: 4, title: "iPhone 15 Pro Max", image:"https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=800", discount: "10%", price: "$1,100", joined: 12, target: 20, endsIn: "3 days" },
+  { id: 1, title: "2024 Tesla Model Y", image: "/assets/Tesla-Model-Y-1-1160x652.webp", discount: "15%", price: "$42,000", joined: 5, target: 10, endsIn: "2 days" },
+  { id: 2, title: "Max Life Insurance Plan", image: "/assets/62e72fdd87d62a03400072a7_Max_Life_Insurance_logo.svg.webp", discount: "20%", price: "$999", joined: 10, target: 50, endsIn: "5 hours" },
+  { id: 3, title: "Luxury Maldives Trip", image:  "/assets/images.jpeg", discount: "30%", price: "$2,500", joined: 2, target: 5, endsIn: "1 week" },
+  { id: 4, title: "iPhone 15 Pro Max", image:"/assets/galaxy-s24-ultra-highlights-kv.jpg", discount: "10%", price: "$1,100", joined: 12, target: 20, endsIn: "3 days" },
 ];
 
 export default function CustomerPublicDeals() {

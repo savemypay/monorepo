@@ -7,9 +7,16 @@ export interface User {
   email: string | null;
   phone_number: string;
   is_active: boolean;
+  name:string;
 }
 
-interface AuthState {
+export interface AuthData {
+  access_token: string;
+  refresh_token: string;
+  user: User;
+}
+
+export interface AuthState {
   // Data
   accessToken: string | null;
   refreshToken: string | null;
