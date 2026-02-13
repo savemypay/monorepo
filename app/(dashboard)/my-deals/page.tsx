@@ -1,21 +1,148 @@
-"use client"; // Client component needed for state (Modal)
+"use client";
 
-import { useState } from 'react';
-import { Plus, Clock, Search } from 'lucide-react';
-import CreatePoolModal from '@/components/CreatePoolModal';
+import { useState, useEffect } from 'react';
+import { Plus, Clock } from 'lucide-react';
 import Link from 'next/link';
+import CreatePoolModal from '@/components/CreatePoolModal';
+import DataTable, { Column } from '@/components/ui/DataTable';
+import { Deal, getMaxDiscount, getTimeLeft } from '@/lib/dealHelpers';
+import { useVendorStore } from '@/lib/store/authStore';
+
+// Helper to colorize status badges
+const getStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'active': return 'bg-green-50 text-green-700 border-green-200';
+    case 'draft': return 'bg-gray-100 text-gray-700 border-gray-200';
+    case 'expired': return 'bg-red-50 text-red-700 border-red-200';
+    default: return 'bg-blue-50 text-blue-700 border-blue-200';
+  }
+};
 
 export default function MyPoolsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter] = useState('All');
+   
+  const vendorId = useVendorStore(state=>state.vendor?.id)
+  const accessToken = useVendorStore(state=>state.accessToken)
 
-  const activePools = [
-    { id: 1, name: '2024 SUV Model X Batch', target: 10, current: 7, discount: '15%', endsIn: '2 Days', status: 'Active' },
-    { id: 2, name: 'Premium Insurance Group', target: 50, current: 42, discount: '20%', endsIn: '5 Hours', status: 'Closing Soon' },
+  // Data State
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 1. Fetch Data on Mount
+  useEffect(() => {
+    if (!vendorId || !accessToken) return;
+    const fetchDeals = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/ads?vendor_id=${vendorId}`,{
+          headers: {
+            "Content-Type": "application/json",
+            'authorization': `Bearer ${accessToken}`,
+            "ngrok-skip-browser-warning": "true"
+          },
+        });
+      
+        // Verify the status matches expectations
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("API Error:", res.status, errorText);
+          return;
+        }
+      
+        const json = await res.json();
+        console.log("Parsed Data:", json); // <--- Look at this in the console
+      
+        if (json.success) {
+          setDeals(json.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch deals", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDeals();
+  }, [vendorId, accessToken]);
+
+  // 2. Define Columns for the Reusable Table
+  const columns: Column<Deal>[] = [
+    {
+      header: "Deal Name",
+      render: (deal) => (
+        <div>
+          <p className="font-medium text-gray-900">{deal.title}</p>
+          <p className="text-xs text-gray-400">{deal.product_name}</p>
+        </div>
+      )
+    },
+    {
+      header: "Progress",
+      render: (deal) => {
+        const percentage = Math.min((deal.slots_sold / deal.total_qty) * 100, 100);
+        return (
+          <div className="w-full max-w-xs">
+            <div className="flex justify-between text-xs mb-1">
+              <span className="font-medium text-gray-700">{deal.slots_sold} / {deal.total_qty} Sold</span>
+              <span className="text-gray-400">{percentage.toFixed(0)}%</span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                style={{ width: `${percentage}%` }}
+              />
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      header: "Max Discount",
+      render: (deal) => (
+        <span className="text-green-600 font-bold bg-green-50 px-2 py-1 rounded text-xs">
+          Up to {getMaxDiscount(deal.tiers)} OFF
+        </span>
+      )
+    },
+    {
+      header: "Time Left",
+      render: (deal) => (
+        <div className="flex items-center gap-2 text-gray-500 text-sm">
+          <Clock size={14} className="text-gray-400" /> 
+          {getTimeLeft(deal.valid_to)}
+        </div>
+      )
+    },
+    {
+      header: "Status",
+      render: (deal) => (
+        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(deal.status)} uppercase tracking-wide`}>
+          {deal.status}
+        </span>
+      )
+    },
+    {
+      header: "Action",
+      className: "text-right",
+      render: (deal) => (
+        <Link 
+          href={`/my-deals/${deal.id}`} 
+          className="text-blue-600 hover:text-blue-800 font-medium text-sm hover:underline"
+        >
+          Manage
+        </Link>
+      )
+    }
   ];
+
+  // 3. Filter Logic (Client-side filtering)
+  const filteredDeals = filter === 'All' 
+    ? deals 
+    : deals.filter(d => d.status.toLowerCase() === filter.toLowerCase());
 
   return (
     <div className="space-y-6">
+      
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
            <h1 className="text-2xl font-bold text-gray-800">My Deals</h1>
@@ -31,12 +158,12 @@ export default function MyPoolsPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 pb-4">
-          {['All', 'Active', 'Completed', 'Expired'].map((f) => (
+      <div className="flex gap-2 border-b border-gray-200 pb-4 overflow-x-auto">
+          {['All', 'Active', 'Draft', 'Expired'].map((f) => (
             <button 
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                 filter === f ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
@@ -45,60 +172,13 @@ export default function MyPoolsPage() {
           ))}
       </div>
 
-      {/* Pools Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
-            <tr>
-              <th className="px-6 py-4">Deal Name</th>
-              <th className="px-6 py-4">Progress</th>
-              <th className="px-6 py-4">Discount</th>
-              <th className="px-6 py-4">Time Left</th>
-              <th className="px-6 py-4">Status</th>
-              <th className='px-6 py-4'>View</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 text-sm">
-            {activePools.map((pool) => (
-              <tr key={pool.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 font-medium text-gray-800">{pool.name}</td>
-                <td className="px-6 py-4">
-                  <div className="w-full max-w-xs">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span>{pool.current} Sold</span>
-                      <span className="text-gray-400">Target: {pool.target}</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
-                        style={{ width: `${(pool.current / pool.target) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-green-600 font-medium">{pool.discount} OFF</td>
-                <td className="px-6 py-4 flex items-center gap-2 text-gray-500">
-                  <Clock size={14} /> {pool.endsIn}
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    pool.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'
-                  }`}>
-                    {pool.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 font-medium text-gray-800">
-                <Link href={`/vendor/pools/${pool.id}`} className="text-blue-600 hover:underline">
-                    View Details
-                </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* The Reusable Table */}
+      <DataTable 
+        columns={columns} 
+        data={filteredDeals} 
+        isLoading={loading} 
+      />
 
-      {/* Render Modal */}
       {isModalOpen && <CreatePoolModal onClose={() => setIsModalOpen(false)} />}
     </div>
   );

@@ -99,8 +99,8 @@ export default function VendorNavbar({ onMenuClick }: NavbarProps) {
             <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
               
               <div className="px-4 py-3 border-b border-gray-100 mb-2 bg-gray-50/50">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Signed in as</p>
-                <p className="font-medium text-gray-900 truncate text-sm mt-1">{vendor?.phone_number}</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Welcome</p>
+                <p className="font-medium text-gray-900 truncate text-sm mt-1">{vendor?.phone_number || vendor?.email}</p>
               </div>
 
               <div className="px-1 space-y-1">
