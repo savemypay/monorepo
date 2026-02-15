@@ -13,3 +13,4 @@ class VendorAccount(BaseModelMixin, Base):
     category = Column(String(100), nullable=True)
     comments = Column(String(1000), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default="true")
+    role = Column(String(20), nullable=False, server_default="vendor")

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, UniqueConstraint, func
 
 from app.db.base import Base
 from app.entities.base import BaseModelMixin
@@ -21,6 +21,8 @@ class Payment(BaseModelMixin, Base):
     customer_ref = Column(String(255), nullable=True)
     deal_ref = Column(String(255), nullable=True)  # loose reference to a deal/signup
     client_secret = Column(String(255), nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    slot_reserved = Column(Boolean, nullable=False, server_default="false")
     error_code = Column(String(100), nullable=True)
     error_message = Column(Text, nullable=True)
     raw_response = Column(Text, nullable=True)

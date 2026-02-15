@@ -26,6 +26,8 @@ from app.entities.user import User
 from app.entities.refresh_token import RefreshToken
 from app.entities.vendor import VendorInterest
 from app.entities.vendor_account import VendorAccount
+from app.entities.admin_account import AdminAccount
+from app.entities.vendor_refresh_token import VendorRefreshToken
 from app.models.auth import LoginRequest, OTPVerifyRequest
 from app.notifications.notifier import send_email_async, send_sms_async
 from app.utils.response import error_response
@@ -63,9 +65,11 @@ def _create_access_token(user: User) -> tuple[str, int]:
     expire_at = _now() + expires_delta
     payload = {
         "sub": str(user.id),
+        "user_id": str(user.id),
         "exp": expire_at,
         "email": user.email,
         "phone_number": user.phone_number,
+        "role": user.role,
     }
     token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
     return token, int(expires_delta.total_seconds())
@@ -170,7 +174,7 @@ def _get_latest_or_error(db: Session, audience: Audience, identifier: str) -> Lo
     return otp
 
 
-def verify_otp(db: Session, audience: Audience, payload: OTPVerifyRequest) -> None:
+def verify_otp(db: Session, audience: Audience, payload: OTPVerifyRequest) -> dict:
     identifier = _get_identifier(payload)
     otp = _get_latest_or_error(db, audience, identifier)
     now = _now()
@@ -204,14 +208,17 @@ def verify_otp(db: Session, audience: Audience, payload: OTPVerifyRequest) -> No
     db.add(otp)
     db.commit()
 
-    user = _ensure_user_record(db, payload, audience)
     if audience == "vendor":
-        _ensure_vendor_account(db, payload)
-    tokens = _issue_tokens(db, user)
-    return tokens
+        vendor, is_new = _ensure_vendor_account(db, payload)
+        tokens = _issue_tokens_vendor(db, vendor, is_new)
+        return tokens
+    else:
+        user, is_new = _ensure_user_record(db, payload, audience)
+        tokens = _issue_tokens_customer(db, user, is_new)
+        return tokens
 
 
-def _ensure_user_record(db: Session, payload: LoginRequest | OTPVerifyRequest, audience: Audience) -> User:
+def _ensure_user_record(db: Session, payload: LoginRequest | OTPVerifyRequest, audience: Audience) -> tuple[User, bool]:
     """Create or update a User row after successful OTP verification."""
     identifier = payload.identifier
     user: User | None = None
@@ -225,6 +232,10 @@ def _ensure_user_record(db: Session, payload: LoginRequest | OTPVerifyRequest, a
     placeholder_secret = secrets.token_hex(32)
     placeholder_hash = hashlib.sha256(placeholder_secret.encode("utf-8")).hexdigest()
 
+    desired_role = "vendor" if audience == "vendor" else "customer"
+
+    is_new = False
+
     if user:
         changed = False
         if payload.email and not user.email:
@@ -236,32 +247,39 @@ def _ensure_user_record(db: Session, payload: LoginRequest | OTPVerifyRequest, a
         if not user.is_active:
             user.is_active = True
             changed = True
+        if user.role != desired_role:
+            user.role = desired_role
+            changed = True
         if changed:
             db.add(user)
             db.commit()
             db.refresh(user)
-        return user
+        return user, is_new
 
     user = User(
         email=payload.email,
         phone_number=payload.phone_number,
         hashed_password=placeholder_hash,
         is_active=True,
+        role=desired_role,
         created_by=audience,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
-    return user
+    is_new = True
+    return user, is_new
 
 
-def _ensure_vendor_account(db: Session, payload: LoginRequest | OTPVerifyRequest) -> VendorAccount:
+def _ensure_vendor_account(db: Session, payload: LoginRequest | OTPVerifyRequest) -> tuple[VendorAccount, bool]:
     vendor = db.query(VendorAccount)
     if payload.email:
         vendor = vendor.filter(VendorAccount.email == payload.email)
     if payload.phone_number:
         vendor = vendor.filter(VendorAccount.phone_number == payload.phone_number)
     vendor = vendor.first()
+
+    is_new = False
 
     if vendor:
         changed = False
@@ -278,20 +296,22 @@ def _ensure_vendor_account(db: Session, payload: LoginRequest | OTPVerifyRequest
             db.add(vendor)
             db.commit()
             db.refresh(vendor)
-        return vendor
+        return vendor, is_new
 
     vendor = VendorAccount(
         email=payload.email,
         phone_number=payload.phone_number,
         is_active=True,
+        role="vendor",
     )
     db.add(vendor)
     db.commit()
     db.refresh(vendor)
-    return vendor
+    is_new = True
+    return vendor, is_new
 
 
-def _issue_tokens(db: Session, user: User) -> dict:
+def _issue_tokens_customer(db: Session, user: User, is_new: bool) -> dict:
     access_token, access_expires_in = _create_access_token(user)
     refresh_token, refresh_expires_in, refresh_exp_at = _create_refresh_token(user)
 
@@ -310,11 +330,63 @@ def _issue_tokens(db: Session, user: User) -> dict:
         "refresh_token": refresh_token,
         "refresh_token_expires_in": refresh_expires_in,
         "token_type": "bearer",
+        "role": user.role,
+        "user_id": str(user.id),
+        "is_new_user": is_new,
         "user": {
             "id": user.id,
             "email": user.email,
             "phone_number": user.phone_number,
             "is_active": user.is_active,
+        },
+    }
+
+
+def _issue_tokens_vendor(db: Session, vendor: VendorAccount, is_new: bool) -> dict:
+    # For vendors, issue tokens with vendor id as subject
+    expires_delta = timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire_at = _now() + expires_delta
+    payload = {
+        "sub": str(vendor.id),
+        "vendor_id": str(vendor.id),
+        "user_id": str(vendor.id),
+        "exp": expire_at,
+        "email": vendor.email,
+        "phone_number": vendor.phone_number,
+        "role": "vendor",
+    }
+    access_token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    access_expires_in = int(expires_delta.total_seconds())
+
+    refresh_token = secrets.token_urlsafe(48)
+    ttl = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_expires_in = int(ttl.total_seconds())
+    refresh_exp_at = _now() + ttl
+
+    vrt = VendorRefreshToken(
+        vendor_id=vendor.id,
+        token_hash=_hash_refresh(refresh_token),
+        expires_at=refresh_exp_at,
+        revoked_at=None,
+    )
+    db.add(vrt)
+    db.commit()
+
+    return {
+        "access_token": access_token,
+        "access_token_expires_in": access_expires_in,
+        "refresh_token": refresh_token,
+        "refresh_token_expires_in": refresh_expires_in,
+        "token_type": "bearer",
+        "role": "vendor",
+        "user_id": str(vendor.id),
+        "vendor_id": str(vendor.id),
+        "is_new_user": is_new,
+        "vendor": {
+            "id": vendor.id,
+            "email": vendor.email,
+            "phone_number": vendor.phone_number,
+            "is_active": vendor.is_active,
         },
     }
 
@@ -326,12 +398,18 @@ def logout(db: Session, refresh_token: str) -> None:
         .filter(RefreshToken.token_hash == token_hash, RefreshToken.revoked_at.is_(None))
         .first()
     )
-    if not rt:
+    vrt = (
+        db.query(VendorRefreshToken)
+        .filter(VendorRefreshToken.token_hash == token_hash, VendorRefreshToken.revoked_at.is_(None))
+        .first()
+    )
+    target = rt or vrt
+    if not target:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_response(message="Invalid refresh token", code="invalid_token"),
         )
     now = _now()
-    rt.revoked_at = now
-    db.add(rt)
+    target.revoked_at = now
+    db.add(target)
     db.commit()

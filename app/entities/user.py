@@ -12,3 +12,4 @@ class User(BaseModelMixin, Base):
     country_code = Column(String(10), nullable=True)
     phone_number = Column(String(30), nullable=True, index=True)
     is_active = Column(Boolean, nullable=False, server_default="true")
+    role = Column(String(20), nullable=False, server_default="customer")  # customer or vendor
