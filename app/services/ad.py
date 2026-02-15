@@ -10,6 +10,10 @@ from app.repositories.ad import AdRepository
 from app.utils.response import error_response
 
 
+def _annotate_slots(ad: Ad):
+    ad.slots_sold = ad.total_qty - ad.slots_remaining
+
+
 def _validate_publishable(ad: Ad):
     if ad.status != "draft":
         raise HTTPException(
@@ -33,7 +37,7 @@ def create_ad(db: Session, vendor_id: int, payload: AdCreate) -> Ad:
         }
         for t in payload.tiers
     ]
-    return AdRepository.create_ad_with_tiers(
+    ad = AdRepository.create_ad_with_tiers(
         db,
         vendor_id=vendor_id,
         title=payload.title,
@@ -49,6 +53,8 @@ def create_ad(db: Session, vendor_id: int, payload: AdCreate) -> Ad:
         tiers=tiers_payload,
         category=payload.category,
     )
+    _annotate_slots(ad)
+    return ad
 
 
 def list_ads(db: Session, vendor_id: int | None, active_only: bool = False) -> List[Ad]:
@@ -57,14 +63,23 @@ def list_ads(db: Session, vendor_id: int | None, active_only: bool = False) -> L
         q = q.filter(Ad.vendor_id == vendor_id)
     if active_only:
         q = q.filter(Ad.status == "active")
-    return q.order_by(Ad.created_at.desc()).all()
+    ads = q.order_by(Ad.created_at.desc()).all()
+    for ad in ads:
+        _annotate_slots(ad)
+    return ads
 
 
-def get_ad(db: Session, ad_id: int, vendor_id: int) -> Ad | None:
-    return AdRepository.get_with_tiers(db, ad_id, vendor_id)
+def get_ad(db: Session, ad_id: int, vendor_id: int | None) -> Ad | None:
+    if vendor_id is None:
+        ad = db.query(Ad).filter(Ad.id == ad_id).first()
+    else:
+        ad = AdRepository.get_with_tiers(db, ad_id, vendor_id)
+    if ad:
+        _annotate_slots(ad)
+    return ad
 
 
-def publish_ad(db: Session, ad_id: int, vendor_id: int) -> Ad:
+def publish_ad(db: Session, ad_id: int, vendor_id: int | None) -> Ad:
     ad = get_ad(db, ad_id, vendor_id)
     if not ad:
         raise HTTPException(
@@ -76,4 +91,5 @@ def publish_ad(db: Session, ad_id: int, vendor_id: int) -> Ad:
     db.add(ad)
     db.commit()
     db.refresh(ad)
+    _annotate_slots(ad)
     return ad

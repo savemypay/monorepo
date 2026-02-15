@@ -19,3 +19,4 @@ from app.entities import payment  # noqa: E402,F401
 from app.entities import ad  # noqa: E402,F401
 from app.entities import ad_tier  # noqa: E402,F401
 from app.entities import vendor_refresh_token  # noqa: E402,F401
+from app.entities import admin_account  # noqa: E402,F401

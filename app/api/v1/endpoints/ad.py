@@ -10,8 +10,9 @@ from app.api.security import (
     get_current_admin_or_vendor,
     get_current_user,
 )
-from app.models.ad import AdCreate, AdListResponse, AdResponse
+from app.models.ad import AdCreate, AdListResponse, AdResponse, ImageAttachRequest
 from app.services.ad import create_ad, list_ads, get_ad, publish_ad
+from app.services.s3 import generate_presigned_upload
 from app.utils.response import success_response
 
 router = APIRouter(prefix="/ads", tags=["ads"])
@@ -63,12 +64,61 @@ def publish_ad_endpoint(
     actor: dict = Depends(get_current_admin_or_vendor),
 ):
     role = actor["role"]
-    if role == "vendor":
-        vendor_id = int(actor.get("vendor_id") or actor.get("sub"))
-    else:
+    if role != "admin":
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Admin publish not yet implemented",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admin can publish ads",
         )
-    ad = publish_ad(db, ad_id, vendor_id)
+    ad = publish_ad(db, ad_id, vendor_id=None)
     return success_response(message="Ad published", data=[ad])
+
+
+@router.post("/{ad_id}/images/presign", status_code=status.HTTP_200_OK)
+def presign_ad_image(
+    ad_id: int,
+    filename: str = Query(..., description="Original filename"),
+    content_type: str = Query(..., description="MIME type"),
+    db: Session = Depends(get_db),
+    actor: dict = Depends(get_current_admin_or_vendor),
+):
+    role = actor["role"]
+    vendor_id = int(actor.get("vendor_id") or actor.get("sub")) if role == "vendor" else None
+    ad = get_ad(db, ad_id, vendor_id) if role == "vendor" else get_ad(db, ad_id, vendor_id=None)
+    if not ad:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ad not found or not accessible")
+
+    presign = generate_presigned_upload(filename, content_type)
+    return success_response(message="Presigned URL created", data=[presign])
+
+
+@router.post("/{ad_id}/images/attach", status_code=status.HTTP_200_OK)
+def attach_ad_image(
+    ad_id: int,
+    payload: ImageAttachRequest,
+    db: Session = Depends(get_db),
+    actor: dict = Depends(get_current_admin_or_vendor),
+):
+    role = actor["role"]
+    vendor_id = int(actor.get("vendor_id") or actor.get("sub")) if role == "vendor" else None
+    ad = get_ad(db, ad_id, vendor_id) if role == "vendor" else get_ad(db, ad_id, vendor_id=None)
+    if not ad:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ad not found or not accessible")
+
+    public_url = payload.public_url
+    if not public_url:
+        if not payload.key:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="key is required")
+        from app.core.config import S3_PUBLIC_BASE_URL
+
+        if not S3_PUBLIC_BASE_URL:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="S3_PUBLIC_BASE_URL not configured")
+        public_url = f"{S3_PUBLIC_BASE_URL.rstrip('/')}/{payload.key}"
+
+    images = ad.images or []
+    images.append(public_url)
+    ad.images = images
+    db.add(ad)
+    db.commit()
+    db.refresh(ad)
+
+    return success_response(message="Image attached", data=[{"url": public_url}])

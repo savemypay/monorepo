@@ -54,6 +54,7 @@ class AdTierOut(BaseModel):
 
 class AdOut(BaseModel):
     id: int
+    vendor_id: int
     title: str
     product_name: Optional[str]
     category: str
@@ -61,6 +62,7 @@ class AdOut(BaseModel):
     original_price: float
     total_qty: int
     slots_remaining: int
+    slots_sold: int
     status: str
     images: Optional[list[str]]
     description: Optional[str]
@@ -79,3 +81,8 @@ class AdResponse(ApiResponse[AdOut]):
 
 class AdListResponse(ApiResponse[AdOut]):
     pass
+
+
+class ImageAttachRequest(BaseModel):
+    key: str
+    public_url: Optional[str] = None

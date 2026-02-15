@@ -40,6 +40,9 @@ class PaidUserEntry(BaseModel):
     status: str
     created_at: datetime
     ad: Optional[dict] = None
+    user_email: Optional[str] = None
+    user_phone_number: Optional[str] = None
+    user_name: Optional[str] = None
 
     class Config:
         orm_mode = True

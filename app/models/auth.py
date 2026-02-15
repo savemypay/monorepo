@@ -36,6 +36,7 @@ class VerifyResponseData(BaseModel):
     user_id: str
     vendor_id: str | None = None
     vendor: dict | None = None
+    is_new_user: bool
 
 
 class ErrorPayload(BaseModel):

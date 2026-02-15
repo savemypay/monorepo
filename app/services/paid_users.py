@@ -1,10 +1,11 @@
 from typing import List, Optional
 
 from sqlalchemy import Integer, cast
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from app.entities.ad import Ad
 from app.entities.payment import Payment
+from app.entities.user import User
 from app.payments.base import PaymentStatus
 
 
@@ -19,10 +20,20 @@ def list_paid_users(db: Session, *, role: str, vendor_id: Optional[int], ad_id: 
         q = (
             q.join(Ad, cast(Payment.deal_ref, Integer) == Ad.id)
             .filter(Ad.vendor_id == vendor_id)
-            .options(joinedload(Ad.tiers))
         )
 
     payments = q.order_by(Payment.created_at.desc()).all()
+
+    # Fetch user details for customer_refs that look like ints
+    user_ids = {int(p.customer_ref) for p in payments if p.customer_ref and p.customer_ref.isdigit()}
+    users = (
+        db.query(User)
+        .filter(User.id.in_(user_ids))
+        .all()
+        if user_ids
+        else []
+    )
+    user_map = {u.id: u for u in users}
 
     return [
         {
@@ -33,6 +44,9 @@ def list_paid_users(db: Session, *, role: str, vendor_id: Optional[int], ad_id: 
             "currency": p.currency,
             "status": p.status,
             "created_at": p.created_at,
+            "user_email": user_map.get(int(p.customer_ref)).email if p.customer_ref and p.customer_ref.isdigit() and int(p.customer_ref) in user_map else None,
+            "user_phone_number": user_map.get(int(p.customer_ref)).phone_number if p.customer_ref and p.customer_ref.isdigit() and int(p.customer_ref) in user_map else None,
+            "user_name": getattr(user_map.get(int(p.customer_ref)), "name", None) if p.customer_ref and p.customer_ref.isdigit() and int(p.customer_ref) in user_map else None,
         }
         for p in payments
     ]
