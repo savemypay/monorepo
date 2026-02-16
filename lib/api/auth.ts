@@ -1,3 +1,5 @@
+import { apiRequest } from "@/lib/api/client";
+
 export interface LoginParams {
   email?: string;
   phone_number?: string;
@@ -45,58 +47,24 @@ export type SendOtpResponse = ApiResponse<unknown>;
 // 2. Verify OTP returns the Auth Payload Array
 export type VendorVerifyResponse = ApiResponse<VendorAuthPayload[]>;
 
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-
-/**
- * Generic Helper function to handle fetch requests with Type Safety
- * @template T - The expected response type
- */
-const handleRequest = async <T>(endpoint: string, payload: object): Promise<T> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    // Try to parse JSON. If server returns 500 HTML, this might fail, so we catch it.
-    let data;
-    try {
-      data = await response.json();
-    } catch (e) {
-      throw new Error("Invalid JSON response from server");
-    }
-
-    if (!response.ok) {
-      // Use the server's error message if available
-      throw new Error(data.message || data.error || "Something went wrong");
-    }
-
-    return data as T;
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error("Network error occurred");
-  }
-};
-
-
 export const sendLoginOtp = async (params: LoginParams): Promise<SendOtpResponse> => {
   if (!params.email && !params.phone_number) {
     throw new Error("Email or Phone Number is required");
   }
-  // Passing <SendOtpResponse> ensures the return type matches the interface
-  return handleRequest<SendOtpResponse>("/api/v1/auth/vendor/login", params);
+  return apiRequest<SendOtpResponse>("/api/v1/auth/vendor/login", {
+    method: "POST",
+    auth: false,
+    body: params,
+  });
 };
 
 export const verifyLoginOtp = async (params: VerifyParams): Promise<VendorVerifyResponse> => {
   if (!params.code) {
     throw new Error("OTP Code is required");
   }
-  // Passing <VendorVerifyResponse> ensures we get strict typing on the result
-  return handleRequest<VendorVerifyResponse>("/api/v1/auth/vendor/verify", params);
+  return apiRequest<VendorVerifyResponse>("/api/v1/auth/vendor/verify", {
+    method: "POST",
+    auth: false,
+    body: params,
+  });
 };

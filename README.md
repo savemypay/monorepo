@@ -1,36 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SMP Vendor Portal
 
-## Getting Started
+Vendor-facing dashboard for OTP login, deal management, and lead tracking.
 
-First, run the development server:
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19 + TypeScript
+- Tailwind CSS v4
+- Zustand (persisted auth store)
+- Lucide icons
+
+## Prerequisites
+
+- Node.js 20+
+- npm 10+
+
+## Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=https://your-api-domain.com
+```
+
+Notes:
+- `NEXT_PUBLIC_API_BASE_URL` is required.
+- All API requests are built from this value in `lib/api/client.ts`.
+
+## Local Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev`: run local development server
+- `npm run build`: production build
+- `npm run start`: run production server
+- `npm run lint`: run ESLint
 
-## Learn More
+## App Architecture
 
-To learn more about Next.js, take a look at the following resources:
+### Routing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `app/(auth)/*`: authentication pages
+- `app/(dashboard)/*`: protected vendor dashboard pages
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Route Protection
 
-## Deploy on Vercel
+- Server-side protection is handled by `proxy.ts`.
+- Protected routes:
+  - `/`
+  - `/my-deals` and nested routes
+  - `/leads` and nested routes
+  - `/earnings` and nested routes
+- Unauthenticated users are redirected to `/login?redirect=<path>`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Auth Flow
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- OTP APIs:
+  - `POST /api/v1/auth/vendor/login`
+  - `POST /api/v1/auth/vendor/verify`
+- Auth state is stored in Zustand (`lib/store/authStore.ts`) and persisted to `localStorage`.
+- A lightweight cookie (`vendor_authenticated=1`) is set for server-side route gating.
+
+### API Layer
+
+- Shared request client: `lib/api/client.ts`
+  - Adds JSON headers
+  - Adds Bearer token automatically for authenticated endpoints
+  - Normalizes API errors
+- Feature APIs:
+  - `lib/api/auth.ts`
+  - `lib/api/deals.ts`
+  - `lib/api/leads.ts`
+
+## API Expectations
+
+The frontend expects JSON responses in this shape for most endpoints:
+
+```ts
+{
+  success: boolean;
+  message: string;
+  error: string | null;
+  data: unknown;
+}
+```
+
+Token source:
+- Access token is read from `vendor-storage` (Zustand persist key) in browser storage.
+
+Required capabilities from backend:
+- Send OTP and verify OTP for vendor login
+- Fetch deals by `vendor_id`
+- Create deal with tier configuration and image payloads
+- Fetch paid users/leads, optionally filtered by `ad_id`
+
+## Important Files
+
+- `proxy.ts`: server-side route guard
+- `lib/api/client.ts`: shared API request wrapper
+- `lib/store/authStore.ts`: persisted auth/session state
+- `app/(auth)/login/page.tsx`: OTP login screen
+- `app/(dashboard)/my-deals/page.tsx`: deals list
+- `app/(dashboard)/my-deals/[id]/page.tsx`: deal details + joined customers
+- `components/CreatePoolModal.tsx`: deal creation form
+
+## Troubleshooting
+
+- `NEXT_PUBLIC_API_BASE_URL is not configured`
+  - Ensure `.env` exists and variable is set.
+- `Unauthorized. Please login again.`
+  - Session token is missing/expired in local storage.
+- API returns non-JSON / HTML error pages
+  - Check API base URL and upstream gateway/proxy configuration.

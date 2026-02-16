@@ -21,9 +21,15 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   }, []);
 
   useEffect(() => {
-    if (isHydrated && !isAuthenticated) {
-      router.replace('/login');
+    if (!isHydrated) return;
+
+    if (isAuthenticated) {
+      document.cookie = "vendor_authenticated=1; Path=/; Max-Age=2592000; SameSite=Lax";
+      return;
     }
+
+    document.cookie = "vendor_authenticated=; Path=/; Max-Age=0; SameSite=Lax";
+    router.replace('/login');
   }, [isHydrated, isAuthenticated, router]);
 
   if (!isHydrated || !isAuthenticated) {

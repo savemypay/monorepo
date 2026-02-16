@@ -9,15 +9,15 @@ export default function EarningsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
           <p className="text-gray-500 text-xs uppercase font-bold tracking-wider">Total Revenue Generated</p>
-          <h3 className="text-3xl font-bold text-gray-800 mt-2">$450,000</h3>
+          <h3 className="text-3xl font-bold text-gray-800 mt-2">₹450,000</h3>
         </div>
         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
           <p className="text-gray-500 text-xs uppercase font-bold tracking-wider">Platform Fees Paid (5%)</p>
-          <h3 className="text-3xl font-bold text-red-600 mt-2">-$22,500</h3>
+          <h3 className="text-3xl font-bold text-red-600 mt-2">-₹22,500</h3>
         </div>
         <div className="bg-green-50 p-6 rounded-xl border border-green-100 shadow-sm">
           <p className="text-green-700 text-xs uppercase font-bold tracking-wider">Net Profit</p>
-          <h3 className="text-3xl font-bold text-green-800 mt-2">$427,500</h3>
+          <h3 className="text-3xl font-bold text-green-800 mt-2">₹427,500</h3>
         </div>
       </div>
 
@@ -36,7 +36,7 @@ export default function EarningsPage() {
                   <p className="text-xs text-gray-500">Oct {20 + i}, 2024</p>
                 </div>
               </div>
-              <span className="font-mono font-bold text-gray-700">+$12,450.00</span>
+              <span className="font-mono font-bold text-gray-700">+₹12,450.00</span>
             </div>
           ))}
         </div>

@@ -19,6 +19,7 @@ export default function VendorLoginPage() {
   // Resend Timer State
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
+  const [redirectPath, setRedirectPath] = useState('/');
 
   // --- Refs ---
   const inputRef = useRef<HTMLInputElement>(null);
@@ -27,6 +28,13 @@ export default function VendorLoginPage() {
   const isEmail = inputValue.includes('@')
 
   const inputLabel = isEmail ? "email" : "mobile number"
+
+  useEffect(() => {
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    if (redirect && redirect.startsWith('/')) {
+      setRedirectPath(redirect);
+    }
+  }, []);
 
   // Auto-focus & Timer Logic
   useEffect(() => {
@@ -116,7 +124,8 @@ export default function VendorLoginPage() {
       
       // Save and Redirect
       setAuth(authData.access_token, authData.refresh_token, authData.vendor);
-      router.push('/'); 
+      document.cookie = "vendor_authenticated=1; Path=/; Max-Age=2592000; SameSite=Lax";
+      router.push(redirectPath); 
 
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Invalid OTP");

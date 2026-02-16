@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, ChangeEvent } from 'react';
-import { X, Plus, Trash2, Upload, Image as ImageIcon, Calendar, DollarSign, Layers, Loader2, AlertCircle } from 'lucide-react';
+import { useState, useRef, ChangeEvent, useEffect } from 'react';
+import { X, Plus, Trash2, Upload, Image as ImageIcon, Calendar, Layers, Loader2, AlertCircle } from 'lucide-react';
 import { useVendorStore } from '@/lib/store/authStore';
+import { createDeal } from '@/lib/api/deals';
 import Image from 'next/image';
 
 // --- Interfaces ---
@@ -43,12 +44,11 @@ interface FormErrors {
 
 export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewsRef = useRef<string[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [globalError, setGlobalError] = useState<string | null>(null);
-
-  const accessToken = useVendorStore(state => state.accessToken);
 
   const [form, setForm] = useState<FormState>({
     title: '',
@@ -67,7 +67,17 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
 
-  const VendorId = useVendorStore(state=>state.vendor?.id)
+  const vendorId = useVendorStore(state => state.vendor?.id);
+
+  useEffect(() => {
+    previewsRef.current = previews;
+  }, [previews]);
+
+  useEffect(() => {
+    return () => {
+      previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview));
+    };
+  }, []);
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -111,6 +121,7 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
       const start = new Date(form.startDate);
       const end = new Date(form.endDate);
       const now = new Date();
+      now.setHours(0, 0, 0, 0);
       if (start < now) newErrors.startDate = "Start Date cannot be in the past";
       if (end <= start) newErrors.endDate = "End Date must be after Start Date";
     }
@@ -181,6 +192,7 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
   };
 
   const removeImage = (index: number) => {
+    URL.revokeObjectURL(previews[index]);
     setImages(prev => prev.filter((_, i) => i !== index));
     setPreviews(prev => prev.filter((_, i) => i !== index));
   };
@@ -197,6 +209,10 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
     setIsLoading(true);
 
     try {
+      if (!vendorId) {
+        throw new Error("Vendor not found. Please login again.");
+      }
+
       const imageStrings = await Promise.all(images.map(file => fileToBase64(file)));
 
       const formattedTiers = tiers.map((tier, index) => ({
@@ -218,20 +234,11 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
         terms: form.terms,
         valid_from: new Date(form.startDate).toISOString(),
         valid_to: new Date(form.endDate).toISOString(),
-        vendor_id: VendorId,
-        token_amount: form.tokenAmount
+        vendor_id: vendorId,
+        token_amount: Number(form.tokenAmount)
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/ads`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': `BEARER ${accessToken}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) throw new Error("Failed to create deal. Please try again.");
+      await createDeal(payload);
       onClose();
 
     } catch (err: unknown) {
@@ -304,7 +311,7 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Token Amount <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
                   <input min={0} name="tokenAmount" value={form.tokenAmount} onChange={handleInputChange} type="number" className={`${getInputClass(!!errors.tokenAmount)} pl-8`} placeholder="5000" />
                 </div>
                 {errors.tokenAmount && <p className="text-xs text-red-500 mt-1">{errors.tokenAmount}</p>}
