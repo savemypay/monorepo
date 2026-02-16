@@ -67,6 +67,8 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
 
+  const VendorId = useVendorStore(state=>state.vendor?.id)
+
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -216,8 +218,8 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
         terms: form.terms,
         valid_from: new Date(form.startDate).toISOString(),
         valid_to: new Date(form.endDate).toISOString(),
-        vendor_id: 1,
-        token_amount: form.tokenAmount // Now dynamic
+        vendor_id: VendorId,
+        token_amount: form.tokenAmount
       };
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/ads`, {
@@ -295,7 +297,7 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Original Price <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
-                  <input name="originalPrice" value={form.originalPrice} onChange={handleInputChange} type="number" className={`${getInputClass(!!errors.originalPrice)} pl-8`} placeholder="50000" />
+                  <input min={0} name="originalPrice" value={form.originalPrice} onChange={handleInputChange} type="number" className={`${getInputClass(!!errors.originalPrice)} pl-8`} placeholder="50000" />
                 </div>
                 {errors.originalPrice && <p className="text-xs text-red-500 mt-1">{errors.originalPrice}</p>}
               </div>
@@ -303,21 +305,13 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Token Amount <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
-                  <input name="tokenAmount" value={form.tokenAmount} onChange={handleInputChange} type="number" className={`${getInputClass(!!errors.tokenAmount)} pl-8`} placeholder="5000" />
+                  <input min={0} name="tokenAmount" value={form.tokenAmount} onChange={handleInputChange} type="number" className={`${getInputClass(!!errors.tokenAmount)} pl-8`} placeholder="5000" />
                 </div>
                 {errors.tokenAmount && <p className="text-xs text-red-500 mt-1">{errors.tokenAmount}</p>}
               </div>
-            </div>
-          </section>
-
-          <section className="space-y-4">
-             <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900 uppercase tracking-wide border-b border-gray-100 pb-2">
-              <DollarSign size={16} className="text-blue-600" /> Deal Rules
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-gray-50 p-5 rounded-xl border border-gray-100">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Total Qty (Min Buyers) <span className="text-red-500">*</span></label>
-                <input name="minBuyers" value={form.minBuyers} onChange={handleInputChange} type="number" className={getInputClass(!!errors.minBuyers)} placeholder="10" />
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Total Qty (Min Buyers) <span className="text-red-500">*</span></label>
+                <input min={0} name="minBuyers" value={form.minBuyers} onChange={handleInputChange} type="number" className={getInputClass(!!errors.minBuyers)} placeholder="10" />
                 {errors.minBuyers && <p className="text-xs text-red-500 mt-1">{errors.minBuyers}</p>}
               </div>
             </div>
@@ -345,10 +339,10 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
                    <div key={index} className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-white transition-colors">
                      <div className="col-span-1 text-center text-gray-500 text-sm">{index + 1}</div>
                      <div className="col-span-5">
-                       <input type="number" value={tier.quantity} onChange={(e) => updateTier(index, 'quantity', e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-500" placeholder="Qty" />
+                       <input min={0} type="number" value={tier.quantity} onChange={(e) => updateTier(index, 'quantity', e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-500" placeholder="Qty" />
                      </div>
                      <div className="col-span-5">
-                       <input type="number" value={tier.discount} onChange={(e) => updateTier(index, 'discount', e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-500" placeholder="%" />
+                       <input min={0} type="number" value={tier.discount} onChange={(e) => updateTier(index, 'discount', e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-500" placeholder="%" />
                      </div>
                      <div className="col-span-1 flex justify-center">
                        {tiers.length > 1 && <button onClick={() => removeTier(index)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>}
@@ -359,7 +353,6 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
             </div>
           </section>
 
-          {/* ... Start/End Date, Description, Images Sections remain identical ... */}
           <section className="space-y-4">
             <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900 uppercase tracking-wide border-b border-gray-100 pb-2">
               <Calendar size={16} className="text-blue-600" /> Timeline <span className="text-red-500">*</span>

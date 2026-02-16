@@ -5,13 +5,11 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, ShieldCheck, Store, ArrowRight } from 'lucide-react';
 import { sendLoginOtp, verifyLoginOtp } from '@/lib/api/auth';
 import { useVendorStore } from '@/lib/store/authStore';
-import { toast } from 'sonner';
 
 export default function VendorLoginPage() {
   const router = useRouter();
   const { setAuth } = useVendorStore();
 
-  // --- State ---
   const [step, setStep] = useState<'input' | 'otp'>('input');
   const [inputValue, setInputValue] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -54,7 +52,7 @@ export default function VendorLoginPage() {
 
   // --- Helpers ---
   const validateInput = (value: string) => {
-    const cleanValue = value.replace(/\s+/g, ''); 
+    const cleanValue = value.replace(/\s+/g, '');          // removing leading spaces
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^[0-9]{10}$/; 
     
@@ -73,6 +71,7 @@ export default function VendorLoginPage() {
     }
 
     setIsLoading(true);
+    setOtp(['', '', '', '', '', ''])
     setError(null);
 
     try {
@@ -128,11 +127,11 @@ export default function VendorLoginPage() {
     }
   };
 
-  // --- OTP Logic (Improved) ---
+  // --- OTP Logic ---
   const handleOtpChange = (index: number, value: string) => {
     if (isNaN(Number(value))) return;
     const newOtp = [...otp];
-    // Take only the last char (allows replacing a digit easily)
+    // Take only the last char
     newOtp[index] = value.substring(value.length - 1);
     setOtp(newOtp);
     
@@ -153,7 +152,7 @@ export default function VendorLoginPage() {
     }
   };
 
-  // New: Handle Paste Event
+  //Handle Paste
   const handleOtpPaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text').slice(0, 6).split('');
@@ -167,18 +166,17 @@ export default function VendorLoginPage() {
       const focusIndex = Math.min(pastedData.length, 5);
       otpRefs.current[focusIndex]?.focus();
       
-      // Optional: Auto-submit if full
+      // Auto-submit if full
       if (pastedData.length === 6) {
         // You might want to wait a tick or just let user click verify
-        // handleVerifyOtp(); 
+        handleVerifyOtp(); 
       }
     }
   };
   
   return(
   <div className="min-h-screen flex bg-white font-sans text-slate-900">
-      
-      {/* LEFT SIDE: Form */}
+      {/* LEFT SIDE: Login Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 sm:p-12 lg:p-24 relative">
         
         {/* Logo */}
@@ -206,15 +204,15 @@ export default function VendorLoginPage() {
               </button>
             )}
             
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
-              {step === 'input' ? 'Welcome Back' : 'Verify Account'}
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-wide mb-3">
+              {step === 'input' ? 'Login/signup' : 'Verify Account'}
             </h1>
             <p className="text-gray-500 text-lg">
               {step === 'input' 
                 ? 'Enter your email or mobile number to access your dashboard.' 
                 : <span>
                     Enter the code sent to your {inputLabel} <br/> 
-                    <span className="font-semibold text-gray-900">{inputValue}</span>
+                    <span className="font-semibold text-gray-800">{inputValue}</span>
                   </span>}
             </p>
           </div>
@@ -330,7 +328,7 @@ export default function VendorLoginPage() {
         </div>
       </div>
 
-      {/* RIGHT SIDE: Branding (Unchanged) */}
+      {/* RIGHT SIDE: Branding */}
       <div className="hidden lg:flex w-1/2 bg-slate-900 relative overflow-hidden items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-slate-900 opacity-90" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />

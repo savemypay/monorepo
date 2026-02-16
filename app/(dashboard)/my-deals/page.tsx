@@ -14,6 +14,8 @@ const getStatusColor = (status: string) => {
     case 'active': return 'bg-green-50 text-green-700 border-green-200';
     case 'draft': return 'bg-gray-100 text-gray-700 border-gray-200';
     case 'expired': return 'bg-red-50 text-red-700 border-red-200';
+    case 'filled': return 'bg-blue-50 text-blue-700 border-bule-200';
+    case 'expired': return 'bg-red-50 text-red-700 border-red-200';
     default: return 'bg-blue-50 text-blue-700 border-blue-200';
   }
 };
@@ -83,7 +85,7 @@ export default function MyPoolsPage() {
           <div className="w-full max-w-xs">
             <div className="flex justify-between text-xs mb-1">
               <span className="font-medium text-gray-700">{deal.slots_sold} / {deal.total_qty} Sold</span>
-              <span className="text-gray-400">{percentage.toFixed(0)}%</span>
+              <span className="text-gray-400">({percentage.toFixed(0)}%)</span>
             </div>
             <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
               <div 
@@ -159,7 +161,7 @@ export default function MyPoolsPage() {
 
       {/* Filter Tabs */}
       <div className="flex gap-2 border-b border-gray-200 pb-4 overflow-x-auto">
-          {['All', 'Active', 'Draft', 'Expired'].map((f) => (
+          {['All', 'Draft', 'Active', 'filled', 'Expired', 'Cancelled'].map((f) => (
             <button 
               key={f}
               onClick={() => setFilter(f)}

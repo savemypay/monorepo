@@ -20,7 +20,7 @@ function LeadsContent() {
       try {
         setLoading(true);
         // Pass ad_id if it exists in URL, otherwise fetches all
-        const response = await getLeads(adIdFromUrl || 2);
+        const response = await getLeads(adIdFromUrl || '');
         
         if (response.success) {
           setLeads(response.data);
@@ -39,7 +39,7 @@ function LeadsContent() {
   const getStatusStyle = (status: string) => {
     // Map your API status strings to colors
     switch (status.toLowerCase()) {
-      case 'success':
+      case 'succeeded':
       case 'purchased': return 'bg-green-100 text-green-700';
       case 'verified': return 'bg-blue-50 text-blue-700';
       case 'pending': return 'bg-yellow-50 text-yellow-700';
@@ -99,12 +99,11 @@ function LeadsContent() {
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-gray-500 font-semibold border-b border-gray-100">
                 <tr>
-                  <th className="px-6 py-4 whitespace-nowrap">Token ID</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Order ID</th>
                   <th className="px-6 py-4">Customer Name</th>
-                  <th className="px-6 py-4">Deal Interest</th>
                   <th className="px-6 py-4">Contact</th>
                   <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Action</th>
+                  <th className="px-6 py-4 text-right">Token Amount</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -118,31 +117,22 @@ function LeadsContent() {
                   filteredLeads.map((lead) => (
                     <tr key={lead.payment_id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 font-mono font-medium text-blue-600">
-                        #{lead.payment_id}
+                        #{lead.order_id}
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-800">
-                        {lead.user_name || "Unknown"}
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {/* Fallback if ad title is missing */}
-                        {lead.ad?.title || "Deal #" + (lead.deal_ref || "N/A")}
+                        {lead.user_name || "NA"}
                       </td>
                       <td className="px-6 py-4 text-gray-500">
-                        {lead.user_phone_number}
+                        {lead.user_phone_number || lead.user_email}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1 capitalize ${getStatusStyle(lead.status)}`}>
-                          {lead.status.toLowerCase() === 'success' && <Check size={12} />}
+                          {lead.status.toLowerCase() === 'succeeded' && <Check size={12}/>}
                           {lead.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {/* Only show verify button if status is 'pending' (example logic) */}
-                        {lead.status.toLowerCase() === 'pending' && (
-                          <button className="text-blue-600 hover:text-blue-800 font-medium text-xs border border-blue-200 px-3 py-1 rounded hover:bg-blue-50 transition-colors">
-                            Verify
-                          </button>
-                        )}
+                        {lead.amount}
                       </td>
                     </tr>
                   ))
