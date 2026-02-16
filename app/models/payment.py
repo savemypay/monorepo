@@ -33,6 +33,7 @@ class PaymentInitResponse(ApiResponse[PaymentResponseData]):
 
 class PaidUserEntry(BaseModel):
     payment_id: int
+    order_id: Optional[str] = None
     deal_ref: Optional[str]
     customer_ref: Optional[str]
     amount: int

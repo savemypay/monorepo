@@ -114,16 +114,17 @@ async def issue_otp(db: Session, audience: Audience, payload: LoginRequest) -> i
     identifier = _get_identifier(payload)
 
     now = _now()
-    existing = _latest_active(db, audience, identifier)
-    if existing and (now - existing.created_at).total_seconds() < OTP_RESEND_COOLDOWN_SECONDS:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=error_response(
-                message="Please wait before requesting another OTP",
-                code="otp_throttled",
-                details={"retry_after_seconds": OTP_RESEND_COOLDOWN_SECONDS},
-            ),
-        )
+    if OTP_RESEND_COOLDOWN_SECONDS > 0:
+        existing = _latest_active(db, audience, identifier)
+        if existing and (now - existing.created_at).total_seconds() < OTP_RESEND_COOLDOWN_SECONDS:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=error_response(
+                    message="Please wait before requesting another OTP",
+                    code="otp_throttled",
+                    details={"retry_after_seconds": OTP_RESEND_COOLDOWN_SECONDS},
+                ),
+            )
 
     # Create new OTP
     code = _generate_code(OTP_CODE_LENGTH)

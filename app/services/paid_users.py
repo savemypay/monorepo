@@ -38,6 +38,7 @@ def list_paid_users(db: Session, *, role: str, vendor_id: Optional[int], ad_id: 
     return [
         {
             "payment_id": p.id,
+            "order_id": p.provider_payment_id,
             "deal_ref": p.deal_ref,
             "customer_ref": p.customer_ref,
             "amount": p.amount,
