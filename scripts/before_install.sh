@@ -5,6 +5,5 @@ set -euo pipefail
 if [ -f "/home/ubuntu/backend/.env" ]; then
   cp /home/ubuntu/backend/.env /home/ubuntu/.env
 fi
-sudo rm -rf /home/ubuntu/backend/*
-sudo mkdir -p /home/ubuntu/backend
-sudo chown -R ubuntu:ubuntu /home/ubuntu/backend
+rm -rf /home/ubuntu/backend/*
+mkdir -p /home/ubuntu/backend
