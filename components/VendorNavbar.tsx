@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   LogOut, 
   User, 
@@ -19,6 +19,7 @@ interface NavbarProps {
 
 export default function VendorNavbar({ onMenuClick }: NavbarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { vendor, logout } = useVendorStore();
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -37,6 +38,7 @@ export default function VendorNavbar({ onMenuClick }: NavbarProps) {
 
   const handleLogout = () => {
     logout(); // 1. Clear Zustand state & localStorage
+    document.cookie = "vendor_authenticated=; Path=/; Max-Age=0; SameSite=Lax";
     router.replace('/login'); // 2. Redirect
   };
 
@@ -45,8 +47,16 @@ export default function VendorNavbar({ onMenuClick }: NavbarProps) {
   const businessName = vendor?.business_name || "My Business";
   const initials = ownerName.slice(0, 2).toUpperCase();
 
+  const pageTitleByPath: Record<string, string> = {
+    "/": "Overview",
+    "/my-deals": "My Deals",
+    "/leads": "Leads",
+    "/earnings": "Earnings",
+  };
+  const pageTitle = pageTitleByPath[pathname] || "Vendor Portal";
+
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-20 h-16 px-8 flex items-center justify-between shadow-sm">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-20 h-16 px-4 sm:px-8 flex items-center justify-between shadow-sm">
       
       {/* Left: Page Title */}
       <div className="flex items-center gap-3">
@@ -58,18 +68,17 @@ export default function VendorNavbar({ onMenuClick }: NavbarProps) {
           <Menu size={24} />
         </button>
         
-        <h2 className="text-xl font-bold text-gray-800">Overview</h2>
+        <h2 className="text-xl font-bold text-gray-800">{pageTitle}</h2>
       </div>
 
       {/* Right: Actions & Profile */}
       <div className="flex items-center gap-6">
         
         {/* Notification Bell */}
-        <button className="relative text-gray-500 hover:text-gray-700 transition p-2 rounded-full hover:bg-gray-100">
+        {/* <button className="relative text-gray-500 hover:text-gray-700 transition p-2 rounded-full hover:bg-gray-100">
           <Bell size={20} />
-          {/* Red Dot */}
           <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
-        </button>
+        </button> */}
 
         {/* Divider */}
         <div className="h-6 w-px bg-gray-200"></div>

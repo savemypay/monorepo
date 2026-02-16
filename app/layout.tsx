@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 const satoshi = localFont({
   src: "./fonts/Satoshi-Variable.ttf",
   display: "swap",
+  variable: "--font-satoshi",
 });
 const satoshi_italic = localFont({
   src: "./fonts/Satoshi-VariableItalic.ttf",
@@ -25,11 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${satoshi.className} ${satoshi_italic.variable} antialiased`}
+        className={`${satoshi.variable} ${satoshi_italic.variable} antialiased`}
       >
-            <main className="relative z-0 w-full ">
-               <main className="h-full w-full">{children}</main>
-            </main>
+        <main className="relative z-0 h-full w-full">{children}</main>
       </body>
     </html>
   );

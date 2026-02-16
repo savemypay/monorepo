@@ -3,17 +3,17 @@
 import CreatePoolModal from '@/components/CreatePoolModal';
 import { 
     Users, 
-    DollarSign, 
+    IndianRupeeIcon, 
     ShoppingBag, 
     CheckCircle,
-    ArrowUpRight 
+    ArrowUpRight, 
   } from 'lucide-react';
 import { useState } from 'react';
 
 const stats = [
   { title: 'Active Pools', value: '3', icon: ShoppingBag, change: '+1 this week', color: 'text-blue-600', bg: 'bg-blue-50' },
   { title: 'Total Leads', value: '142', icon: Users, change: '+12% vs last month', color: 'text-purple-600', bg: 'bg-purple-50' },
-  { title: 'Revenue Potential', value: '$45,000', icon: DollarSign, change: 'Pending Closure', color: 'text-green-600', bg: 'bg-green-50' },
+  { title: 'Revenue Potential', value: '₹45,000', icon: IndianRupeeIcon, change: 'Pending Closure', color: 'text-green-600', bg: 'bg-green-50' },
   { title: 'Pool Success Rate', value: '85%', icon: CheckCircle, change: 'High Performance', color: 'text-orange-600', bg: 'bg-orange-50' },
 ];
   

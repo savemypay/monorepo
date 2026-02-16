@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, ChangeEvent } from 'react';
-import { X, Plus, Trash2, Upload, Image as ImageIcon, Calendar, DollarSign, Layers, Loader2, AlertCircle } from 'lucide-react';
+import { useState, useRef, ChangeEvent, useEffect } from 'react';
+import { X, Plus, Trash2, Upload, Image as ImageIcon, Calendar, Layers, Loader2, AlertCircle } from 'lucide-react';
 import { useVendorStore } from '@/lib/store/authStore';
+import { createDeal } from '@/lib/api/deals';
 import Image from 'next/image';
 
 // --- Interfaces ---
@@ -43,12 +44,11 @@ interface FormErrors {
 
 export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewsRef = useRef<string[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [globalError, setGlobalError] = useState<string | null>(null);
-
-  const accessToken = useVendorStore(state => state.accessToken);
 
   const [form, setForm] = useState<FormState>({
     title: '',
@@ -66,6 +66,18 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
   const [tiers, setTiers] = useState<DiscountTier[]>([{ quantity: '', discount: '' }]);
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+
+  const vendorId = useVendorStore(state => state.vendor?.id);
+
+  useEffect(() => {
+    previewsRef.current = previews;
+  }, [previews]);
+
+  useEffect(() => {
+    return () => {
+      previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview));
+    };
+  }, []);
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -109,6 +121,7 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
       const start = new Date(form.startDate);
       const end = new Date(form.endDate);
       const now = new Date();
+      now.setHours(0, 0, 0, 0);
       if (start < now) newErrors.startDate = "Start Date cannot be in the past";
       if (end <= start) newErrors.endDate = "End Date must be after Start Date";
     }
@@ -179,6 +192,7 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
   };
 
   const removeImage = (index: number) => {
+    URL.revokeObjectURL(previews[index]);
     setImages(prev => prev.filter((_, i) => i !== index));
     setPreviews(prev => prev.filter((_, i) => i !== index));
   };
@@ -195,6 +209,10 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
     setIsLoading(true);
 
     try {
+      if (!vendorId) {
+        throw new Error("Vendor not found. Please login again.");
+      }
+
       const imageStrings = await Promise.all(images.map(file => fileToBase64(file)));
 
       const formattedTiers = tiers.map((tier, index) => ({
@@ -216,20 +234,11 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
         terms: form.terms,
         valid_from: new Date(form.startDate).toISOString(),
         valid_to: new Date(form.endDate).toISOString(),
-        vendor_id: 1,
-        token_amount: form.tokenAmount // Now dynamic
+        vendor_id: vendorId,
+        token_amount: Number(form.tokenAmount)
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/ads`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': `BEARER ${accessToken}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) throw new Error("Failed to create deal. Please try again.");
+      await createDeal(payload);
       onClose();
 
     } catch (err: unknown) {
@@ -295,29 +304,21 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Original Price <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
-                  <input name="originalPrice" value={form.originalPrice} onChange={handleInputChange} type="number" className={`${getInputClass(!!errors.originalPrice)} pl-8`} placeholder="50000" />
+                  <input min={0} name="originalPrice" value={form.originalPrice} onChange={handleInputChange} type="number" className={`${getInputClass(!!errors.originalPrice)} pl-8`} placeholder="50000" />
                 </div>
                 {errors.originalPrice && <p className="text-xs text-red-500 mt-1">{errors.originalPrice}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Token Amount <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
-                  <input name="tokenAmount" value={form.tokenAmount} onChange={handleInputChange} type="number" className={`${getInputClass(!!errors.tokenAmount)} pl-8`} placeholder="5000" />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
+                  <input min={0} name="tokenAmount" value={form.tokenAmount} onChange={handleInputChange} type="number" className={`${getInputClass(!!errors.tokenAmount)} pl-8`} placeholder="5000" />
                 </div>
                 {errors.tokenAmount && <p className="text-xs text-red-500 mt-1">{errors.tokenAmount}</p>}
               </div>
-            </div>
-          </section>
-
-          <section className="space-y-4">
-             <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900 uppercase tracking-wide border-b border-gray-100 pb-2">
-              <DollarSign size={16} className="text-blue-600" /> Deal Rules
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-gray-50 p-5 rounded-xl border border-gray-100">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Total Qty (Min Buyers) <span className="text-red-500">*</span></label>
-                <input name="minBuyers" value={form.minBuyers} onChange={handleInputChange} type="number" className={getInputClass(!!errors.minBuyers)} placeholder="10" />
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Total Qty (Min Buyers) <span className="text-red-500">*</span></label>
+                <input min={0} name="minBuyers" value={form.minBuyers} onChange={handleInputChange} type="number" className={getInputClass(!!errors.minBuyers)} placeholder="10" />
                 {errors.minBuyers && <p className="text-xs text-red-500 mt-1">{errors.minBuyers}</p>}
               </div>
             </div>
@@ -345,10 +346,10 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
                    <div key={index} className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-white transition-colors">
                      <div className="col-span-1 text-center text-gray-500 text-sm">{index + 1}</div>
                      <div className="col-span-5">
-                       <input type="number" value={tier.quantity} onChange={(e) => updateTier(index, 'quantity', e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-500" placeholder="Qty" />
+                       <input min={0} type="number" value={tier.quantity} onChange={(e) => updateTier(index, 'quantity', e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-500" placeholder="Qty" />
                      </div>
                      <div className="col-span-5">
-                       <input type="number" value={tier.discount} onChange={(e) => updateTier(index, 'discount', e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-500" placeholder="%" />
+                       <input min={0} type="number" value={tier.discount} onChange={(e) => updateTier(index, 'discount', e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-500" placeholder="%" />
                      </div>
                      <div className="col-span-1 flex justify-center">
                        {tiers.length > 1 && <button onClick={() => removeTier(index)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>}
@@ -359,7 +360,6 @@ export default function CreatePoolModal({ onClose }: CreatePoolModalProps) {
             </div>
           </section>
 
-          {/* ... Start/End Date, Description, Images Sections remain identical ... */}
           <section className="space-y-4">
             <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900 uppercase tracking-wide border-b border-gray-100 pb-2">
               <Calendar size={16} className="text-blue-600" /> Timeline <span className="text-red-500">*</span>
