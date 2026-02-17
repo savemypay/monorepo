@@ -64,12 +64,12 @@ export default function DealCard({
         </div>
 
         {/* Favorite Button */}
-        <button
+        {/* <button
           onClick={handleFavorite}
           className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-sm text-gray-500 hover:text-red-500 hover:bg-white transition-all z-10"
         >
           <Heart size={18} />
-        </button>
+        </button> */}
 
         {/* Timer Badge */}
         <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-md text-white text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 z-10 border border-white/10">

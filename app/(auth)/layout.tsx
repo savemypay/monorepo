@@ -1,32 +1,20 @@
-"use client";
+import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
+import CustomerNavbar from "@/components/CustomerNavbar";
 
-import Link from "next/link";
-import { ShoppingBag, ArrowLeft } from "lucide-react";
+export const metadata: Metadata = buildMetadata({
+  title: "Login | SaveMyPay",
+  description:
+    "Sign in to SaveMyPay with secure OTP verification to manage deals, saved pools, and purchases.",
+  path: "/login",
+});
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Simple Header */}
-      <header className="bg-white border-b border-gray-100 py-4 px-6 md:px-12 flex justify-between items-center sticky top-0 z-10">
-        <Link href="/customer" className="flex items-center gap-1.5">
-          <div className="bg-blue-600 text-white p-1.5 rounded-lg">
-            <ShoppingBag size={20} strokeWidth={2.5} />
-          </div>
-          <span className="font-extrabold text-2xl tracking-tight text-slate-900">
-            Save<span className="text-blue-600">My</span>Pay
-          </span>
-        </Link>
-        
-        <Link 
-            href="/customer" 
-            className="text-sm font-medium text-gray-500 hover:text-blue-600 flex items-center gap-1 transition-colors"
-        >
-            <ArrowLeft size={16} /> Back to Home
-        </Link>
-      </header>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <CustomerNavbar />
 
-      {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-4 md:p-8">
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8 bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.08),_transparent_45%),radial-gradient(circle_at_bottom_left,_rgba(2,132,199,0.08),_transparent_50%)]">
         {children}
       </main>
     </div>

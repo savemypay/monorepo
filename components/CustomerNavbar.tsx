@@ -7,7 +7,7 @@ import { useAuthStore } from "@/lib/store/authStore"; // Import Store
 
 export default function CustomerNavbar() {
   // Use Zustand Store for everything
-  const { user, isAuthenticated, logout, openLoginModal } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -59,9 +59,9 @@ export default function CustomerNavbar() {
               /* LOGGED IN VIEW */
               <>
                 <div className="flex items-center gap-2">
-                  <Link href="/customer/saved" className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                  {/* <Link href="/customer/saved" className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
                     <Heart size={22} />
-                  </Link>
+                  </Link> */}
                   <Link href="/customer/my-deals" className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
                     <ShoppingBag size={22} />
                   </Link>
@@ -83,16 +83,16 @@ export default function CustomerNavbar() {
                   {isProfileOpen && (
                     <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2">
                       <div className="px-5 py-3 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+                        <p className="text-sm font-semibold text-gray-900 truncate">{user.name || `User #${user.id}`}</p>
                         <p className="text-xs text-gray-500 truncate">{user.email || user.phone_number}</p>
                       </div>
                       <div className="py-2">
                         <Link href="/customer/my-deals" className="flex items-center gap-3 px-5 py-2 text-sm text-gray-700 hover:bg-gray-50">
                           <ShoppingBag size={18} /> My Orders
                         </Link>
-                        <Link href="/customer/saved" className="flex items-center gap-3 px-5 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        {/* <Link href="/customer/saved" className="flex items-center gap-3 px-5 py-2 text-sm text-gray-700 hover:bg-gray-50">
                           <Heart size={18} /> Saved Deals
-                        </Link>
+                        </Link> */}
                       </div>
                       <div className="border-t border-gray-100 py-2">
                         <button onClick={logout} className="flex w-full items-center gap-3 px-5 py-2 text-sm text-red-600 hover:bg-red-50">
@@ -107,7 +107,7 @@ export default function CustomerNavbar() {
               /* GUEST VIEW */
               <Link 
                 href="/login"
-                className="bg-gray-900 text-white px-6 py-2.5 rounded-full font-medium text-sm hover:bg-gray-800 transition-all shadow-md active:scale-95"
+                className="bg-blue-600 text-white px-6 py-2 rounded-full font-medium text-sm hover:bg-gray-800 transition-all shadow-md active:scale-95"
               >
                 Login
               </Link>
@@ -147,16 +147,16 @@ export default function CustomerNavbar() {
                        {(user.email?.[0] || user.phone_number?.[0] || 'U').toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">User #{user.id}</p>
+                      <p className="text-sm font-semibold text-gray-900">{user.name || `User #${user.id}`}</p>
                       <p className="text-xs text-gray-500">{user.email || user.phone_number}</p>
                     </div>
                  </div>
                  <Link href="/customer/my-deals" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-600 hover:bg-gray-100 font-medium">
                    <ShoppingBag size={20} /> My Orders
                  </Link>
-                 <Link href="/customer/saved" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-600 hover:bg-gray-100 font-medium">
+                 {/* <Link href="/customer/saved" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-600 hover:bg-gray-100 font-medium">
                    <Heart size={20} /> Favorites
-                 </Link>
+                 </Link> */}
                  <button onClick={() => { logout(); setIsMenuOpen(false); }} className="flex w-full items-center gap-3 px-3 py-3 rounded-xl text-red-600 hover:bg-red-50 font-medium">
                    <LogOut size={20} /> Logout
                  </button>
