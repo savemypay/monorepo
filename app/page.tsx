@@ -8,6 +8,15 @@ import Web3Gateway from "@/components/Home/Web3Gateway";
 import Categories from "@/components/Home/categories";
 import Hero from "@/components/Home/hero";
 import Navbar from "@/components/Home/navbar";
+import type { Metadata } from "next";
+import { buildMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildMetadata({
+  title: "SaveMyPay | Power in Numbers, Savings in Bulk",
+  description:
+    "Join curated group deals on SaveMyPay and access exclusive pricing from verified vendors with transparent progress and timelines.",
+  path: "/",
+});
 
 export default function Home() {
   return (

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter, usePathname } from 'next/navigation'; // Added imports
 import { Clock, Users, Heart, ArrowRight } from "lucide-react";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuthStore } from "@/lib/store/authStore"; // Use Store
 
 interface DealCardProps {
   id: number | string;
@@ -26,7 +27,9 @@ export default function DealCard({
   target,
   endsIn,
 }: DealCardProps) {
-  const { user, openLoginModal } = useAuth();
+  const router = useRouter()
+  const pathname = usePathname();
+  const { user } = useAuthStore(); // Changed from useAuth to useAuthStore
 
   const progress = Math.min((joined / target) * 100, 100);
   const isFillingFast = progress >= 70;
@@ -34,7 +37,7 @@ export default function DealCard({
   const handleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!user) openLoginModal();
+    if (!user) router.push(`/login?redirect=${pathname}`);
     else alert("Added to favorites!");
   };
 
@@ -61,12 +64,12 @@ export default function DealCard({
         </div>
 
         {/* Favorite Button */}
-        <button
+        {/* <button
           onClick={handleFavorite}
           className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-sm text-gray-500 hover:text-red-500 hover:bg-white transition-all z-10"
         >
           <Heart size={18} />
-        </button>
+        </button> */}
 
         {/* Timer Badge */}
         <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-md text-white text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 z-10 border border-white/10">
