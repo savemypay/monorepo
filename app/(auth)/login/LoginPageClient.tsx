@@ -9,8 +9,9 @@ import { AuthData, sendLoginOtp, verifyLoginOtp } from '@/lib/api/auth';
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setAuth } = useAuthStore();
+  const { setAuth, user, accessToken, isAuthenticated, hasHydrated } = useAuthStore();
   const redirectUrl = searchParams.get('redirect') || '/customer';
+  const safeRedirectUrl = redirectUrl === '/login' ? '/customer' : redirectUrl;
 
   // State
   const [step, setStep] = useState<'input' | 'otp' | 'name'>('input');
@@ -35,6 +36,13 @@ export default function LoginPage() {
     if (step === 'otp') otpRefs.current[0]?.focus();
     if (step === 'name') nameRef.current?.focus();
   }, [step]);
+
+  useEffect(() => {
+    if (!hasHydrated) return;
+    if (isAuthenticated || (user && accessToken)) {
+      router.replace(safeRedirectUrl);
+    }
+  }, [hasHydrated, isAuthenticated, user, accessToken, router, safeRedirectUrl]);
 
   useEffect(() => {
     if (step !== 'otp' || resendTimer <= 0) return;
@@ -121,7 +129,7 @@ export default function LoginPage() {
         if (!authData.is_new_user) {
              // User exists and has flag -> Login immediately
              setAuth(authData.access_token, authData.refresh_token, authData.user);
-             router.push(redirectUrl);
+             router.push(safeRedirectUrl);
         } else {
              // User is new -> Go to Name step
              setStep('name');
@@ -169,7 +177,7 @@ export default function LoginPage() {
       );
 
       // Redirect
-      router.push(redirectUrl);
+      router.push(safeRedirectUrl);
 
     } catch {
       setError("Failed to complete login. Please try again.");
@@ -243,6 +251,17 @@ export default function LoginPage() {
 
   const currentStep = step === 'input' ? 0 : step === 'otp' ? 1 : 2;
   const stepItems = ['Identity', 'Verification', 'Profile'];
+
+  if (!hasHydrated || isAuthenticated || (user && accessToken)) {
+    return (
+      <div className="w-full max-w-5xl min-h-[580px] rounded-3xl border border-slate-200 bg-white flex items-center justify-center">
+        <div className="flex items-center gap-2 text-sm text-slate-500">
+          <Loader2 size={16} className="animate-spin" />
+          Redirecting...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_50px_-25px_rgba(15,23,42,0.35)]">
