@@ -1,6 +1,7 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import type { Metadata } from "next";
+import { buildMetadata, getSiteUrl } from "@/lib/seo";
 
 const satoshi = localFont({
   src: "./fonts/Satoshi-Variable.ttf",
@@ -13,9 +14,14 @@ const satoshi_italic = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Save My Pay",
-  description: "Save my pay - Power in numbers and savings in bulk",
-}; 
+  metadataBase: new URL(getSiteUrl()),
+  ...buildMetadata({
+    title: "SaveMyPay | Group Buying Deals & Bulk Savings",
+    description:
+      "SaveMyPay helps buyers unlock better prices through trusted group deals across automotive, travel, electronics, and more.",
+    path: "/",
+  }),
+};
 
 export default function RootLayout({
   children,
