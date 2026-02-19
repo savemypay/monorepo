@@ -39,7 +39,7 @@ const IMPACTS = [
               Real Results, Real Savings
             </h2>
             <p className="text-gray-500 max-w-2xl mx-auto">
-              The numbers that matter—real impact for our growing community
+              The numbers that matter-real impact for our growing community
             </p>
           </div>
   

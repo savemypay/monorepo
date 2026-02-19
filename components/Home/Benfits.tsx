@@ -57,7 +57,7 @@ const BENEFITS = [
               What Makes Us Different
             </h2>
             <p className="text-white/75 max-w-2xl mx-auto text-lg md:text-xl">
-              More than a marketplace — a smarter way to buy together.
+              More than a marketplace - a smarter way to buy together.
             </p>
           </div>
   
