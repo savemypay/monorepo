@@ -35,7 +35,9 @@ def list_customer_purchases(db: Session, customer_id: str) -> List[dict]:
         entries.append(
             {
                 "payment_id": p.id,
+                "order_id": p.provider_payment_id,
                 "deal_ref": p.deal_ref,
+                "customer_ref": p.customer_ref,
                 "amount": p.amount,
                 "currency": p.currency,
                 "status": p.status,

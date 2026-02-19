@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 
@@ -60,6 +60,21 @@ def get_current_user(
 ) -> dict:
     """Allow any authenticated role (customer/vendor/admin)."""
     return decode_token(creds.credentials)
+
+
+def get_current_user_optional(
+    authorization: str | None = Header(default=None),
+) -> dict | None:
+    """Allow anonymous access, but decode token when present."""
+    if not authorization:
+        return None
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=error_response(message="Invalid token", code="invalid_token"),
+        )
+    return decode_token(token)
 
 
 def get_current_customer(

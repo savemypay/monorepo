@@ -1,6 +1,7 @@
 from typing import List, Optional
+from decimal import Decimal
 
-from sqlalchemy import Integer, cast
+from sqlalchemy import Integer, String, cast, func
 from sqlalchemy.orm import Session
 
 from app.entities.ad import Ad
@@ -51,3 +52,35 @@ def list_paid_users(db: Session, *, role: str, vendor_id: Optional[int], ad_id: 
         }
         for p in payments
     ]
+
+
+def get_dashboard_summary(db: Session, vendor_id: Optional[int]) -> dict:
+    active_ads_q = db.query(func.count(Ad.id)).filter(Ad.status == "active")
+    if vendor_id is not None:
+        active_ads_q = active_ads_q.filter(Ad.vendor_id == vendor_id)
+    active_ads = active_ads_q.scalar() or 0
+
+    payments_q = (
+        db.query(Payment)
+        .join(Ad, cast(Ad.id, String) == Payment.deal_ref)
+        .filter(Payment.status == PaymentStatus.SUCCEEDED)
+    )
+    if vendor_id is not None:
+        payments_q = payments_q.filter(Ad.vendor_id == vendor_id)
+
+    total_leads = (
+        payments_q
+        .filter(Payment.customer_ref.isnot(None))
+        .with_entities(func.count(func.distinct(Payment.customer_ref)))
+        .scalar()
+        or 0
+    )
+
+    total_revenue_minor = payments_q.with_entities(func.coalesce(func.sum(Payment.amount), 0)).scalar() or 0
+    total_revenue = float(Decimal(total_revenue_minor) / Decimal("100"))
+
+    return {
+        "active_ads": int(active_ads),
+        "total_leads": int(total_leads),
+        "total_revenue": total_revenue,
+    }

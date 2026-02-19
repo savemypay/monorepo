@@ -51,3 +51,13 @@ class PaidUserEntry(BaseModel):
 
 class PaidUsersResponse(ApiResponse[PaidUserEntry]):
     pass
+
+
+class DashboardSummaryData(BaseModel):
+    active_ads: int
+    total_leads: int
+    total_revenue: float
+
+
+class DashboardSummaryResponse(ApiResponse[DashboardSummaryData]):
+    pass

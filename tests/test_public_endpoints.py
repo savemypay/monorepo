@@ -100,6 +100,49 @@ def test_onboard_vendor_validation_error_missing_phone(client, test_db):
     assert res.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
+def test_list_ads_public_only_active(client, test_db: Session):
+    active_ad_id = create_ad(test_db, title="Active Deal", vendor_id=100, status="active")
+    create_ad(test_db, title="Draft Deal", vendor_id=100, status="draft")
+    create_ad(test_db, title="Another Active Deal", vendor_id=200, status="active")
+
+    res = client.get("/api/v1/ads")
+    assert res.status_code == HTTPStatus.OK
+    body = res.json()
+    assert body["success"] is True
+
+    statuses = [ad["status"] for ad in body["data"]]
+    ids = [ad["id"] for ad in body["data"]]
+    assert len(statuses) == 2
+    assert all(status == "active" for status in statuses)
+    assert active_ad_id in ids
+
+
+def create_ad(db_session, title: str, vendor_id: int, status: str):
+    from app.entities.ad import Ad
+    from app.entities.ad_tier import AdTier
+
+    ad = Ad(
+        vendor_id=vendor_id,
+        title=title,
+        product_name="Sample Product",
+        original_price=100.0,
+        token_amount=10.0,
+        total_qty=10,
+        slots_remaining=10,
+        status=status,
+        category="Auto",
+        images=[],
+    )
+    db_session.add(ad)
+    db_session.flush()
+
+    tier = AdTier(ad_id=ad.id, seq=1, qty=10, discount_pct=0, label="Default")
+    db_session.add(tier)
+    db_session.commit()
+    db_session.refresh(ad)
+    return ad.id
+
+
 def create_category(db_session, name):
     from app.entities.category import Category
 
