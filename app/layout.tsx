@@ -6,10 +6,12 @@ import { buildMetadata, getSiteUrl } from "@/lib/seo";
 const satoshi = localFont({
   src: "./fonts/Satoshi-Variable.ttf",
   display: "swap",
+  fallback: ["Inter", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
 });
 const satoshi_italic = localFont({
   src: "./fonts/Satoshi-VariableItalic.ttf",
   display: "swap",
+  fallback: ["Inter", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
   variable: "--font-satoshi-i",
 });
 
