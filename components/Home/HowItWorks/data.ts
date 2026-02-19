@@ -1,7 +1,7 @@
 export const CUSTOMER_STEPS = [
     {
       title: "Browse & Express Interest",
-      desc: "Explore our featured categories and indicate what you're interested in purchasing. Simply signal your intent—no commitment or payment required at this stage.",
+      desc: "Explore our featured categories and indicate what you're interested in purchasing. Simply signal your intent-no commitment or payment required at this stage.",
     },
     {
       title: "We Aggregate Demand",

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -13,23 +14,42 @@ import { Button } from "@/components/ui/button";
 import { submitCustomer, submitVendor } from "@/lib/api/join";
 
 type JoinForm = {
-  name?: string;
-  email?: string;
-  phone_number?: string;
-  category?: string;
-  comments?: string;
+  name: string;
+  email: string;
+  phone_number: string;
+  category: string;
+  comments: string;
 };
 
 type DialogType = "customer" | "vendor" | null;
 
-const CATEGORIES = [
-  "Insurance",
-  "Automation",
-  "Real Estate",
-  "Electronics",
-  "Other",
-];
+const CATEGORIES = ["Insurance", "Automation", "Real Estate", "Electronics", "Other"];
 
+const INITIAL_FORM: JoinForm = {
+  name: "",
+  email: "",
+  phone_number: "",
+  category: "",
+  comments: "",
+};
+
+const CUSTOMER_COPY = {
+  badge: "Customer onboarding",
+  title: "Start Saving with Group Buying",
+  description:
+    "Share your details and we will match you with active high-value deals in your preferred categories.",
+  submitLabel: "Get Started",
+  successMessage: "Your request was submitted. Our team will connect you with the next available deals.",
+};
+
+const VENDOR_COPY = {
+  badge: "Vendor onboarding",
+  title: "Become a Vendor Partner",
+  description:
+    "Join the SaveMyPay network to receive demand from qualified bulk buyers and close deals faster.",
+  submitLabel: "Join Vendor Network",
+  successMessage: "Thanks for registering. Our partnerships team will contact you shortly.",
+};
 
 export function JoinDialog({
   open,
@@ -40,13 +60,13 @@ export function JoinDialog({
   onOpenChange: (open: boolean) => void;
   type: DialogType;
 }) {
-  const [form, setForm] = useState<JoinForm>({});
+  const [form, setForm] = useState<JoinForm>(INITIAL_FORM);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const resetState = () => {
-    setForm({});
+    setForm(INITIAL_FORM);
     setError("");
     setSuccess(false);
     setLoading(false);
@@ -60,57 +80,32 @@ export function JoinDialog({
 
   if (!type) return null;
 
-  const update = (key: keyof JoinForm, value: string) =>
-    setForm({ ...form, [key]: value });
+  const content = type === "customer" ? CUSTOMER_COPY : VENDOR_COPY;
 
-  const validate = () => {
-    if (!form.name) return "Name is required";
+  const update = (key: keyof JoinForm, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    if (error) setError("");
+  };
+
+  const validate = (): string => {
+    if (!form.name.trim()) return "Name is required";
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!form.email || !emailRegex.test(form.email))
-      return "Valid email is required";
+    if (!form.email.trim() || !emailRegex.test(form.email.trim())) return "Valid email is required";
 
     const phoneRegex = /^[0-9]{10}$/;
-    if (!form.phone_number || !phoneRegex.test(form.phone_number))
+    if (!form.phone_number.trim() || !phoneRegex.test(form.phone_number.trim()))
       return "Phone number must be 10 digits";
 
-    if (type === "vendor" && !form.category)
-      return "Please select a category";
+    if (type === "vendor" && !form.category.trim()) return "Please select a category";
 
     return "";
   };
 
-  // const handleSubmit = async () => {
-  //   setError("");
-  //   const validationError = validate();
-  //   if (validationError) {
-  //     setError(validationError);
-  //     return;
-  //   }
-  
-  //   setLoading(true);
-  //   try {
-  //     const res =
-  //       type === "customer"
-  //         ? await submitCustomer(form)
-  //         : await submitVendor(form);
-  //     console.log("res",res)
-  //     if (res.success) {
-  //       setSuccess(true);
-  //     } else {
-  //       setError(res.message || "Submission failed");
-  //     }
-  //   } catch (err: unknown) {
-  //     const message = err instanceof Error ? err.message : "Server error";
-  //     setError(message);
-  //   }
-  //    finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError("");
+
     const validationError = validate();
     if (validationError) {
       setError(validationError);
@@ -119,35 +114,28 @@ export function JoinDialog({
   
     setLoading(true);
   
-    try {
-      // const payload = form as {
-      //   name: string;
-      //   email: string;
-      //   phone_number: string;
-      //   category?: string;
-      //   comments?: string;
-      // };
-  
-      // const res =
-      //   type === "customer"
-      //     ? await submitCustomer(payload)
-      //     : await submitVendor(payload);
+    const name = form.name.trim();
+    const email = form.email.trim();
+    const phoneNumber = form.phone_number.trim();
+    const category = form.category.trim();
+    const comments = form.comments.trim();
 
+    try {
       let res;
 
       if (type === "customer") {
-        res = await submitCustomer(form as {
-          name: string;
-          email: string;
-          phone_number: string;
+        res = await submitCustomer({
+          name,
+          email,
+          phone_number: phoneNumber,
         });
       } else {
-        res = await submitVendor(form as {
-          name: string;
-          email: string;
-          phone_number: string;
-          category: string;
-          comments?: string;
+        res = await submitVendor({
+          name,
+          email,
+          phone_number: phoneNumber,
+          category,
+          comments: comments || undefined,
         });
       }
 
@@ -163,108 +151,139 @@ export function JoinDialog({
       setLoading(false);
     }
   };
-  
-  
 
   return (
-      <Dialog
-        open={open}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) {
-            resetState();
-          }
-          onOpenChange(isOpen);
-        }}
-      >
-
-      <DialogContent className="sm:max-w-md">
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          resetState();
+        }
+        onOpenChange(isOpen);
+      }}
+    >
+      <DialogContent className="w-[calc(100%-1rem)] max-w-[640px] border-0 bg-transparent p-0 shadow-none [&>button]:right-5 [&>button]:top-5 [&>button]:text-white/70 [&>button]:hover:text-white">
         {!success ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>
-                {type === "customer"
-                  ? "Start Saving Today"
-                  : "Become a Vendor Partner"}
-              </DialogTitle>
-            </DialogHeader>
+          <div className="max-h-[86vh] overflow-y-auto rounded-2xl border border-[rgba(232,168,48,0.25)] bg-[linear-gradient(145deg,#0f2347,#1b3a6b)] text-white shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
+            <div className="border-b border-white/10 px-5 py-5 sm:px-7">
+              <span className="inline-flex items-center rounded-full border border-[rgba(232,168,48,0.35)] bg-[rgba(232,168,48,0.12)] px-3 py-1 text-[11px] font-semibold tracking-[0.4px] text-[#f5c96a]">
+                {content.badge}
+              </span>
+              <DialogHeader className="mt-3 text-left">
+                <DialogTitle className="text-xl font-bold leading-tight text-white sm:text-2xl">
+                  {content.title}
+                </DialogTitle>
+                <DialogDescription className="text-sm leading-relaxed text-white/60 sm:text-base">
+                  {content.description}
+                </DialogDescription>
+              </DialogHeader>
+            </div>
 
-            <div className="space-y-4 pt-4">
-              <Field label="Name">
-                <Input onChange={(e) => update("name", e.target.value)} />
-              </Field>
+            <form className="space-y-4 px-5 py-5 sm:px-7 sm:py-6" onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Full Name" htmlFor="join-name">
+                  <Input
+                    id="join-name"
+                    value={form.name}
+                    onChange={(e) => update("name", e.target.value)}
+                    placeholder="Enter your full name"
+                    className="h-11 rounded-xl border-white/20 bg-white/5 text-white placeholder:text-white/35 focus-visible:ring-2 focus-visible:ring-[#e8a830] focus-visible:ring-offset-0"
+                  />
+                </Field>
 
-              <Field label="Email">
-                <Input type="email" onChange={(e) => update("email", e.target.value)} />
-              </Field>
+                <Field label="Email Address" htmlFor="join-email">
+                  <Input
+                    id="join-email"
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => update("email", e.target.value)}
+                    placeholder="name@example.com"
+                    className="h-11 rounded-xl border-white/20 bg-white/5 text-white placeholder:text-white/35 focus-visible:ring-2 focus-visible:ring-[#e8a830] focus-visible:ring-offset-0"
+                  />
+                </Field>
+              </div>
 
-              <Field label="Phone">
-                {/* <Input onChange={(e) => update("phone_number", e.target.value)} /> */}
-
+              <Field label="Phone Number" htmlFor="join-phone">
                 <Input
+                  id="join-phone"
                   type="tel"
                   inputMode="numeric"
                   maxLength={10}
-                  value={form.phone_number ?? ""}
-                  onChange={(e) => update("phone_number", e.target.value)}
+                  value={form.phone_number}
+                  onChange={(e) =>
+                    update("phone_number", e.target.value.replace(/\D/g, "").slice(0, 10))
+                  }
+                  placeholder="10-digit mobile number"
+                  className="h-11 rounded-xl border-white/20 bg-white/5 text-white placeholder:text-white/35 focus-visible:ring-2 focus-visible:ring-[#e8a830] focus-visible:ring-offset-0"
                 />
-
               </Field>
 
               {type === "vendor" && (
                 <>
-                  <Field label="Category">
+                  <Field label="Business Category" htmlFor="join-category">
                     <select
-                      className="w-full border rounded-md p-2 text-sm"
-                      onChange={(e) =>
-                        update("category", e.target.value)
-                      }
+                      id="join-category"
+                      value={form.category}
+                      onChange={(e) => update("category", e.target.value)}
+                      className="h-11 w-full rounded-xl border border-white/20 bg-white/5 px-3 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-[#e8a830]"
                     >
-                      <option value="">Select category</option>
-                      {CATEGORIES.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
+                      <option value="" className="bg-[#153058] text-white">
+                        Select category
+                      </option>
+                      {CATEGORIES.map((categoryOption) => (
+                        <option key={categoryOption} value={categoryOption} className="bg-[#153058] text-white">
+                          {categoryOption}
                         </option>
                       ))}
                     </select>
                   </Field>
 
-                  <Field label="Comments">
+                  <Field label="Comments (Optional)" htmlFor="join-comments">
                     <textarea
+                      id="join-comments"
                       rows={3}
-                      className="w-full border rounded-md p-2 text-sm"
-                      onChange={(e) =>
-                        update("comments", e.target.value)
-                      }
+                      value={form.comments}
+                      onChange={(e) => update("comments", e.target.value)}
+                      placeholder="Tell us about your products or preferred deal size."
+                      className="w-full resize-none rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/35 focus:outline-hidden focus:ring-2 focus:ring-[#e8a830]"
                     />
                   </Field>
                 </>
               )}
 
-              {error && (
-                <p className="text-red-500 text-sm">{error}</p>
-              )}
+              {error ? (
+                <p className="rounded-lg border border-[#f0883e]/50 bg-[#f0883e]/10 px-3 py-2 text-sm text-[#ffd6bf]">
+                  {error}
+                </p>
+              ) : null}
 
               <Button
-                className="w-full"
-                onClick={handleSubmit}
+                type="submit"
                 disabled={loading}
+                className="h-11 w-full rounded-xl bg-[linear-gradient(135deg,#e8a830,#f5c96a)] text-sm font-bold text-[#0f2347] hover:opacity-95"
               >
-                {loading ? "Submitting..." : "Submit"}
+                {loading ? "Submitting..." : content.submitLabel}
               </Button>
-            </div>
-          </>
+
+              <p className="text-center text-xs text-white/45">
+                We use your details only to contact you about relevant opportunities.
+              </p>
+            </form>
+          </div>
         ) : (
-          // SUCCESS STATE
-          <div className="text-center py-10">
-            <h3 className="text-xl font-bold mb-2">
-              🎉 Success!
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              {type === "customer"
-                ? "We’ll contact you with the best deals soon."
-                : "Our team will reach out to you shortly."}
+          <div className="rounded-2xl border border-[rgba(232,168,48,0.25)] bg-[linear-gradient(145deg,#0f2347,#1b3a6b)] px-6 py-10 text-center text-white shadow-[0_24px_60px_rgba(0,0,0,0.35)] sm:px-8">
+            <div className="mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-[#6ec6c0]">
+              ✅
+            </div>
+            <h3 className="mb-2 text-xl font-bold">Request Submitted</h3>
+            <p className="mx-auto mb-6 max-w-md text-sm text-white/65">
+              {content.successMessage}
             </p>
-            <Button onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="h-10 rounded-xl bg-[linear-gradient(135deg,#e8a830,#f5c96a)] px-8 font-bold text-[#0f2347]"
+            >
               Close
             </Button>
           </div>
@@ -276,14 +295,18 @@ export function JoinDialog({
 
 function Field({
   label,
+  htmlFor,
   children,
 }: {
   label: string;
-  children: React.ReactNode;
+  htmlFor: string;
+  children: ReactNode;
 }) {
   return (
-    <div>
-      <Label className="text-sm">{label}</Label>
+    <div className="space-y-1.5">
+      <Label htmlFor={htmlFor} className="text-sm font-medium text-white/80">
+        {label}
+      </Label>
       {children}
     </div>
   );
