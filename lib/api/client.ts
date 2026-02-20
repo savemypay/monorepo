@@ -61,6 +61,7 @@ export async function apiRequest<T>(
       throw new Error("Unauthorized. Please login again.");
     }
     requestHeaders.set("Authorization", `Bearer ${token}`);
+    requestHeaders.set("access_token", token);
   }
 
   const response = await fetch(buildUrl(endpoint, query), {
