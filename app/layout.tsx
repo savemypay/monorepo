@@ -2,6 +2,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import type { Metadata } from "next";
 import { buildMetadata, getSiteUrl } from "@/lib/seo";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 const satoshi = localFont({
   src: "./fonts/Satoshi-Variable.ttf",
@@ -30,6 +31,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -38,6 +41,7 @@ export default function RootLayout({
             <main className="relative z-0 w-full ">
                <main className="h-full w-full">{children}</main>
             </main>
+            <GoogleAnalytics measurementId={gaMeasurementId} />
       </body>
     </html>
   );

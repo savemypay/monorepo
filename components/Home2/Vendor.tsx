@@ -9,7 +9,7 @@ const REVEAL =
 
 type DialogType = "customer" | "vendor" | null;
 
-export default function Home2Vendor() {
+export default function Vendor() {
   const [dialogType, setDialogType] = useState<DialogType>(null);
 
   return (
