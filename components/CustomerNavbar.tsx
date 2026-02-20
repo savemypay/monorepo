@@ -1,17 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
-import { Search, Heart, ShoppingBag, LogOut, Menu, X, User, ChevronDown } from "lucide-react";
-import { useAuthStore } from "@/lib/store/authStore"; // Import Store
+import { useState, useRef, useEffect, type FormEvent } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Search, ShoppingBag, LogOut, Menu, X, User, ChevronDown } from "lucide-react";
+import { useAuthStore } from "@/lib/store/authStore";
+import { getProfile, type Profile } from "@/lib/api/profile";
 
 export default function CustomerNavbar() {
-  // Use Zustand Store for everything
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const { user, accessToken, isAuthenticated, logout } = useAuthStore();
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [searchInput, setSearchInput] = useState(() => searchParams.get("q") || "");
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const hasSession = Boolean(isAuthenticated && accessToken);
+  const profileName = profile?.name || user?.name || (profile?.id || user?.id ? `User #${profile?.id || user?.id}` : "User");
+  const profileContact =
+    profile?.email ||
+    profile?.phone_number ||
+    user?.email ||
+    user?.phone_number ||
+    "No contact added";
+  const profileInitial = (
+    profile?.email?.[0] ||
+    profile?.phone_number?.[0] ||
+    user?.email?.[0] ||
+    user?.phone_number?.[0] ||
+    "U"
+  ).toUpperCase();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -23,6 +46,50 @@ export default function CustomerNavbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!hasSession || !accessToken) {
+      return;
+    }
+
+    const loadProfile = async () => {
+      try {
+        const response = await getProfile(accessToken);
+        if (isMounted) {
+          setProfile(response);
+        }
+      } catch {
+        if (isMounted) {
+          setProfile(null);
+        }
+      }
+    };
+
+    void loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hasSession, accessToken]);
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const nextQuery = searchInput.trim();
+    const params = new URLSearchParams(pathname === "/customer" ? searchParams.toString() : "");
+
+    if (nextQuery) {
+      params.set("q", nextQuery);
+    } else {
+      params.delete("q");
+    }
+
+    const queryString = params.toString();
+    router.push(queryString ? `/customer?${queryString}` : "/customer");
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100">
@@ -41,21 +108,27 @@ export default function CustomerNavbar() {
 
           {/* 2. Search Bar (Hidden on Mobile) */}
           <div className="hidden md:flex flex-1 items-center justify-center px-8">
-            <div className="relative flex justify-between items-center px-4 py-2 border border-gray-300 rounded-full w-full max-w-sm bg-gray-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="relative flex justify-between items-center px-4 py-2 border border-gray-300 rounded-full w-full max-w-sm bg-gray-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-100 transition-all"
+            >
               <input
                 type="text"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
                 className="block w-full bg-transparent outline-none text-gray-900 placeholder-gray-400 text-sm"
                 placeholder="Search deals..."
+                aria-label="Search deals"
               />
-              <div className="pl-2 pointer-events-none text-gray-400">
+              <button type="submit" className="pl-2 text-gray-400 hover:text-blue-600 transition-colors">
                 <Search className="h-4 w-4" />
-              </div>
-            </div>
+              </button>
+            </form>
           </div>
 
           {/* 3. Desktop Right Actions */}
           <div className="hidden md:flex items-center gap-4 flex-shrink-0">
-            {isAuthenticated && user ? (
+            {hasSession ? (
               /* LOGGED IN VIEW */
               <>
                 <div className="flex items-center gap-2">
@@ -73,9 +146,6 @@ export default function CustomerNavbar() {
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
                     className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
                   >
-                    {/* <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
-                      {(user.email?.[0] || 'U').toUpperCase()}
-                    </div> */}
                     <User size={22}/>
                     <ChevronDown size={16} className="text-gray-400" />
                   </button>
@@ -83,8 +153,8 @@ export default function CustomerNavbar() {
                   {isProfileOpen && (
                     <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2">
                       <div className="px-5 py-3 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{user.name || `User #${user.id}`}</p>
-                        <p className="text-xs text-gray-500 truncate">{user.email || user.phone_number}</p>
+                        <p className="text-sm font-semibold text-gray-900 truncate">{profileName}</p>
+                        <p className="text-xs text-gray-500 truncate">{profileContact}</p>
                       </div>
                       <div className="py-2">
                         <Link href="/customer/my-deals" className="flex items-center gap-3 px-5 py-2 text-sm text-gray-700 hover:bg-gray-50">
@@ -131,24 +201,32 @@ export default function CustomerNavbar() {
         <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-gray-100 shadow-xl z-40">
           <div className="p-4 space-y-4">
              {/* Mobile Search */}
-            <div className="flex items-center bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="flex items-center bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none focus-within:ring-2 focus-within:ring-blue-500"
+            >
               <input 
                 type="text" 
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Search deals..." 
-                className="w-full outline-none" 
+                className="w-full outline-none bg-transparent"
+                aria-label="Search deals"
               />
-              <Search className="text-gray-400 h-4 w-4" />
-            </div>
+              <button type="submit" className="text-gray-400 hover:text-blue-600 transition-colors">
+                <Search className="h-4 w-4" />
+              </button>
+            </form>
             
-            {isAuthenticated && user ? (
+            {hasSession ? (
               <div className="space-y-1 pt-2">
                  <div className="px-3 py-2 flex items-center gap-3 mb-2 bg-blue-50 rounded-lg">
                     <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                       {(user.email?.[0] || user.phone_number?.[0] || 'U').toUpperCase()}
+                       {profileInitial}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{user.name || `User #${user.id}`}</p>
-                      <p className="text-xs text-gray-500">{user.email || user.phone_number}</p>
+                      <p className="text-sm font-semibold text-gray-900">{profileName}</p>
+                      <p className="text-xs text-gray-500">{profileContact}</p>
                     </div>
                  </div>
                  <Link href="/customer/my-deals" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-600 hover:bg-gray-100 font-medium">

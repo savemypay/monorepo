@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import DealCard from "@/components/DealCard";
 import { Ad, getAds } from "@/lib/api/ads";
@@ -121,7 +122,10 @@ function CustomerDealsLoading() {
 }
 
 export default function CustomerDealsClient() {
-  const [deals, setDeals] = useState<DealViewModel[]>([]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [allDeals, setAllDeals] = useState<DealViewModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -139,13 +143,13 @@ export default function CustomerDealsClient() {
           .map(mapAdToCard);
 
         if (!isCancelled) {
-          setDeals(mappedDeals);
+          setAllDeals(mappedDeals);
         }
       } catch (error: unknown) {
         if (!isCancelled) {
           const message = error instanceof Error ? error.message : "Failed to load active deals";
           setErrorMessage(message);
-          setDeals([]);
+          setAllDeals([]);
         }
       } finally {
         if (!isCancelled) {
@@ -161,10 +165,38 @@ export default function CustomerDealsClient() {
     };
   }, []);
 
-  const categories = useMemo(
-    () => ["All Deals", ...new Set(deals.map((deal) => deal.category))],
-    [deals]
-  );
+  const query = (searchParams.get("q") || "").trim().toLowerCase();
+  const selectedCategoryParam = searchParams.get("category") || "All Deals";
+
+  const categories = useMemo(() => ["All Deals", ...new Set(allDeals.map((deal) => deal.category))], [allDeals]);
+
+  const activeCategory = useMemo(() => {
+    if (selectedCategoryParam === "All Deals") return "All Deals";
+    return categories.includes(selectedCategoryParam) ? selectedCategoryParam : "All Deals";
+  }, [selectedCategoryParam, categories]);
+
+  const filteredDeals = useMemo(() => {
+    return allDeals.filter((deal) => {
+      const inCategory = activeCategory === "All Deals" || deal.category === activeCategory;
+      if (!inCategory) return false;
+
+      if (!query) return true;
+      const haystack = `${deal.title} ${deal.category}`.toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [allDeals, activeCategory, query]);
+
+  const updateCategoryFilter = (category: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (category === "All Deals") {
+      params.delete("category");
+    } else {
+      params.set("category", category);
+    }
+
+    const queryString = params.toString();
+    router.replace(queryString ? `/customer?${queryString}` : "/customer");
+  };
 
   if (isLoading) {
     return <CustomerDealsLoading />;
@@ -192,11 +224,12 @@ export default function CustomerDealsClient() {
       <div>
         <h1 className="font-bold mb-2 text-xl">Top Categories</h1>
         <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide mask-fade-right">
-          {categories.map((cat, i) => (
+          {categories.map((cat) => (
             <button
               key={cat}
+              onClick={() => updateCategoryFilter(cat)}
               className={`px-6 py-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-200 border ${
-                i === 0
+                activeCategory === cat
                   ? "bg-gray-900 text-white border-gray-900 shadow-md transform scale-105"
                   : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
               }`}
@@ -213,18 +246,27 @@ export default function CustomerDealsClient() {
         </div>
       )}
 
-      {!errorMessage && deals.length > 0 && (
+      {!errorMessage && filteredDeals.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6 md:gap-8 bg-[#f5f5f5]">
-          {deals.map((deal) => (
+          {filteredDeals.map((deal) => (
             <DealCard key={deal.id} {...deal} />
           ))}
         </div>
       )}
 
-      {!errorMessage && deals.length === 0 && (
+      {!errorMessage && allDeals.length === 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center">
           <h3 className="text-lg font-semibold text-slate-900">No active deals right now</h3>
           <p className="mt-2 text-sm text-slate-500">Please check back shortly for new group offers.</p>
+        </div>
+      )}
+
+      {!errorMessage && allDeals.length > 0 && filteredDeals.length === 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center">
+          <h3 className="text-lg font-semibold text-slate-900">No matching deals found</h3>
+          <p className="mt-2 text-sm text-slate-500">
+            Try another search term or switch to a different category.
+          </p>
         </div>
       )}
     </div>

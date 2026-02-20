@@ -15,9 +15,9 @@ export const SAVINGS_ITEMS = [
 export const TRUST_ITEMS = [
   "✅ No commitment to browse",
   "🔒 100% secure payments",
-  "⚡ Deals closed in 72 hrs",
+  "⚡ Deals closed in 1 week",
   "🤝 Verified vendors only",
-  "💰 Average 20-40% savings",
+  // "💰 Average 20-40% savings",
 ];
 
 export const CATEGORIES = [
@@ -132,7 +132,7 @@ export const WHY_ITEMS = [
     icon: "💰",
     title: "Unbeatable Savings",
     description:
-      "Save 20–40% compared to buying alone. Prices once reserved for corporations, now accessible to every salaried professional.",
+      "Save 20 - 40% compared to buying alone. Prices once reserved for corporations, now accessible to every salaried professional.",
     tone: "gold",
   },
   {
@@ -146,7 +146,7 @@ export const WHY_ITEMS = [
     icon: "⚡",
     title: "Lightning Fast",
     description:
-      "Express interest, we build the group, deals finalised in 72 hours. Fast, efficient, completely transparent throughout.",
+      "Express interest, we build the group, deals finalised in 1 week. Fast, efficient, completely transparent throughout.",
     tone: "gold",
   },
   {
@@ -193,20 +193,73 @@ export const VENDOR_PERKS = [
   },
 ];
 
-export const FOOTER_COLUMNS = [
+export const FAQ_ITEMS = [
   {
-    title: "Platform",
-    links: [
-      { label: "Categories", href: "#categories" },
-      { label: "How It Works", href: "#how" },
-      { label: "Web3 Rewards", href: "#web3" },
-      { label: "Partner With Us", href: "#partner" },
-    ],
+    question: "How does SaveMyPay help me save money?",
+    answer:
+      "SaveMyPay groups buyers with similar purchase intent and negotiates bulk pricing with verified vendors. Larger group demand helps unlock better pricing than individual purchases.",
   },
+  {
+    question: "Do I need to pay anything to browse or express interest?",
+    answer:
+      "No. Browsing deals and showing interest are free. You only pay when you decide to confirm participation in an active deal flow.",
+  },
+  {
+    question: "How are vendors selected on the platform?",
+    answer:
+      "Vendors go through verification checks before being listed. We focus on credible partners with clear terms, reliable fulfillment, and transparent pricing.",
+  },
+  {
+    question: "What categories are available on SaveMyPay?",
+    answer:
+      "Current categories include insurance, property, automotive, travel, healthcare, and e-commerce deals. Categories may expand based on buyer demand.",
+  },
+  {
+    question: "How long does a deal usually remain active?",
+    answer:
+      "Each deal has a visible validity window. Most group deals run for a limited period so demand can be aggregated and negotiated efficiently.",
+  },
+  {
+    question: "What happens if a deal does not reach enough participants?",
+    answer:
+      "If participation is insufficient for negotiated pricing, the deal may be paused, extended, or closed. Final availability depends on vendor terms and group demand.",
+  },
+  {
+    question: "Can I track progress before joining a deal?",
+    answer:
+      "Yes. You can see current participation, remaining slots, and discount tier progress on deal cards and deal detail pages before making a decision.",
+  },
+  {
+    question: "Are payments on SaveMyPay secure?",
+    answer:
+      "Yes. Payments are handled through integrated payment gateways with secure transaction flows. We also maintain transparent payment references for tracking.",
+  },
+  {
+    question: "I am a vendor. How can I partner with SaveMyPay?",
+    answer:
+      "Use the 'Partner With Us' or 'Join Our Vendor Network' CTA, submit your details, and our team will review your profile for onboarding.",
+  },
+  {
+    question: "How do I receive updates after joining or purchasing?",
+    answer:
+      "You receive updates through your registered contact details and can also track your orders and purchased deals from your customer dashboard.",
+  },
+];
+
+export const FOOTER_COLUMNS = [
+  // {
+  //   title: "Platform",
+  //   links: [
+  //     { label: "Categories", href: "#categories" },
+  //     { label: "How It Works", href: "#how" },
+  //     { label: "Web3 Rewards", href: "#web3" },
+  //     { label: "Partner With Us", href: "#partner" },
+  //   ],
+  // },
   {
     title: "Support",
     links: [
-      { label: "FAQ", href: "#" },
+      { label: "FAQ", href: "#faq" },
       { label: "Contact Us", href: "#" },
       { label: "Help Center", href: "#" },
       { label: "Live Chat", href: "#" },
