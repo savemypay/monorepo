@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage, type PersistStorage } from 'zustand/middleware';
+import {
+  persist,
+  createJSONStorage,
+  type PersistStorage,
+  type StateStorage,
+} from 'zustand/middleware';
 
 export interface User {
   id: number;
@@ -26,7 +31,15 @@ type PersistedAuthState = Pick<
   "accessToken" | "refreshToken" | "user" | "isAuthenticated"
 >;
 
-const rawStorage = createJSONStorage<PersistedAuthState>(() => localStorage);
+const noopStorage: StateStorage = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+};
+
+const rawStorage = createJSONStorage<PersistedAuthState>(() =>
+  typeof window !== "undefined" ? window.localStorage : noopStorage
+);
 
 const authStorage: PersistStorage<PersistedAuthState> = {
   getItem: (name) => rawStorage?.getItem(name) ?? null,
@@ -81,7 +94,9 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
           hasHydrated: true,
         });
-        localStorage.removeItem('auth-storage');
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem('auth-storage');
+        }
       },
     }),
     {

@@ -1,6 +1,7 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { buildMetadata, getSiteUrl } from "@/lib/seo";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
@@ -41,7 +42,9 @@ export default function RootLayout({
             <main className="relative z-0 w-full ">
                <main className="h-full w-full">{children}</main>
             </main>
-            <GoogleAnalytics measurementId={gaMeasurementId} />
+            <Suspense fallback={null}>
+              <GoogleAnalytics measurementId={gaMeasurementId} />
+            </Suspense>
       </body>
     </html>
   );
