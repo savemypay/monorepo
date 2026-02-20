@@ -1,6 +1,29 @@
 "use client";
 
 import { FOOTER_COLUMNS } from "./data";
+import Image from "next/image";
+import { Mail, MapPin, Phone } from "lucide-react";
+
+const socialLinks = [
+  {
+    id: 1,
+    name: "X (Twitter)",
+    icon: "/assets/X.svg",
+    link: "https://x.com/Savemypay_xyz",
+  },
+  {
+    id: 2,
+    name: "Instagram",
+    icon: "/assets/instagram.svg",
+    link: "https://www.instagram.com/savemypay",
+  },
+  {
+    id: 3,
+    name: "YouTube",
+    icon: "/assets/youtube.svg",
+    link: "https://www.youtube.com/@savemypay",
+  },
+];
 
 function smoothScroll(id: string, offset = 68) {
   const element = document.getElementById(id);
@@ -13,11 +36,11 @@ function smoothScroll(id: string, offset = 68) {
   });
 }
 
-export default function Home2Footer() {
+export default function Footer() {
   return (
     <footer className="bg-[#0f2347] px-6 pt-12 md:pt-17 pb-7 border-t border-[rgba(232,168,48,0.12)]">
-      <div className="max-w-300 mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-11 pb-13 border-b border-white/7">
-        <div>
+      <div className="max-w-300 mx-auto grid grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] gap-7 md:gap-11 pb-13 border-b border-white/7">
+        <div className="col-span-2 lg:col-span-1">
           <a
             href="#"
             className="inline-flex items-center gap-3 text-white no-underline font-extrabold text-[30px]"
@@ -31,6 +54,53 @@ export default function Home2Footer() {
             Transforming how salaried professionals make high-value purchases through the
             collective buying power of our community.
           </p>
+          {/* Social Links */}
+          <div className="mt-4 flex items-center gap-4">
+            {socialLinks.map((item) => (
+              <a
+                key={item.id}
+                href={item.link}
+                target="_blank"
+                rel="noreferrer noopener"
+                aria-label={item.name}
+                className="group inline-flex items-center justify-center"
+              >
+                <Image
+                  src={item.icon}
+                  alt={item.name}
+                  width={24}
+                  height={24}
+                  className="h-6 w-6 object-contain opacity-80 transition-opacity group-hover:opacity-100 hover:scale-120"
+                />
+              </a>
+            ))}
+          </div>
+        </div>
+        {/* Address */}
+        <div className="col-span-2 lg:col-span-1">
+          <h5 className="text-[#e8a830] uppercase tracking-[1.2px] text-[12px] font-bold mb-3">
+            Address
+          </h5>
+          <div className="space-y-3 text-sm text-white/55">
+            <p className="flex items-start gap-2.5 leading-[1.6]">
+              <MapPin size={16} className="mt-0.5 text-[#e8a830] shrink-0" />
+              Plot No. 255, 3rd Floor, Botanical Garden Rd, Kondapur, Sri Ramnagar - Block B, Telangana 500084
+            </p>
+            <a
+              href="mailto:support@savemypay.xyz"
+              className="flex items-center gap-2.5 hover:text-[#e8a830] transition-colors"
+            >
+              <Mail size={16} className="text-[#e8a830] shrink-0" />
+              support@savemypay.xyz
+            </a>
+            {/* <a
+              href="tel:+919000000000"
+              className="flex items-center gap-2.5 hover:text-[#e8a830] transition-colors"
+            >
+              <Phone size={16} className="text-[#e8a830] shrink-0" />
+              +91 90000 00000
+            </a> */}
+          </div>
         </div>
 
         {FOOTER_COLUMNS.map((column) => (
@@ -43,9 +113,8 @@ export default function Home2Footer() {
                 key={link.label}
                 href={link.href}
                 onClick={(e) => {
-                  const isPlatformHashLink =
-                    column.title === "Platform" && link.href.startsWith("#");
-                  if (!isPlatformHashLink) return;
+                  const isHashLink = link.href.startsWith("#");
+                  if (!isHashLink) return;
 
                   const targetId = link.href.replace("#", "");
                   const target = document.getElementById(targetId);

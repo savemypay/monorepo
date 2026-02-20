@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { SAVINGS_ITEMS } from "./data";
 import { JoinDialog } from "@/components/ui/join-dialog";
+import Image from "next/image";
 
 type Particle = {
   id: number;
@@ -53,7 +53,8 @@ export default function Hero() {
         ))}
       </div>
 
-      <div className="relative z-[2] w-full max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-[72px] items-center">
+      <div className="relative z-[2] w-full max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_480px] gap-18 items-center">
+        {/* left Section */}
         <div>
           <div className="inline-flex items-center gap-2 bg-[rgba(232,168,48,0.12)] border border-[rgba(232,168,48,0.3)] text-[#f5c96a] px-[14px] py-[5px] rounded-[20px] text-[13px] font-semibold tracking-[0.4px] mb-[22px]">
             <span className="w-[7px] h-[7px] rounded-full bg-[#e8a830] animate-[home2-blink_1.5s_infinite]" />
@@ -89,36 +90,18 @@ export default function Hero() {
             </button>
           </div>
         </div>
-
+        {/* Right Section */}
         <div
-          className={`hidden lg:block bg-white/6 border border-[rgba(232,168,48,0.2)] rounded-[20px] p-7 backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] ${REVEAL}`}
+          className={`hidden w-full h-full lg:block relative`}
           data-reveal
         >
-          <div className="flex items-center justify-between mb-[22px]">
-            <h3 className="text-lg font-medium text-white">Your Savings Potential</h3>
-            <span className="text-[12px] font-extrabold text-[#0f2347] px-3 py-[3px] rounded-[20px] bg-[linear-gradient(135deg,#e8a830,#f0883e)]">
-              Up to 40% OFF
-            </span>
-          </div>
-
-          {SAVINGS_ITEMS.map((item) => (
-            <div
-              key={item.label}
-              className="flex items-center gap-[13px] bg-white/5 border border-white/7 rounded-[11px] px-[15px] py-[13px] mb-[10px] hover:bg-[rgba(232,168,48,0.08)] hover:border-[rgba(232,168,48,0.22)] transition-all"
-            >
-              <div className="text-[22px]">{item.icon}</div>
-              <div className="flex-1">
-                <div className="text-[13px] text-white/70 font-medium">{item.label}</div>
-                <div className="text-[17px] font-bold text-[#f5c96a]">{item.amount}</div>
-                <div className="h-[3px] bg-white/10 rounded-[2px] mt-[5px] overflow-hidden">
-                  <div
-                    className="h-full rounded-[2px] bg-[linear-gradient(90deg,#e8a830,#6ec6c0)] animate-[home2-fill_2s_ease-out_forwards]"
-                    style={{ width: `${item.fill}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
+          {/* Custom generated collective buying concept image */}
+          <Image
+            src="/assets/Website_Hero_Image.png"
+            alt="Collective Buying"
+            fill
+            className="w-full h-full object-cover transition-transform"
+          />
         </div>
       </div>
       <JoinDialog type={dialogType} open={!!dialogType} onOpenChange={() => setDialogType(null)} />

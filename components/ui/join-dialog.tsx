@@ -162,7 +162,7 @@ export function JoinDialog({
         onOpenChange(isOpen);
       }}
     >
-      <DialogContent className="w-[calc(100%-1rem)] max-w-[640px] border-0 bg-transparent p-0 shadow-none [&>button]:right-5 [&>button]:top-5 [&>button]:text-white/70 [&>button]:hover:text-white">
+      <DialogContent className="w-[calc(100%-1rem)] max-w-[540px] border-0 bg-transparent p-0 shadow-none [&>button]:right-5 [&>button]:top-5 [&>button]:text-white/70 [&>button]:hover:text-white">
         {!success ? (
           <div className="max-h-[86vh] overflow-y-auto rounded-2xl border border-[rgba(232,168,48,0.25)] bg-[linear-gradient(145deg,#0f2347,#1b3a6b)] text-white shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
             <div className="border-b border-white/10 px-5 py-5 sm:px-7">
@@ -180,7 +180,7 @@ export function JoinDialog({
             </div>
 
             <form className="space-y-4 px-5 py-5 sm:px-7 sm:py-6" onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4">
                 <Field label="Full Name" htmlFor="join-name">
                   <Input
                     id="join-name"

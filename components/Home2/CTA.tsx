@@ -5,7 +5,7 @@ import { JoinDialog } from "@/components/ui/join-dialog";
 
 type DialogType = "customer" | "vendor" | null;
 
-export default function Home2CTA() {
+export default function CTA() {
   const [dialogType, setDialogType] = useState<DialogType>(null);
 
   return (

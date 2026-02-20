@@ -11,6 +11,7 @@ import Stats from "./Stats";
 import Web3 from "./Web3";
 import WhyUs from "./WhyUs";
 import Vendor from "./Vendor";
+import FAQ from "./FAQ";
 import CTA from "./CTA";
 import Footer from "./Footer";
 import WaveDivider from "./WaveDivider";
@@ -50,16 +51,12 @@ export default function Home2() {
         path="M0,20 C360,40 720,0 1080,20 C1260,30 1380,25 1440,20 L1440,40 L0,40 Z"
       />
       <Categories />
-      <WaveDivider
-        background="#f9f7f3"
-        fill="#FFFFFF"
-        path="M0,20 C480,40 960,0 1440,20 L1440,40 L0,40 Z"
-      />
       <HowItWorks />
-      <Stats />
+      {/* <Stats /> */}
       <Web3 />
       <WhyUs />
       <Vendor />
+      <FAQ />
       <CTA />
       <Footer />
     </div>
