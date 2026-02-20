@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShoppingBag, Users, DollarSign,IndianRupeeIcon, X } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Users,IndianRupeeIcon, X } from "lucide-react";
 
 // --- Configuration ---
 const sidebarItems = [

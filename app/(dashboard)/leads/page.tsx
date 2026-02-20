@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import { Search, Download, Check, Loader2, AlertCircle, Phone, Mail, User, CreditCard } from 'lucide-react';
 import { getLeads, Lead } from '@/lib/api/leads';
 
-// --- 1. Internal Component (Contains Logic) ---
 function LeadsContent() {
   const searchParams = useSearchParams();
   const adIdFromUrl = searchParams.get('ad_id');
@@ -171,8 +170,6 @@ function LeadsContent() {
   );
 }
 
-// --- 2. The Main Page Component (Exported Default) ---
-// This is the clean wrapper that Next.js expects
 const LeadsPage = () => {
   return (
     <Suspense fallback={

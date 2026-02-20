@@ -6,10 +6,10 @@ import {
   LogOut, 
   User, 
   ChevronDown, 
-  Bell, 
   Store 
 } from 'lucide-react';
 import { useVendorStore } from '@/lib/store/authStore';
+import { getVendorProfile, type VendorProfileDetails } from '@/lib/api/profile';
 
 import { Menu } from 'lucide-react'; // Import Menu Icon
 
@@ -23,7 +23,29 @@ export default function VendorNavbar({ onMenuClick }: NavbarProps) {
   const { vendor, logout } = useVendorStore();
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [profile, setProfile] = useState<VendorProfileDetails | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchProfile = async () => {
+      try {
+        const response = await getVendorProfile();
+        if (isMounted && response.success) {
+          setProfile(response.data?.[0] ?? null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile", error);
+      }
+    };
+
+    fetchProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -43,8 +65,9 @@ export default function VendorNavbar({ onMenuClick }: NavbarProps) {
   };
 
   // Safe fallbacks if data is missing
-  const ownerName = vendor?.owner_name || "Vendor";
-  const businessName = vendor?.business_name || "My Business";
+  const ownerName = profile?.name || vendor?.owner_name || "Vendor";
+  const businessName = profile?.category || vendor?.business_name || "My Business";
+  const contactInfo = profile?.phone_number || profile?.email || vendor?.phone_number || vendor?.email || "No contact info";
   const initials = ownerName.slice(0, 2).toUpperCase();
 
   const pageTitleByPath: Record<string, string> = {
@@ -109,7 +132,7 @@ export default function VendorNavbar({ onMenuClick }: NavbarProps) {
               
               <div className="px-4 py-3 border-b border-gray-100 mb-2 bg-gray-50/50">
                 <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Welcome</p>
-                <p className="font-medium text-gray-900 truncate text-sm mt-1">{vendor?.phone_number || vendor?.email}</p>
+                <p className="font-medium text-gray-900 truncate text-sm mt-1">{contactInfo}</p>
               </div>
 
               <div className="px-1 space-y-1">
