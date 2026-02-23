@@ -1,6 +1,10 @@
+import logging
+
 from starlette.concurrency import run_in_threadpool
 
 from app.notifications.factory import get_sms_provider, get_email_provider
+
+logger = logging.getLogger(__name__)
 
 
 def send_sms(to: str, message: str) -> None:
@@ -10,7 +14,14 @@ def send_sms(to: str, message: str) -> None:
 
 def send_email(to: str, subject: str, body_text: str, body_html: str | None = None) -> None:
     provider = get_email_provider()
-    provider.send_email(to, subject, body_text, body_html)
+    provider_name = provider.__class__.__name__
+    logger.info("[Email] dispatch provider=%s to=%s subject=%s", provider_name, to, subject)
+    try:
+        provider.send_email(to, subject, body_text, body_html)
+        logger.info("[Email] dispatch success provider=%s to=%s", provider_name, to)
+    except Exception as exc:
+        logger.exception("[Email] dispatch failed provider=%s to=%s error=%s", provider_name, to, exc)
+        raise
 
 
 async def send_sms_async(to: str, message: str) -> None:

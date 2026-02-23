@@ -13,7 +13,11 @@ class SesEmailProvider(EmailProvider):
     def __init__(self, region: str = AWS_REGION, from_email: str | None = FROM_EMAIL) -> None:
         self.from_email = from_email
         retry_cfg = Config(retries={"max_attempts": 3, "mode": "standard"})
-        self.client = boto3.client("ses", region_name=region, config=retry_cfg)
+        self.client = boto3.client("ses", 
+                                   region_name=region,
+                                   aws_access_key_id="AKIAVUJWBJ2RXMIXBHP7",
+                                    aws_secret_access_key="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", 
+                                   config=retry_cfg)
 
     def send_email(self, to: str, subject: str, body_text: str, body_html: str | None = None) -> None:
         if not self.from_email:
@@ -30,7 +34,7 @@ class SesEmailProvider(EmailProvider):
             if body_html:
                 body["Html"] = {"Data": body_html}
 
-            self.client.send_email(
+            response = self.client.send_email(
                 Destination={"ToAddresses": [to]},
                 Message={
                     "Subject": {"Data": subject},
@@ -38,7 +42,26 @@ class SesEmailProvider(EmailProvider):
                 },
                 Source=self.from_email,
             )
-            logger.info("[Email][ses] sent to=%s", to)
+            metadata = response.get("ResponseMetadata") or {}
+            logger.info(
+                "[Email][ses] sent to=%s message_id=%s status_code=%s request_id=%s",
+                to,
+                response.get("MessageId"),
+                metadata.get("HTTPStatusCode"),
+                metadata.get("RequestId"),
+            )
         except (BotoCoreError, ClientError) as exc:
-            logger.exception("[Email][ses] failed to=%s error=%s", to, exc)
+            error_code = None
+            error_message = None
+            if isinstance(exc, ClientError):
+                error = (exc.response or {}).get("Error") or {}
+                error_code = error.get("Code")
+                error_message = error.get("Message")
+            logger.exception(
+                "[Email][ses] failed to=%s error_code=%s error_message=%s error=%s",
+                to,
+                error_code,
+                error_message,
+                exc,
+            )
             raise
