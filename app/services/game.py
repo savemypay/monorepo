@@ -5,6 +5,9 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 from jose import jwt
 from sqlalchemy.orm import Session
+import base58
+from nacl.exceptions import BadSignatureError
+from nacl.signing import VerifyKey
 
 from app.core.config import (
     GAME_ACCESS_TOKEN_EXPIRE_DAYS,
@@ -76,13 +79,61 @@ def _create_game_access_token(user: GameUser) -> tuple[str, int]:
     return token, int(expires_delta.total_seconds())
 
 
-def register_game_user(db: Session, wallet_id: str) -> dict:
+def _verify_wallet_signature(*, wallet_id: str, message: str, signature: str) -> None:
+    try:
+        public_key_bytes = base58.b58decode(wallet_id)
+        signature_bytes = base58.b58decode(signature)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="Invalid wallet_id or signature format", code="invalid_signature_format"),
+        ) from exc
+
+    if len(public_key_bytes) != 32:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="Invalid wallet_id length", code="invalid_wallet_id"),
+        )
+    if len(signature_bytes) != 64:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="Invalid signature length", code="invalid_signature"),
+        )
+
+    try:
+        verify_key = VerifyKey(public_key_bytes)
+        verify_key.verify(message.encode("utf-8"), signature_bytes)
+    except BadSignatureError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=error_response(message="Invalid signature", code="invalid_signature"),
+        ) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="Signature verification failed", code="signature_verification_failed"),
+        ) from exc
+
+
+def register_game_user(db: Session, wallet_id: str, message: str, signature: str) -> dict:
     wallet_id = wallet_id.strip()
     if not wallet_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_response(message="wallet_id is required", code="validation_error"),
         )
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="message is required", code="validation_error"),
+        )
+    if not signature:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="signature is required", code="validation_error"),
+        )
+
+    _verify_wallet_signature(wallet_id=wallet_id, message=message, signature=signature)
 
     user = db.query(GameUser).filter(GameUser.wallet_id == wallet_id).first()
     is_new_user = False

@@ -24,7 +24,12 @@ def register(
     payload: GameRegisterRequest,
     db: Session = Depends(get_db),
 ):
-    data = register_game_user(db, payload.wallet_id)
+    data = register_game_user(
+        db,
+        wallet_id=payload.wallet_id,
+        message=payload.message,
+        signature=payload.signature,
+    )
     return success_response(message="Game user registered", data=[data])
 
 
@@ -42,9 +47,8 @@ def submit_score(
 @router.get("/leaderboard", status_code=status.HTTP_200_OK, response_model=GameLeaderboardResponse)
 def leaderboard(
     db: Session = Depends(get_db),
-    # actor: dict = Depends(get_current_game_user),
+    actor: dict = Depends(get_current_game_user),
 ):
-    # _ = actor  # enforce auth
+    _ = actor  # enforce auth
     entries = get_leaderboard(db, limit=20)
     return success_response(message="Leaderboard fetched", data=entries)
-

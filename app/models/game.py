@@ -7,6 +7,8 @@ from app.models.auth import ApiResponse
 
 class GameRegisterRequest(BaseModel):
     wallet_id: str = Field(..., min_length=10, max_length=255)
+    message: str = Field(..., min_length=1, max_length=5000)
+    signature: str = Field(..., min_length=10, max_length=1000)
 
 
 class GameRegisterData(BaseModel):
@@ -50,4 +52,3 @@ class GameLeaderboardEntry(BaseModel):
 
 class GameLeaderboardResponse(ApiResponse[GameLeaderboardEntry]):
     pass
-
