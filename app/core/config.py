@@ -48,6 +48,7 @@ REFRESH_TOKEN_PEPPER = os.getenv("REFRESH_TOKEN_PEPPER", "")
 
 # Game auth settings
 GAME_ACCESS_TOKEN_EXPIRE_DAYS = int(os.getenv("GAME_ACCESS_TOKEN_EXPIRE_DAYS", "3650"))
+GAME_LEADERBOARD_CACHE_TTL_SECONDS = int(os.getenv("GAME_LEADERBOARD_CACHE_TTL_SECONDS", "10"))
 
 # Payment providers
 PAYMENT_PROVIDER = os.getenv("PAYMENT_PROVIDER", "mock")  # options: stripe, razorpay, adyen, mock

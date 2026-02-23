@@ -1,17 +1,65 @@
+import logging
+import threading
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, status
 from jose import jwt
 from sqlalchemy.orm import Session
 
-from app.core.config import GAME_ACCESS_TOKEN_EXPIRE_DAYS, JWT_ALGORITHM, JWT_SECRET_KEY
+from app.core.config import (
+    GAME_ACCESS_TOKEN_EXPIRE_DAYS,
+    GAME_LEADERBOARD_CACHE_TTL_SECONDS,
+    JWT_ALGORITHM,
+    JWT_SECRET_KEY,
+)
 from app.entities.game_score import GameScore
 from app.entities.game_user import GameUser
 from app.utils.response import error_response
 
+logger = logging.getLogger(__name__)
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+class _LeaderboardCache:
+    def __init__(self, ttl_seconds: int) -> None:
+        self._ttl_seconds = max(ttl_seconds, 0)
+        self._lock = threading.RLock()
+        self._store: dict[int, tuple[datetime, list[dict]]] = {}
+
+    def get(self, limit: int) -> list[dict] | None:
+        if self._ttl_seconds <= 0:
+            return None
+
+        now = _now()
+        with self._lock:
+            cached = self._store.get(limit)
+            if not cached:
+                return None
+            expires_at, entries = cached
+            if now >= expires_at:
+                self._store.pop(limit, None)
+                return None
+            # Return a copy so callers cannot mutate cache contents.
+            return [dict(item) for item in entries]
+
+    def set(self, limit: int, entries: list[dict]) -> None:
+        if self._ttl_seconds <= 0:
+            return
+
+        expires_at = _now() + timedelta(seconds=self._ttl_seconds)
+        cached_entries = [dict(item) for item in entries]
+        with self._lock:
+            self._store[limit] = (expires_at, cached_entries)
+
+    def invalidate(self) -> None:
+        with self._lock:
+            self._store.clear()
+
+
+_leaderboard_cache = _LeaderboardCache(GAME_LEADERBOARD_CACHE_TTL_SECONDS)
 
 
 def _create_game_access_token(user: GameUser) -> tuple[str, int]:
@@ -80,6 +128,9 @@ def submit_game_score(db: Session, user_id: int, score: int) -> dict:
     db.add(user)
     db.commit()
     db.refresh(user)
+    if updated_best:
+        _leaderboard_cache.invalidate()
+        logger.debug("Leaderboard cache invalidated user_id=%s best_score=%s", user.id, user.best_score)
 
     return {
         "user_id": user.id,
@@ -92,6 +143,12 @@ def submit_game_score(db: Session, user_id: int, score: int) -> dict:
 
 
 def get_leaderboard(db: Session, limit: int = 20) -> list[dict]:
+    cached_entries = _leaderboard_cache.get(limit)
+    if cached_entries is not None:
+        logger.debug("Leaderboard cache hit limit=%s", limit)
+        return cached_entries
+
+    logger.debug("Leaderboard cache miss limit=%s", limit)
     users = (
         db.query(GameUser)
         .filter(
@@ -108,7 +165,7 @@ def get_leaderboard(db: Session, limit: int = 20) -> list[dict]:
         .all()
     )
 
-    return [
+    entries = [
         {
             "rank": idx + 1,
             "user_id": user.id,
@@ -118,3 +175,5 @@ def get_leaderboard(db: Session, limit: int = 20) -> list[dict]:
         }
         for idx, user in enumerate(users)
     ]
+    _leaderboard_cache.set(limit, entries)
+    return entries
