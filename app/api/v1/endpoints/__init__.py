@@ -1,6 +1,18 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import customer_interest, vendor, category, auth, payment, ad, paid_users, payment_maintenance, customer_purchases, profile
+from app.api.v1.endpoints import (
+    ad,
+    auth,
+    category,
+    customer_interest,
+    customer_purchases,
+    game,
+    paid_users,
+    payment,
+    payment_maintenance,
+    profile,
+    vendor,
+)
 
 router = APIRouter()
 router.include_router(customer_interest.router)
@@ -13,3 +25,4 @@ router.include_router(paid_users.router)
 router.include_router(payment_maintenance.router)
 router.include_router(customer_purchases.router)
 router.include_router(profile.router)
+router.include_router(game.router)

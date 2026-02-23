@@ -87,3 +87,15 @@ def get_current_customer(
             detail=error_response(message="Customer token required", code="invalid_token"),
         )
     return payload
+
+
+def get_current_game_user(
+    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> dict:
+    payload = decode_token(creds.credentials)
+    if payload.get("role") != "game_user":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=error_response(message="Game user token required", code="invalid_token"),
+        )
+    return payload

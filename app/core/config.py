@@ -46,6 +46,9 @@ JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
 REFRESH_TOKEN_PEPPER = os.getenv("REFRESH_TOKEN_PEPPER", "")
 
+# Game auth settings
+GAME_ACCESS_TOKEN_EXPIRE_DAYS = int(os.getenv("GAME_ACCESS_TOKEN_EXPIRE_DAYS", "3650"))
+
 # Payment providers
 PAYMENT_PROVIDER = os.getenv("PAYMENT_PROVIDER", "mock")  # options: stripe, razorpay, adyen, mock
 PAYMENT_IDEMPOTENCY_HEADER = os.getenv("PAYMENT_IDEMPOTENCY_HEADER", "Idempotency-Key")
