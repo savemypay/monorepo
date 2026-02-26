@@ -5,7 +5,7 @@ import {CategoryCard} from "./CategoryCard"
 export default function Categories() {
   return (
     <section id="categories" className="pb-12 md:pb-24 bg-white">
-      <div className="max-w-[1400px] mx-auto px-8">
+      <div className="max-w-[1200px] mx-auto px-8">
 
         {/* Header */}
         <div className="text-center mb-16">

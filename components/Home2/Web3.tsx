@@ -1,64 +1,99 @@
 import { WEB3_CARDS, WEB3_FLOW } from "./data";
 
 const REVEAL =
-  "opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
+  ""; // "opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
 
 export default function Web3() {
   return (
-    <section id="web3" className="px-6 py-12 md:py-24 bg-[#f9f7f3]">
-      <div className="max-w-300 mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16 items-center mt-4">
-          <div>
-            <span
-              className={`inline-block bg-[#d4f0ee] text-[#3da8a0] px-[13px] py-1 rounded-[20px] text-[11px] font-bold tracking-[1px] uppercase mb-5 ${REVEAL}`}
+    <section id="web3" className="px-6 py-12 md:py-30 bg-[#f5f4f6]">
+      <div className="max-w-[1200px] mx-auto">
+        <div className="relative overflow-hidden bg-[#f5f4f6]">
+          <div className="relative">
+            <h2
+              className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight font-medium mb-[14px] text-[#163B63] ${REVEAL}`}
               data-reveal
+              style={{ transitionDelay: "100ms" }}
             >
-              🚀 Web3 Rewards
-            </span>
-            <h2 className={`text-[28px] md:text-[36px] lg:text-[54px] leading-[1.15] font-extrabold mb-[14px] ${REVEAL}`} data-reveal style={{ transitionDelay: "100ms" }}>
-              Earn While You <em className="not-italic text-[#1b3a6b]">Save - Web3 Powered</em>
+              Save Money.<br/> Earn blockchain based rewards.<br/> <em className="not-italic bg-[linear-gradient(90deg,#e8a830,#f5c96a)] bg-clip-text text-transparent">On Solana.</em>
             </h2>
-            <p className={`text-base md:text-lg text-[#5a7090] leading-[1.75] max-w-150 ${REVEAL}`} data-reveal style={{ transitionDelay: "200ms" }}>
+            <p
+              className={`text-base md:text-lg text-[#7A8CA3] leading-tight max-w-150 ${REVEAL}`}
+              data-reveal
+              style={{ transitionDelay: "200ms" }}
+            >
               Every purchase earns reward points you can convert into crypto tokens. Your shopping
               activity becomes a real financial investment.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-[30px]">
-              {WEB3_CARDS.map((item, index) => (
+            <div
+              className={`mt-10 overflow-hidden rounded-2xl border border-[#e0e8f0] bg-[#e0e8f0] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px ${REVEAL}`}
+              data-reveal
+              style={{ transitionDelay: "300ms" }}
+            >
+              {WEB3_CARDS.map((item) => (
                 <article
                   key={item.title}
-                  className={`bg-white rounded-[13px] p-[22px] border border-[#e0e8f0] hover:border-[#6ec6c0] hover:shadow-[0_6px_24px_rgba(110,198,192,0.15)] transition-all ${REVEAL}`}
-                  data-reveal
-                  style={{ transitionDelay: `${(index + 1) * 100}ms` }}
+                  className="group relative bg-white p-6 transition-colors duration-300 hover:bg-[#f8fbff]"
                 >
-                  <div className="text-[26px] mb-[11px]">{item.icon}</div>
-                  <h4 className="text-sm md:text-lg font-bold text-[#1b3a6b] mb-[7px]">{item.title}</h4>
-                  <p className="text-xs md:text-sm text-[#5a7090] leading-[1.5]">{item.description}</p>
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-[rgba(110,198,192,0.28)] bg-[rgba(110,198,192,0.12)] text-2xl"> 
+                    {item.icon}
+                  </div>
+                  <h4 className="text-sm md:text-base font-bold text-[#1b3a6b] leading-snug">{item.title}</h4>
+                  <p className="mt-2 text-xs md:text-sm text-[#7A8CA3] leading-[1.6]">{item.description}</p>
+                  <div className="absolute bottom-0 left-0 h-[2px] w-full origin-left scale-x-0 bg-[linear-gradient(90deg,#e8a830,#f5c96a)] transition-transform duration-300 group-hover:scale-x-100" />
                 </article>
               ))}
             </div>
-          </div>
 
-          <aside
-            className={`bg-[linear-gradient(135deg,#0f2347,#1b3a6b)] rounded-[18px] p-8 border border-[rgba(232,168,48,0.15)] shadow-[0_20px_60px_rgba(15,35,71,0.2)] ${REVEAL}`}
-            data-reveal
-            style={{ transitionDelay: "200ms" }}
-          >
-            <div className="text-[15px] font-bold text-white mb-4">💰 How Rewards Flow</div>
-            {WEB3_FLOW.map((item, index) => (
-              <div
-                key={item.value}
-                className="flex items-center gap-[13px] bg-white/5 border border-white/10 rounded-[11px] px-4 py-[14px] mb-3 hover:border-[rgba(232,168,48,0.3)] hover:bg-[rgba(232,168,48,0.06)] transition-all"
-              >
-                <div className="text-[24px]">{item.icon}</div>
-                <div>
-                  <div className="text-[11px] uppercase tracking-[0.8px] text-white/58 font-medium">{item.step}</div>
-                  <div className="text-[15px] font-bold text-white">{item.value}</div>
-                </div>
-                {index < WEB3_FLOW.length - 1 && <div className="ml-auto text-[#e8a830] text-[18px] font-bold">↓</div>}
+            <aside
+              className={`relative mt-10 overflow-hidden rounded-3xl border border-[rgba(232,168,48,0.16)] bg-[linear-gradient(135deg,#122E4E_0%,#163B63_55%,#1E2F46_100%)] p-6 md:p-10 shadow-[0_20px_60px_rgba(15,35,71,0.2)] ${REVEAL}`}
+              data-reveal
+              style={{ transitionDelay: "400ms" }}
+            >
+              <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(232,168,48,0.14)_0%,transparent_70%)]" />
+
+              <div className="relative mb-8 flex items-center gap-3">
+                <div className="text-[15px] font-bold uppercase tracking-[1.5px] text-[#F2B705]">💰 How Rewards Flow</div>
+                <div className="h-px flex-1 bg-[linear-gradient(90deg,rgba(232,168,48,0.35),transparent)]" />
               </div>
-            ))}
-          </aside>
+
+              <div className="relative">
+                <div className="pointer-events-none absolute left-[13%] right-[14.5%] top-9 hidden lg:block h-[2px] bg-[linear-gradient(90deg,#1CA7A6_0%,#6ec6c0_45%,#F2B705_100%)]" />
+
+                <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  {WEB3_FLOW.map((item, index) => {
+                    const isLast = index === WEB3_FLOW.length - 1;
+
+                    return (
+                      <div key={item.value} className="group flex flex-col items-center gap-4 text-center">
+                        <div
+                          className={`relative flex h-[72px] w-[72px] items-center justify-center rounded-full border-2 text-[24px] transition-all duration-300 ${
+                            isLast
+                              ? "border-[rgba(232,168,48,0.4)] bg-[rgba(232,168,48,0.08)] group-hover:border-[#F2B705] group-hover:shadow-[0_0_24px_rgba(232,168,48,0.22)]"
+                              : "border-white/20 bg-[#0f2347] group-hover:border-[#1CA7A6] group-hover:scale-110 group-hover:shadow-[0_0_24px_rgba(110,198,192,0.22)]"
+                          }`}
+                        >
+                          {item.icon}
+                          <span
+                            className={`absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-extrabold ${
+                              isLast ? "bg-[#F2B705] text-[#0f2347]" : "bg-[#1CA7A6] text-[#0f2347]"
+                            }`}
+                          >
+                            {index + 1}
+                          </span>
+                        </div>
+
+                        <div className={`text-sm font-bold leading-snug ${isLast ? "text-[#F2B705]" : "text-white"}`}>
+                          {item.value}
+                        </div>
+                        <div className="text-xs text-white/65">{item.step}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
     </section>

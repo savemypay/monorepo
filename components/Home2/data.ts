@@ -1,7 +1,7 @@
 export const NAV_LINKS = [
-  { label: "Categories", href: "#categories" },
   { label: "How It Works", href: "#how" },
-  { label: "Web3 Rewards", href: "#web3" },
+  { label: "Categories", href: "#categories" },
+  { label: "Rewards", href: "#web3" },
   { label: "Vendors", href: "#partner" },
 ];
 
@@ -17,57 +17,56 @@ export const TRUST_ITEMS = [
   "🔒 100% secure payments",
   "⚡ Deals closed in 1 week",
   "🤝 Verified vendors only",
-  // "💰 Average 20-40% savings",
 ];
 
 export const CATEGORIES = [
   {
-    icon: "🛡️",
+    slug: "insurance",
+    image: "/assets/Sector Cards/Insurance.png",
     title: "Insurance Plans",
     description:
-      "Access group rates on health, life, and home insurance. Premiums previously reserved for large corporations, now unlocked for you.",
-    badge: "Save up to 35%",
+      " Health & Life InsuranceNew text: Get group rates on health, life, and home insurance that were earlier only available to big companies.",
   },
   {
-    icon: "🏠",
+    slug: "property-deals",
+    image: "/assets/Sector Cards/Real Estate.png",
     title: "Property Deals",
     description:
-      "Unlock exclusive bulk property offers, negotiated pricing on rentals, purchases, and home loans with group leverage.",
-    badge: "Save up to 12%",
+      "Homes & PropertyNew text: Better pricing on home loans, rentals, and property purchases through group negotiation.",
   },
   {
-    icon: "🚗",
-    title: "Automotive",
+    slug: "automotive",
+    image: "/assets/Sector Cards/Automobiles.png",
+    title: "Cars & Two-Wheelers",
     description:
       "Get fleet pricing on new and pre-owned vehicles. Our group orders give you dealer-level discounts without the hassle.",
-    badge: "Save up to 18%",
   },
   {
-    icon: "🛒",
+    slug: "ecommerce",
+    image: "/assets/Sector Cards/E Commerce.png",
     title: "E-Commerce",
     description:
-      "Daily essentials, gadgets, and groceries - unlock bulk discounts and cashback on Amazon, Flipkart and more.",
-    badge: "Save up to 25%",
+      "Daily Essentials & GadgetsNew text: Bulk discounts and cashback on daily essentials.",
   },
   {
-    icon: "✈️",
+    slug: "travel",
+    image: "/assets/Sector Cards/Travel.png",
     title: "Travel & Stays",
     description:
       "Group deals on flights, hotels, cabs, and holidays. Corporate travel rates finally unlocked for everyday travellers.",
-    badge: "Save up to 30%",
   },
   {
-    icon: "🏥",
+    slug: "healthcare",
+    image: "/assets/Sector Cards/Health Care.png",
     title: "Healthcare",
     description:
-      "Discounted telehealth, diagnostics, medicines, and preventive care packages negotiated for our entire community.",
-    badge: "Save up to 40%",
+      " Health & WellnessNew text: Discounted diagnostics, medicines and preventive care packages.",
   },
 ];
 
 export const HOW_STEPS = [
   {
-    title: "Browse & Express Interest",
+    title: "Browse & Show Interest (No payment, no commitment)",
     description:
       "Explore categories and signal what you need. No commitment or payment required at this stage.",
   },
@@ -77,12 +76,12 @@ export const HOW_STEPS = [
       "Our platform groups buyers with similar needs. More people joining = better deals for everyone.",
   },
   {
-    title: "We Negotiate For You",
+    title: "We Negotiate the Best Deal",
     description:
       "Our expert team works directly with vendors, delivering 20-40% off regular retail prices on your behalf.",
   },
   {
-    title: "Confirm & Purchase",
+    title: "Review & Save",
     description:
       "Review the deal, lock in your discount, complete with confidence. Save hundreds to lakhs instantly.",
   },
@@ -104,7 +103,7 @@ export const WEB3_CARDS = [
   },
   {
     icon: "🪙",
-    title: "Convert to Tokens",
+    title: "Redeem/Swap Reward points",
     description:
       "Exchange accumulated rewards for our native tokens with real-world value on exchanges.",
   },
@@ -122,8 +121,8 @@ export const WEB3_CARDS = [
 
 export const WEB3_FLOW = [
   { icon: "🛒", step: "Step 1", value: "Make a Group Purchase" },
-  { icon: "⭐", step: "Step 2", value: "Earn Reward Points" },
-  { icon: "🪙", step: "Step 3", value: "Convert to Tokens" },
+  { icon: "⭐", step: "Step 2", value: "Earn & Claim Reward Points" },
+  { icon: "🪙", step: "Step 3", value: "Redeem/Swap Reward points" },
   { icon: "💰", step: "Step 4", value: "Build Real Wealth" },
 ];
 
@@ -132,28 +131,28 @@ export const WHY_ITEMS = [
     icon: "💰",
     title: "Unbeatable Savings",
     description:
-      "Save 20 - 40% compared to buying alone. Prices once reserved for corporations, now accessible to every salaried professional.",
+      "Prices once reserved for corporations, now accessible to every salaried professional. Collective buying delivers what solo shopping never can — real, significant savings on everything that matters.",
     tone: "gold",
   },
   {
     icon: "🤝",
     title: "We Negotiate For You",
     description:
-      "No haggling needed. Our expert team handles all vendor discussions using the group's collective leverage.",
+      "No haggling needed. Our expert team handles all vendor discussions using the group's collective leverage — so you get the best deal without lifting a finger.",
     tone: "teal",
   },
   {
     icon: "⚡",
     title: "Lightning Fast",
     description:
-      "Express interest, we build the group, deals finalised in 1 week. Fast, efficient, completely transparent throughout.",
+      "Express interest, we build the group, deals finalised in 1 week. Fast, efficient and completely transparent at every stage.",
     tone: "gold",
   },
   {
     icon: "✅",
     title: "Trusted Vendors Only",
     description:
-      "Every vendor thoroughly vetted and verified. We partner exclusively with reputable, reliable businesses only.",
+      "Every vendor thoroughly vetted before appearing on the platform. We partner exclusively with reputable, reliable businesses.",
     tone: "teal",
   },
   {
@@ -167,7 +166,7 @@ export const WHY_ITEMS = [
     icon: "📱",
     title: "Simple & Accessible",
     description:
-      "Intuitive platform making the power of bulk buying accessible to everyone - not just big corporations.",
+      "An intuitive platform that makes the power of bulk buying available to everyone — not just large corporations.",
     tone: "teal",
   },
 ];
@@ -247,27 +246,28 @@ export const FAQ_ITEMS = [
 ];
 
 export const FOOTER_COLUMNS = [
+  {
+    title: "Quick Links",
+    links: [
+      { label: "Categories", href: "#categories" },
+      { label: "How It Works", href: "#how" },
+      { label: "Web3 Rewards", href: "#web3" },
+      { label: "Partner With Us", href: "#partner" },
+    ],
+  },
   // {
-  //   title: "Platform",
+  //   title: "Support",
   //   links: [
-  //     { label: "Categories", href: "#categories" },
-  //     { label: "How It Works", href: "#how" },
-  //     { label: "Web3 Rewards", href: "#web3" },
-  //     { label: "Partner With Us", href: "#partner" },
+  //     { label: "FAQ", href: "#faq" },
+  //     { label: "Contact Us", href: "#" },
+  //     { label: "Help Center", href: "#" },
+  //     // { label: "Live Chat", href: "#" },
   //   ],
   // },
   {
-    title: "Support",
+    title: "Platform",
     links: [
       { label: "FAQ", href: "#faq" },
-      { label: "Contact Us", href: "#" },
-      { label: "Help Center", href: "#" },
-      { label: "Live Chat", href: "#" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
       { label: "Privacy Policy", href: "#" },
       { label: "Terms of Service", href: "#" },
       { label: "Vendor Terms", href: "#" },

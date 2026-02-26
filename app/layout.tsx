@@ -5,17 +5,16 @@ import { Suspense } from "react";
 import { buildMetadata, getSiteUrl } from "@/lib/seo";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
-const satoshi = localFont({
-  src: "./fonts/Satoshi-Variable.ttf",
+const sofiaPro = localFont({
+  src: [
+    { path: "./fonts/sofia-pro/Sofia Pro Regular Az.otf", weight: "400", style: "normal" },
+    { path: "./fonts/sofia-pro/Sofia Pro Medium Az.otf", weight: "500", style: "normal" },
+    { path: "./fonts/sofia-pro/Sofia Pro Semi Bold Az.otf", weight: "700", style: "normal" },
+    { path: "./fonts/sofia-pro/Sofia Pro Regular Italic Az.otf", weight: "400", style: "italic" },
+  ],
   display: "swap",
-  fallback: ["Inter", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
-});
-const satoshi_italic = localFont({
-  src: "./fonts/Satoshi-VariableItalic.ttf",
-  display: "swap",
-  fallback: ["Inter", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
-  variable: "--font-satoshi-i",
-});
+  // fallback: ["Inter", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
@@ -37,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${satoshi.className} ${satoshi_italic.variable} antialiased`}
+        className={`${sofiaPro.className} antialiased`}
       >
             <main className="relative z-0 w-full ">
                <main className="h-full w-full">{children}</main>
