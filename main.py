@@ -19,6 +19,7 @@ from fastapi.responses import JSONResponse
 from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.background.payment_expiry import payment_expirer
+from app.background.ad_expiry import ad_expirer_daily
 
 logger = logging.getLogger(__name__)
 
@@ -57,18 +58,27 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 @app.on_event("startup")
 async def start_background_tasks():
+    logger.info("Server startUp")
+    # app.state.ad_expirer_task = asyncio.create_task(ad_expirer_daily(run_hour=0, run_minute=1))
+    # logger.info("Started ad_expirer daily background task")
     # app.state.payment_expirer_task = asyncio.create_task(payment_expirer())
-    logger.info("Started payment_expirer background task")
+    # logger.info("payment_expirer background task is disabled")
 
 
 @app.on_event("shutdown")
 async def stop_background_tasks():
-    pass
-    # task = getattr(app.state, "payment_expirer_task", None)
-    # if task:
-    #     task.cancel()
+    ad_task = getattr(app.state, "ad_expirer_task", None)
+    if ad_task:
+        ad_task.cancel()
+        with contextlib.suppress(Exception):
+            await ad_task
+        logger.info("Stopped ad_expirer background task")
+
+    # payment_task = getattr(app.state, "payment_expirer_task", None)
+    # if payment_task:
+    #     payment_task.cancel()
     #     with contextlib.suppress(Exception):
-    #         await task
+    #         await payment_task
     #     logger.info("Stopped payment_expirer background task")
 
 
