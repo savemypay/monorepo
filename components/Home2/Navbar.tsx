@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { JoinDialog } from "../ui/join-dialog";
 import { NAV_LINKS } from "./data";
+import Image from "next/image";
 
 function smoothScroll(id: string, offset = 68) {
   const element = document.getElementById(id);
@@ -55,13 +56,14 @@ export default function Navbar() {
   const vendorIsExternal = isExternalUrl(VENDOR_PORTAL_URL);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[200] backdrop-blur-2xl bg-[rgba(15,35,71,0.92)] border-b border-[rgba(232,168,48,0.18)]">
-      <div className="max-w-[1200px] mx-auto h-20 px-6 flex items-center justify-between">
+    <nav className="fixed top-0 left-0 right-0 z-[200] backdrop-blur-2xl bg-[#f5f4f6] border-b border-[rgba(232,168,48,0.18)]">
+      <div className="max-w-[1200px] mx-auto h-14 md:h-20 px-6 flex items-center justify-between">
         <a href="#" className="inline-flex items-center gap-2.75 text-white no-underline font-extrabold text-2xl">
-          <span className="w-9 h-9 rounded-full border-2 border-[#e8a830] bg-[linear-gradient(135deg,#e8a830,#6ec6c0)] flex items-center justify-center text-lg">
+          {/* <span className="w-9 h-9 rounded-full border-2 border-[#e8a830] bg-[linear-gradient(135deg,#e8a830,#6ec6c0)] flex items-center justify-center text-lg">
             💰
           </span>
-          SaveMyPay
+          SaveMyPay */}
+          <Image src="/assets/logo.svg" alt="logo" height={80} width={180}/>
         </a>
 
         <div className="hidden md:flex items-center gap-7">
@@ -73,12 +75,12 @@ export default function Navbar() {
                 e.preventDefault();
                 handleSectionClick(item.href);
               }}
-              className="text-base font-semibold text-white/60 hover:text-[#e8a830] transition-colors"
+              className="text-base font-semibold text-[#1b3a6b] hover:text-[#e8a830] transition-colors"
             >
               {item.label}
             </a>
           ))}
-          <div className="relative" ref={portalRef}>
+          {/* <div className="relative" ref={portalRef}>
             <button
               type="button"
               onClick={() => setIsPortalMenuOpen((prev) => !prev)}
@@ -111,20 +113,20 @@ export default function Navbar() {
                 </a>
               </div>
             )}
-          </div>
+          </div> */}
           <button
             type="button"
             onClick={() => setDialogType("customer")}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-[9px] font-bold text-[15px] text-[#0f2347] bg-[linear-gradient(135deg,#e8a830,#f5c96a)] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(232,168,48,0.4)] transition-all"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-[9px] font-bold text-[15px] text-[#0f2347] bg-[linear-gradient(135deg,#F2B705,#D9A304)] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(232,168,48,0.4)] transition-all"
           >
-            Start Saving →
+            Start Saving
           </button>
         </div>
 
         <button
           type="button"
           onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-          className="md:hidden inline-flex items-center justify-center text-white hover:text-[#e8a830] transition-colors"
+          className="md:hidden inline-flex items-center justify-center text-[#0f2347] hover:text-[#e8a830] transition-colors"
           aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           aria-expanded={isMobileMenuOpen}
         >
@@ -133,22 +135,22 @@ export default function Navbar() {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-[rgba(232,168,48,0.18)] bg-[rgba(12,27,54,0.98)]">
+        <div className="md:hidden border-t border-[rgba(232,168,48,0.18)] bg-white">
           <div className="max-w-[1200px] mx-auto px-6 py-4 space-y-2">
-            {/* {NAV_LINKS.map((item) => (
+            {NAV_LINKS.map((item) => (
               <button
                 key={item.href}
                 type="button"
                 onClick={() => handleSectionClick(item.href)}
-                className="block w-full text-left rounded-lg px-2 py-2 text-sm font-semibold text-white/80 hover:text-[#e8a830] hover:bg-white/5 transition-colors"
+                className="block w-full text-left rounded-lg px-2 py-2 text-sm font-semibold text-[#0f2347] hover:text-[#e8a830] hover:bg-white/5 transition-colors"
               >
                 {item.label}
               </button>
             ))}
 
-            <div className="my-2 h-px bg-white/10" /> */}
+            <div className="my-2 h-px bg-white/10" />
 
-            <Link
+            {/* <Link
               href={CUSTOMER_PORTAL_PATH}
               onClick={closeMenus}
               className="block rounded-lg px-2 py-2 text-sm font-semibold text-white/80 hover:text-[#e8a830] hover:bg-white/5 transition-colors"
@@ -163,7 +165,7 @@ export default function Navbar() {
               className="block rounded-lg px-2 py-2 text-sm font-semibold text-white/80 hover:text-[#e8a830] hover:bg-white/5 transition-colors"
             >
               Partner Console
-            </a>
+            </a> */}
 
             <button
               type="button"
@@ -173,7 +175,7 @@ export default function Navbar() {
               }}
               className="mt-2 inline-flex w-full items-center justify-center gap-2 px-5 py-2 rounded-[9px] font-bold text-sm text-[#0f2347] bg-[linear-gradient(135deg,#e8a830,#f5c96a)]"
             >
-              Start Saving →
+              Start Saving
             </button>
           </div>
         </div>

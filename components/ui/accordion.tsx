@@ -26,7 +26,7 @@ function AccordionItem({
     <AccordionPrimitive.Item
       data-slot="accordion-item"
       className={cn(
-        " border-l-5 bg-[#F8FCFF] px-2 md:px-5 first:rounded-t-xl last:rounded-b-xl odd:border-l-blue-1 even:border-l-blue-2",
+        "bg-[#F8FCFF] px-2 md:px-5 first:rounded-t-xl last:rounded-b-x",
         className
       )}
       {...props}

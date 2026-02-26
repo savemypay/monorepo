@@ -45,39 +45,19 @@ export default function Footer() {
             href="#"
             className="inline-flex items-center gap-3 text-white no-underline font-extrabold text-[30px]"
           >
-            <span className="w-9 h-9 rounded-full border-2 border-[#e8a830] bg-[linear-gradient(135deg,#e8a830,#6ec6c0)] flex items-center justify-center text-[18px]">
+            {/* <span className="w-9 h-9 rounded-full border-2 border-[#e8a830] bg-[linear-gradient(135deg,#e8a830,#6ec6c0)] flex items-center justify-center text-[18px]">
               💰
             </span>
-            SaveMyPay
+            SaveMyPay */}
+            <Image src="/assets/logo.png" alt="logo" height={60} width={180}/>
+            
           </a>
           <p className="text-sm leading-[1.7] text-white/55 mt-3 max-w-67.5">
             Transforming how salaried professionals make high-value purchases through the
             collective buying power of our community.
           </p>
-          {/* Social Links */}
-          <div className="mt-4 flex items-center gap-4">
-            {socialLinks.map((item) => (
-              <a
-                key={item.id}
-                href={item.link}
-                target="_blank"
-                rel="noreferrer noopener"
-                aria-label={item.name}
-                className="group inline-flex items-center justify-center"
-              >
-                <Image
-                  src={item.icon}
-                  alt={item.name}
-                  width={24}
-                  height={24}
-                  className="h-6 w-6 object-contain opacity-80 transition-opacity group-hover:opacity-100 hover:scale-120"
-                />
-              </a>
-            ))}
-          </div>
         </div>
-        {/* Address */}
-        <div className="col-span-2 lg:col-span-1">
+        {/* <div className="col-span-2 lg:col-span-1">
           <h5 className="text-[#e8a830] uppercase tracking-[1.2px] text-[12px] font-bold mb-3">
             Address
           </h5>
@@ -93,15 +73,15 @@ export default function Footer() {
               <Mail size={16} className="text-[#e8a830] shrink-0" />
               support@savemypay.xyz
             </a>
-            {/* <a
+            <a
               href="tel:+919000000000"
               className="flex items-center gap-2.5 hover:text-[#e8a830] transition-colors"
             >
               <Phone size={16} className="text-[#e8a830] shrink-0" />
               +91 90000 00000
-            </a> */}
+            </a>
           </div>
-        </div>
+        </div> */}
 
         {FOOTER_COLUMNS.map((column) => (
           <div key={column.title}>
@@ -130,11 +110,52 @@ export default function Footer() {
             ))}
           </div>
         ))}
+        <div className="col-span-2 lg:col-span-1">
+          <h5 className="text-[#e8a830] uppercase tracking-[1.2px] text-[12px] font-bold mb-3">
+            Contact US
+          </h5>
+          {/* Email */}
+          <div className="mt-4">
+            <a
+              href="mailto:support@savemypay.xyz"
+              className="flex items-center gap-2.5 text-white/55 hover:text-[#e8a830] transition-colors font-medium text-md"
+            >
+              <Mail size={16} className="text-[#e8a830] shrink-0" />
+              support@savemypay.xyz
+            </a>
+          </div>
+          {/* Social Links */}
+          <div className="mt-4">
+          <h5 className="text-[#e8a830] uppercase tracking-[1.2px] text-[12px] font-bold mb-3">
+            Social
+          </h5>
+          <div className="flex items-center gap-4">
+            {socialLinks.map((item) => (
+              <a
+                key={item.id}
+                href={item.link}
+                target="_blank"
+                rel="noreferrer noopener"
+                aria-label={item.name}
+                className="group inline-flex items-center justify-center"
+              >
+                <Image
+                  src={item.icon}
+                  alt={item.name}
+                  width={24}
+                  height={24}
+                  className="h-6 w-6 object-contain opacity-80 transition-opacity group-hover:opacity-100 hover:scale-120"
+                />
+              </a>
+            ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="max-w-300 mx-auto pt-6 flex items-center justify-between flex-wrap gap-3">
         <p className="text-sm text-white/55">© 2026 SaveMyPay. All rights reserved.</p>
-        <div className="flex items-center gap-5">
+        {/* <div className="flex items-center gap-5">
           <a href="#" className="text-[12px] text-white/45 no-underline hover:text-[#e8a830] transition-colors">
             Privacy
           </a>
@@ -144,7 +165,7 @@ export default function Footer() {
           <a href="#" className="text-[12px] text-white/45 no-underline hover:text-[#e8a830] transition-colors">
             Cookies
           </a>
-        </div>
+        </div> */}
       </div>
     </footer>
   );

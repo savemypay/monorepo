@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property & Corporate Farming | SaveMyPay</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --earth-green: #2C5F2D;
+            --sage: #7A9B76;
+            --wheat: #D4A574;
+            --soil: #8B6F47;
+            --cream: #F5F3EF;
+            --forest: #1B3E1F;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--cream);
+            color: var(--forest);
+            line-height: 1.6;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--earth-green) 0%, var(--forest) 100%);
+            color: white;
+            padding: 120px 20px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"><path fill="rgba(255,255,255,0.05)" d="M0,20 Q300,60 600,20 T1200,20 L1200,120 L0,120 Z"/></svg>');
+            background-size: cover;
+            opacity: 0.3;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 56px;
+            margin-bottom: 20px;
+            line-height: 1.1;
+        }
+
+        .hero-subtitle {
+            font-size: 22px;
+            color: var(--wheat);
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--wheat);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .problem-section {
+            padding: 80px 20px;
+            background: white;
+        }
+
+        .section-tag {
+            display: inline-block;
+            background: var(--sage);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 42px;
+            color: var(--forest);
+            margin-bottom: 30px;
+            line-height: 1.2;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .problem-card {
+            background: var(--cream);
+            padding: 30px;
+            border-radius: 12px;
+            border-left: 4px solid var(--soil);
+        }
+
+        .problem-card h3 {
+            font-size: 20px;
+            color: var(--earth-green);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .problem-card p {
+            color: #555;
+            line-height: 1.7;
+        }
+
+        .solution-section {
+            padding: 80px 20px;
+            background: linear-gradient(to bottom, var(--cream), white);
+        }
+
+        .solution-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            margin-top: 40px;
+        }
+
+        .solution-visual {
+            background: var(--earth-green);
+            border-radius: 20px;
+            padding: 50px;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .solution-visual::before {
+            content: '🌾';
+            font-size: 120px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.1;
+        }
+
+        .solution-visual h3 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 32px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .solution-visual p {
+            font-size: 18px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .benefits-list {
+            list-style: none;
+        }
+
+        .benefits-list li {
+            padding: 15px 0;
+            padding-left: 40px;
+            position: relative;
+            font-size: 17px;
+            line-height: 1.6;
+        }
+
+        .benefits-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--earth-green);
+            font-weight: 700;
+            font-size: 24px;
+        }
+
+        .how-it-works {
+            padding: 80px 20px;
+            background: var(--forest);
+            color: white;
+        }
+
+        .how-it-works h2 {
+            color: white;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .step {
+            text-align: center;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: var(--wheat);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--forest);
+            margin: 0 auto 20px;
+        }
+
+        .step h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--wheat);
+        }
+
+        .step p {
+            opacity: 0.9;
+            line-height: 1.7;
+        }
+
+        .vision-section {
+            padding: 80px 20px;
+            background: white;
+        }
+
+        .vision-box {
+            background: linear-gradient(135deg, var(--sage) 0%, var(--earth-green) 100%);
+            padding: 60px;
+            border-radius: 20px;
+            color: white;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .vision-box h3 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .vision-box p {
+            font-size: 20px;
+            line-height: 1.8;
+            opacity: 0.95;
+        }
+
+        .cta-section {
+            padding: 80px 20px;
+            text-align: center;
+            background: var(--cream);
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--earth-green);
+            color: white;
+            padding: 18px 45px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .cta-button:hover {
+            background: var(--forest);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 38px;
+            }
+            
+            .solution-content {
+                grid-template-columns: 1fr;
+            }
+            
+            h2 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="container">
+            <h1>🏡 Property & Corporate Farming</h1>
+            <p class="hero-subtitle">Unlock exclusive bulk property offers + Join the future of agriculture through collective ownership</p>
+            
+            <div class="stats-row">
+                <div class="stat-box">
+                    <span class="stat-number">12%</span>
+                    <span class="stat-label">Average Savings on Property</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number">40%</span>
+                    <span class="stat-label">Lower Farming Costs</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number">100+</span>
+                    <span class="stat-label">Salaried Professionals Farming Together</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="problem-section">
+        <div class="container">
+            <span class="section-tag">THE CHALLENGE</span>
+            <h2>Why Traditional Property & Farming Models Are Failing</h2>
+            
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <h3>🏠 High Individual Property Costs</h3>
+                    <p>Buying property alone means paying full retail prices. Developers and sellers rarely offer discounts to individual buyers, leaving you overpaying for your dream home or land.</p>
+                </div>
+                
+                <div class="problem-card">
+                    <h3>🌾 Small-Scale Farming Is Dying</h3>
+                    <p>Per-acre farming costs have skyrocketed. Individual farmers can't compete. Within a few years, small-scale farming will vanish entirely as costs become unsustainable.</p>
+                </div>
+                
+                <div class="problem-card">
+                    <h3>💰 1 Acre Is Not Economical</h3>
+                    <p>Buying just 1 acre of farmland for personal use makes no financial sense. Equipment, seeds, labor, irrigation — all cost more than the returns you'll ever see.</p>
+                </div>
+                
+                <div class="problem-card">
+                    <h3>🚫 Salaried Employees Locked Out</h3>
+                    <p>Thousands of salaried professionals want to enter agriculture but can't afford land individually. The barrier to entry keeps growing higher every year.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="solution-section">
+        <div class="container">
+            <span class="section-tag">THE SAVEMYPAY SOLUTION</span>
+            <h2>Group Buying Power Transforms Everything</h2>
+            
+            <div class="solution-content">
+                <div class="solution-visual">
+                    <h3>Corporate Agriculture Model</h3>
+                    <p>What if 50 salaried professionals bought farmland together? Suddenly, corporate-scale farming becomes accessible to everyone.</p>
+                </div>
+                
+                <div>
+                    <h3 style="font-size: 28px; margin-bottom: 25px;">How Collective Ownership Works:</h3>
+                    <ul class="benefits-list">
+                        <li><strong>Group land purchase:</strong> 50-100 people buy 25-50 acres together at bulk rates</li>
+                        <li><strong>Professional management:</strong> Hire expert farmers and agricultural managers</li>
+                        <li><strong>Economies of scale:</strong> Share costs of equipment, seeds, irrigation, labor</li>
+                        <li><strong>Reduced per-person cost:</strong> Each member invests ₹2-5 lakh instead of ₹50 lakh+</li>
+                        <li><strong>Profit sharing:</strong> Harvest revenue distributed among all members</li>
+                        <li><strong>Web3 transparency:</strong> Blockchain-tracked ownership and earnings</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="how-it-works">
+        <div class="container">
+            <h2>How SaveMyPay Makes It Happen</h2>
+            
+            <div class="steps-grid">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Express Interest</h3>
+                    <p>Tell us what you're looking for — property purchase, rental deals, or farmland investment. No commitment yet.</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>We Build Your Group</h3>
+                    <p>SaveMyPay aggregates demand from people with similar needs. For farming: We gather 50-100 interested professionals.</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Negotiate Together</h3>
+                    <p>We approach developers, landowners, and agricultural consultants with guaranteed bulk volume. Corporate pricing unlocked.</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Confirm & Own</h3>
+                    <p>Review the deal. Lock in your share. For farmland: Own your portion of corporate agricultural land with Web3-verified ownership.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vision-section">
+        <div class="container">
+            <span class="section-tag">OUR VISION</span>
+            <h2>The Future of Agriculture in India</h2>
+            
+            <div class="vision-box">
+                <h3>Corporate Farming for Everyone</h3>
+                <p>In 3-5 years, individual small-scale farming will be extinct. But through SaveMyPay, salaried professionals can ACCESS corporate-scale agriculture — pooling resources, sharing risks, and earning returns that were previously impossible. This isn't just saving money. This is democratizing land ownership and agricultural wealth.</p>
+            </div>
+            
+            <div class="problem-grid" style="margin-top: 50px;">
+                <div class="problem-card">
+                    <h3>📊 What We're Building</h3>
+                    <p><strong>Property Deals:</strong> Group purchases on residential, commercial, and agricultural land<br><br>
+                    <strong>Corporate Farming:</strong> Collective ownership of 25-100 acre farms with professional management<br><br>
+                    <strong>Rental Discounts:</strong> Bulk rental agreements in high-demand areas</p>
+                </div>
+                
+                <div class="problem-card">
+                    <h3>💡 Why It Works</h3>
+                    <p><strong>Massive Cost Reduction:</strong> 40-60% lower per-person investment<br><br>
+                    <strong>Professional Execution:</strong> Expert agricultural management<br><br>
+                    <strong>Risk Distribution:</strong> Shared across many members<br><br>
+                    <strong>Passive Income:</strong> Harvest revenue without daily involvement</p>
+                </div>
+                
+                <div class="problem-card">
+                    <h3>🎯 Who This Is For</h3>
+                    <p><strong>Salaried Professionals:</strong> Earn ₹5L-50L annually, want agricultural investment<br><br>
+                    <strong>NRIs:</strong> Want India land exposure without hassle<br><br>
+                    <strong>Future Farmers:</strong> Passionate about agriculture, blocked by cost</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cta-section">
+        <div class="container">
+            <h2>Ready to Join the Agricultural Revolution?</h2>
+            <p style="font-size: 20px; color: #555; margin-bottom: 10px;">Be among the first salaried professionals to own corporate farmland.</p>
+            <a href="#" class="cta-button">Express Interest — No Commitment</a>
+        </div>
+    </div>
+</body>
+</html>
