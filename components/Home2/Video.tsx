@@ -1,39 +1,91 @@
-const REVEAL =
-  "opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
+// const REVEAL = "opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
+
+// const VIDEO_EMBED_URL =
+//   process.env.NEXT_PUBLIC_HOME_VIDEO_URL ?? "https://www.youtube-nocookie.com/embed/M7lc1UVf-VE";
+
+// export default function Video() {
+//   return (
+//     <section id="video" className="relative px-6 py-12 md:py-25 md:pb-35 bg-[#0C111A] overflow-hidden">
+//       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-screen bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
+//       <div className="max-w-[1200px] mx-auto grid grid-cols-1 gap-10 items-center">
+//         <div className="flex flex-col items-start justify-center">
+//           <h2
+//             className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight tracking-tight font-medium text-white mb-4 ${REVEAL}`}
+//             data-reveal
+//             style={{ transitionDelay: "80ms" }}
+//           >
+//             Strength in Numbers.{" "}
+//             <em className="not-italic bg-[linear-gradient(90deg,#e8a830,#f5c96a)] bg-clip-text text-transparent ">
+//                 Savings in Reality
+//               </em>
+//           </h2>
+//           <p
+//             className={`text-lg text-[#7A8CA3] leading-tight max-w-200 ${REVEAL}`}
+//             data-reveal
+//             style={{ transitionDelay: "160ms" }}
+//           >
+//            From the moment you express interest to the second your discount locks in - watch the full journey, start to finish.
+//           </p>
+//         </div>
+
+//         <div
+//           className={`rounded-2xl border border-[rgba(232,168,48,0.22)] bg-white/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)] ${REVEAL}`}
+//           data-reveal
+//           style={{ transitionDelay: "220ms" }}
+//         >
+//           <div className="relative w-full overflow-hidden rounded-xl border border-white/15 bg-black/40 pt-[56.25%]">
+//             <iframe
+//               className="absolute inset-0 h-full w-full"
+//               src={VIDEO_EMBED_URL}
+//               title="SaveMyPay Platform Overview"
+//               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+//               referrerPolicy="strict-origin-when-cross-origin"
+//               allowFullScreen
+//               loading="lazy"
+//             />
+//           </div>
+//         </div>
+//       </div>
+//     </section>
+//   );
+// }
+
+const REVEAL =""// "opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
 
 const VIDEO_EMBED_URL =
   process.env.NEXT_PUBLIC_HOME_VIDEO_URL ?? "https://www.youtube-nocookie.com/embed/M7lc1UVf-VE";
 
 export default function Video() {
   return (
-    <section id="video" className="px-6 py-20 bg-[#0f2347]">
-      <div className="max-w-5xl mx-auto grid grid-cols-1 gap-10 items-center">
-        <div className="flex flex-col items-center justify-center">
-          <span
-            className={`inline-block bg-[rgba(232,168,48,0.14)] text-[#f5c96a] px-3 py-1 rounded-[20px] text-[11px] font-bold tracking-[1px] uppercase mb-5 ${REVEAL}`}
-            data-reveal
-          >
-            Platform Demo
-          </span>
+    <section id="video" className="relative px-6 py-12 md:py-25 md:pb-35 bg-slate-950 overflow-hidden">
+      
+      {/* Glow effect matching the previous section */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
+      
+      {/* Added relative and z-10 so the content sits above the background glow */}
+      <div className="relative z-10 max-w-[1200px] mx-auto grid grid-cols-1 gap-10 items-center">
+        <div className="flex flex-col items-start justify-center">
           <h2
-            className={`text-[28px] md:text-[36px] lg:text-[54px] leading-[1.15] font-extrabold text-white mb-4 ${REVEAL}`}
+            className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight tracking-tight font-medium text-white mb-4 ${REVEAL}`}
             data-reveal
             style={{ transitionDelay: "80ms" }}
           >
-            See SaveMyPay in Action
+            Real Savings Start When{" "}
+            <em className="not-italic bg-[linear-gradient(90deg,#e8a830,#f5c96a)] bg-clip-text text-transparent ">
+                We Buy Together 
+              </em>
           </h2>
           <p
-            className={`text-lg text-white/68 leading-[1.75] max-w-[520px] text-center ${REVEAL}`}
+            className={`text-lg text-[#7A8CA3] leading-tight max-w-200 ${REVEAL}`}
             data-reveal
             style={{ transitionDelay: "160ms" }}
           >
-            Watch how group buying works, how discounts unlock, and how members complete purchases
-            with full transparency.
+           From showing interest to locking in your discount - the entire journey takes in few hours.
           </p>
         </div>
 
         <div
-          className={`rounded-2xl border border-[rgba(232,168,48,0.22)] bg-white/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)] ${REVEAL}`}
+          className={`rounded-2xl border border-[rgba(232,168,48,0.22)] bg-white/5 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)] mt-5 lg:mt-10 ${REVEAL}`}
           data-reveal
           style={{ transitionDelay: "220ms" }}
         >

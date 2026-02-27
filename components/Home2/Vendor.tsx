@@ -4,8 +4,8 @@ import { useState } from "react";
 import { VENDOR_PERKS } from "./data";
 import { JoinDialog } from "@/components/ui/join-dialog";
 
-const REVEAL =
-  "opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
+const REVEAL =""
+  //"opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
 
 type DialogType = "customer" | "vendor" | null;
 
@@ -13,17 +13,17 @@ export default function Vendor() {
   const [dialogType, setDialogType] = useState<DialogType>(null);
 
   return (
-    <section id="partner" className="px-6 py-12 md:py-24 bg-[#f9f7f3]">
+    <section id="partner" className="px-6 py-12 md:py-24 bg-[#f5f4f6]">
       <div className="max-w-300 mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-15 items-start mt-4">
           <div>
-            <span className={`inline-block bg-[#fdf3dc] text-[#e8a830] px-4 py-1 rounded-[20px] text-[11px] font-bold tracking-[1px] uppercase mb-5 ${REVEAL}`} data-reveal>
+            {/* <span className={`inline-block bg-[#fdf3dc] text-[#e8a830] px-4 py-1 rounded-[20px] text-[11px] font-bold tracking-[1px] uppercase mb-5 ${REVEAL}`} data-reveal>
               For Vendors
-            </span>
-            <h2 className={`text-[28px] md:text-[36px] lg:text-[54px] leading-[1.15] font-extrabold mb-4 ${REVEAL}`} data-reveal style={{ transitionDelay: "100ms" }}>
-              Grow Faster with <em className="not-italic text-[#1b3a6b]">Guaranteed Bulk Orders</em>
+            </span> */}
+            <h2 className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight font-medium mb-4 ${REVEAL}`} data-reveal style={{ transitionDelay: "100ms" }}>
+              Vendors, <em className="not-italic text-[#1b3a6b]"> Get Ready for Guaranteed Bulk Buyers </em>
             </h2>
-            <p className={`text-base md:text-lg text-[#5a7090] leading-[1.75] max-w-135 ${REVEAL}`} data-reveal style={{ transitionDelay: "200ms" }}>
+            <p className={`text-base md:text-lg text-[#7A8CA3] max-w-135 ${REVEAL}`} data-reveal style={{ transitionDelay: "200ms" }}>
               Move inventory faster, cut marketing costs, and connect with pre-qualified buyers
               ready to purchase in volume.
             </p>
@@ -61,7 +61,7 @@ export default function Vendor() {
               onClick={() => setDialogType("vendor")}
               className="inline-flex w-full items-center justify-center gap-2 px-7.5 py-3 rounded-[9px] font-bold text-[15px] text-[#0f2347] bg-[linear-gradient(135deg,#e8a830,#f5c96a)] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(232,168,48,0.4)] transition-all"
             >
-              Join Our Vendor Network →
+              Become a Partner Vendor
             </button>
             <p className="text-[12px] mt-4 mb-0 text-white/28">
               Free to join · No setup fees · Cancel anytime
