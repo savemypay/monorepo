@@ -22,42 +22,42 @@ export const TRUST_ITEMS = [
 export const CATEGORIES = [
   {
     slug: "insurance",
-    image: "/assets/Sector Cards/Insurance.png",
+    image: "/assets/Sector Cards_v2/Insurance.png",
     title: "Insurance Plans",
     description:
       " Health & Life InsuranceNew text: Get group rates on health, life, and home insurance that were earlier only available to big companies.",
   },
   {
     slug: "property-deals",
-    image: "/assets/Sector Cards/Real Estate.png",
+    image: "/assets/Sector Cards_v2/Real Estate.png",
     title: "Property Deals",
     description:
       "Homes & PropertyNew text: Better pricing on home loans, rentals, and property purchases through group negotiation.",
   },
   {
     slug: "automotive",
-    image: "/assets/Sector Cards/Automobiles.png",
+    image: "/assets/Sector Cards_v2/Automobile.png",
     title: "Cars & Two-Wheelers",
     description:
       "Get fleet pricing on new and pre-owned vehicles. Our group orders give you dealer-level discounts without the hassle.",
   },
   {
     slug: "ecommerce",
-    image: "/assets/Sector Cards/E Commerce.png",
+    image: "/assets/Sector Cards_v2/E Commerce.png",
     title: "E-Commerce",
     description:
       "Daily Essentials & GadgetsNew text: Bulk discounts and cashback on daily essentials.",
   },
   {
     slug: "travel",
-    image: "/assets/Sector Cards/Travel.png",
+    image: "/assets/Sector Cards_v2/Travel.png",
     title: "Travel & Stays",
     description:
       "Group deals on flights, hotels, cabs, and holidays. Corporate travel rates finally unlocked for everyday travellers.",
   },
   {
     slug: "healthcare",
-    image: "/assets/Sector Cards/Health Care.png",
+    image: "/assets/Sector Cards_v2/Healthcare.png",
     title: "Healthcare",
     description:
       " Health & WellnessNew text: Discounted diagnostics, medicines and preventive care packages.",

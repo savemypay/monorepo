@@ -30,7 +30,7 @@ export default function Hero() {
   const [dialogType, setDialogType] = useState<DialogType>(null);
 
   return (
-    <section className="relative mt-14 md:mt-20 min-h-[calc(100svh-5rem)] overflow-hidden bg-[#f5f4f6]">
+    <section className="relative mt-14 md:mt-20 min-h-[calc(100svh-4rem)] overflow-hidden bg-[#f5f4f6]">
       <div className="absolute -top-[120px] -right-[200px] w-[560px] h-[560px] rounded-full bg-[radial-gradient(circle,rgba(232,168,48,0.16)_0%,transparent_70%)] animate-[home2-breathe_7s_ease-in-out_infinite]" />
       <div className="absolute -bottom-[180px] -left-[180px] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(110,198,192,0.12)_0%,transparent_70%)] animate-[home2-breathe_9s_ease-in-out_infinite_reverse]" />
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
@@ -53,8 +53,9 @@ export default function Hero() {
       <div className="relative z-20 mx-auto min-h-[calc(100svh-5rem)] w-full max-w-300 px-4 sm:px-6 pb-28 sm:pb-32 md:pb-36 pt-6 sm:pt-8">
         <div className="grid grid-cols-1 gap-8 sm:gap-10">
           <div className="flex flex-col items-center text-center pt-10">
-            <h1 className="max-w-5xl text-[clamp(2.1rem,8vw,4.5rem)] leading-[1.08] font-extrabold text-[#163B63] mb-1">
+            <h1 className="max-w-5xl text-[48px] md:text-[56px] lg:text-[72px] leading-[1.08] font-extrabold text-[#163B63] mb-1">
               Buy Together.
+              <br className="block md:hidden"/>
               <em className="not-italic bg-[linear-gradient(90deg,#e8a830,#f5c96a)] bg-clip-text text-transparent ">
                 Save Big.
               </em>

@@ -35,10 +35,10 @@ export default function FAQ() {
           <Accordion type="single" collapsible className="gap-3">
             {FAQ_ITEMS.map((item, index) => (
               <AccordionItem key={item.question} value={`faq-${index + 1}`} className="rounded-xl px-3 md:px-5">
-                <AccordionTrigger className="text-[15px] md:text-lg text-black/70 font-medium hover:no-underline">
+                <AccordionTrigger className="text-[15px] md:text-lg text-black/90 font-medium hover:no-underline">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-sm md:text-[15px] leading-[1.7] text-[#4c5f7a] pb-5">
+                <AccordionContent className="text-sm md:text-[15px] leading-[1.7] text-[#4c5f7a] pb-5 text-left">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>

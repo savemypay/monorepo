@@ -19,13 +19,15 @@ function CategoryCard({ item, index }: { item: (typeof CATEGORIES)[number]; inde
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(15,35,71,0.72),rgba(15,35,71,0.12))]" />
-        <h3 className="absolute left-4 right-4 bottom-4 text-lg md:text-xl font-bold text-white drop-shadow-sm">
+        {/* <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(15,35,71,0.72),rgba(15,35,71,0.12))]" /> */}
+        {/* <h3 className="absolute left-4 right-4 bottom-4 text-lg md:text-xl font-bold text-white drop-shadow-sm">
+          {item.title}
+        </h3> */}
+      </div>
+      <h3 className="text-lg md:text-xl font-bold text-black/80 drop-shadow-sm px-5 py-3">
           {item.title}
         </h3>
-      </div>
-
-      <p className="text-sm leading-5 text-[#7A8CA3] px-5 py-5">{item.description}</p>
+      <p className="text-sm leading-5 text-[#7A8CA3] px-5 pb-5">{item.description}</p>
 
       <div className="px-5 flex justify-end">
         <Link
