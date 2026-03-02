@@ -57,7 +57,7 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-[200] backdrop-blur-2xl bg-[#f5f4f6] border-b border-[rgba(232,168,48,0.18)]">
-      <div className="max-w-[1200px] mx-auto h-14 md:h-20 px-6 flex items-center justify-between">
+      <div className="max-w-[1200px] mx-auto h-16 md:h-20 px-6 flex items-center justify-between">
         <a href="#" className="inline-flex items-center gap-2.75 text-white no-underline font-extrabold text-2xl">
           {/* <span className="w-9 h-9 rounded-full border-2 border-[#e8a830] bg-[linear-gradient(135deg,#e8a830,#6ec6c0)] flex items-center justify-center text-lg">
             💰
