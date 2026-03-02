@@ -162,18 +162,18 @@ export function JoinDialog({
         onOpenChange(isOpen);
       }}
     >
-      <DialogContent className="w-[calc(100%-1rem)] max-w-[540px] border-0 bg-transparent p-0 shadow-none [&>button]:right-5 [&>button]:top-5 [&>button]:text-white/70 [&>button]:hover:text-white">
+      <DialogContent className="w-[calc(100%-1rem)] max-w-[540px] border-0 bg-transparent p-0 shadow-none [&>button]:right-5 [&>button]:top-5 [&>button]:text-[#163B63]/65 [&>button]:hover:text-[#163B63]">
         {!success ? (
-          <div className="max-h-[86vh] overflow-y-auto rounded-2xl border border-[rgba(232,168,48,0.25)] bg-[linear-gradient(145deg,#0f2347,#1b3a6b)] text-white shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
-            <div className="border-b border-white/10 px-5 py-5 sm:px-7">
-              <span className="inline-flex items-center rounded-full border border-[rgba(232,168,48,0.35)] bg-[rgba(232,168,48,0.12)] px-3 py-1 text-[11px] font-semibold tracking-[0.4px] text-[#f5c96a]">
+          <div className="max-h-[86vh] overflow-y-auto rounded-2xl border border-[rgba(232,168,48,0.25)] bg-[#f5f4f6] text-[#163B63] shadow-[0_24px_60px_rgba(0,0,0,0.2)]">
+            <div className="border-b border-[#e0e8f0] px-5 py-5 sm:px-7">
+              <span className="inline-flex items-center rounded-full border border-[rgba(232,168,48,0.35)] bg-[rgba(232,168,48,0.12)] px-3 py-1 text-[11px] font-semibold tracking-[0.4px] text-[#163B63]">
                 {content.badge}
               </span>
               <DialogHeader className="mt-3 text-left">
-                <DialogTitle className="text-xl font-bold leading-tight text-white sm:text-2xl">
+                <DialogTitle className="text-xl font-bold leading-tight text-[#163B63] sm:text-2xl">
                   {content.title}
                 </DialogTitle>
-                <DialogDescription className="text-sm leading-relaxed text-white/60 sm:text-base">
+                <DialogDescription className="text-sm leading-relaxed text-[#7A8CA3] sm:text-base">
                   {content.description}
                 </DialogDescription>
               </DialogHeader>
@@ -187,7 +187,7 @@ export function JoinDialog({
                     value={form.name}
                     onChange={(e) => update("name", e.target.value)}
                     placeholder="Enter your full name"
-                    className="h-11 rounded-xl border-white/20 bg-white/5 text-white placeholder:text-white/35 focus-visible:ring-2 focus-visible:ring-[#e8a830] focus-visible:ring-offset-0"
+                    className="h-11 rounded-xl border-[#dbe4ef] bg-white text-[#163B63] placeholder:text-[#7A8CA3]/70 focus-visible:ring-2 focus-visible:ring-[#e8a830] focus-visible:ring-offset-0"
                   />
                 </Field>
 
@@ -198,7 +198,7 @@ export function JoinDialog({
                     value={form.email}
                     onChange={(e) => update("email", e.target.value)}
                     placeholder="name@example.com"
-                    className="h-11 rounded-xl border-white/20 bg-white/5 text-white placeholder:text-white/35 focus-visible:ring-2 focus-visible:ring-[#e8a830] focus-visible:ring-offset-0"
+                    className="h-11 rounded-xl border-[#dbe4ef] bg-white text-[#163B63] placeholder:text-[#7A8CA3]/70 focus-visible:ring-2 focus-visible:ring-[#e8a830] focus-visible:ring-offset-0"
                   />
                 </Field>
               </div>
@@ -214,7 +214,7 @@ export function JoinDialog({
                     update("phone_number", e.target.value.replace(/\D/g, "").slice(0, 10))
                   }
                   placeholder="10-digit mobile number"
-                  className="h-11 rounded-xl border-white/20 bg-white/5 text-white placeholder:text-white/35 focus-visible:ring-2 focus-visible:ring-[#e8a830] focus-visible:ring-offset-0"
+                  className="h-11 rounded-xl border-[#dbe4ef] bg-white text-[#163B63] placeholder:text-[#7A8CA3]/70 focus-visible:ring-2 focus-visible:ring-[#e8a830] focus-visible:ring-offset-0"
                 />
               </Field>
 
@@ -225,13 +225,13 @@ export function JoinDialog({
                       id="join-category"
                       value={form.category}
                       onChange={(e) => update("category", e.target.value)}
-                      className="h-11 w-full rounded-xl border border-white/20 bg-white/5 px-3 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-[#e8a830]"
+                      className="h-11 w-full rounded-xl border border-[#dbe4ef] bg-white px-3 text-sm text-[#163B63] focus:outline-hidden focus:ring-2 focus:ring-[#e8a830]"
                     >
-                      <option value="" className="bg-[#153058] text-white">
+                      <option value="" className="bg-white text-[#163B63]">
                         Select category
                       </option>
                       {CATEGORIES.map((categoryOption) => (
-                        <option key={categoryOption} value={categoryOption} className="bg-[#153058] text-white">
+                        <option key={categoryOption} value={categoryOption} className="bg-white text-[#163B63]">
                           {categoryOption}
                         </option>
                       ))}
@@ -245,14 +245,14 @@ export function JoinDialog({
                       value={form.comments}
                       onChange={(e) => update("comments", e.target.value)}
                       placeholder="Tell us about your products or preferred deal size."
-                      className="w-full resize-none rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/35 focus:outline-hidden focus:ring-2 focus:ring-[#e8a830]"
+                      className="w-full resize-none rounded-xl border border-[#dbe4ef] bg-white px-3 py-2 text-sm text-[#163B63] placeholder:text-[#7A8CA3]/70 focus:outline-hidden focus:ring-2 focus:ring-[#e8a830]"
                     />
                   </Field>
                 </>
               )}
 
               {error ? (
-                <p className="rounded-lg border border-[#f0883e]/50 bg-[#f0883e]/10 px-3 py-2 text-sm text-[#ffd6bf]">
+                <p className="rounded-lg border border-[#f0883e]/50 bg-[#f0883e]/10 px-3 py-2 text-sm text-[#9c4d1f]">
                   {error}
                 </p>
               ) : null}
@@ -265,18 +265,18 @@ export function JoinDialog({
                 {loading ? "Submitting..." : content.submitLabel}
               </Button>
 
-              <p className="text-center text-xs text-white/45">
+              <p className="text-center text-xs text-[#7A8CA3]">
                 We use your details only to contact you about relevant opportunities.
               </p>
             </form>
           </div>
         ) : (
-          <div className="rounded-2xl border border-[rgba(232,168,48,0.25)] bg-[linear-gradient(145deg,#0f2347,#1b3a6b)] px-6 py-10 text-center text-white shadow-[0_24px_60px_rgba(0,0,0,0.35)] sm:px-8">
+          <div className="rounded-2xl border border-[rgba(232,168,48,0.25)] bg-[#f5f4f6] px-6 py-10 text-center text-[#163B63] shadow-[0_24px_60px_rgba(0,0,0,0.2)] sm:px-8">
             <div className="mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-[#6ec6c0]">
               ✅
             </div>
             <h3 className="mb-2 text-xl font-bold">Request Submitted</h3>
-            <p className="mx-auto mb-6 max-w-md text-sm text-white/65">
+            <p className="mx-auto mb-6 max-w-md text-sm text-[#7A8CA3]">
               {content.successMessage}
             </p>
             <Button
@@ -304,7 +304,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={htmlFor} className="text-sm font-medium text-white/80">
+      <Label htmlFor={htmlFor} className="text-sm font-medium text-[#35557b]">
         {label}
       </Label>
       {children}

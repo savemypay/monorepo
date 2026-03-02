@@ -45,11 +45,11 @@ export default function Home2() {
       <Hero />
       {/* <Trust /> */}
       <Video />
-      <WaveDivider
+      {/* <WaveDivider
         background="#020618"
         fill="#f5f4f6"
         path="M0,20 C360,40 720,0 1080,20 C1260,30 1380,25 1440,20 L1440,40 L0,40 Z"
-      />
+      /> */}
       <Categories />
       <HowItWorks />
       {/* <Stats /> */}
