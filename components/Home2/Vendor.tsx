@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { VENDOR_PERKS } from "./data";
 import { JoinDialog } from "@/components/ui/join-dialog";
+import Image from "next/image";
 
 const REVEAL =""
   //"opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
@@ -36,10 +37,12 @@ export default function Vendor() {
                   data-reveal
                   style={{ transitionDelay: `${(index + 1) * 100}ms` }}
                 >
-                  <div className="text-[26px] shrink-0">{item.icon}</div>
+                  <div className="text-[26px] shrink-0">
+                    <Image src={item.icon} alt={item.title} width={30} height={30}/>
+                  </div>
                   <div>
-                    <h5 className="text-sm md:text-xl font-bold text-[#1b3a6b] mb-1">{item.title}</h5>
-                    <p className="text-xs md:text-base text-[#5a7090] leading-normal">{item.description}</p>
+                    <h5 className="text-lg md:text-xl font-bold text-[#1b3a6b] mb-1">{item.title}</h5>
+                    <p className="text-sm md:text-base text-[#5a7090] leading-normal">{item.description}</p>
                   </div>
                 </article>
               ))}
@@ -47,19 +50,22 @@ export default function Vendor() {
           </div>
 
           <aside
-            className={`bg-[linear-gradient(145deg,#0f2347,#1b3a6b)] rounded-[20px] p-10 text-center border border-[rgba(232,168,48,0.15)] shadow-[0_20px_60px_rgba(15,35,71,0.15)] ${REVEAL}`}
+            className={`relative bg-[#0C111A] rounded-[20px] p-10 text-center border border-[rgba(232,168,48,0.15)] shadow-[0_20px_60px_rgba(15,35,71,0.15)] ${REVEAL}`}
             data-reveal
             style={{ transitionDelay: "200ms" }}
           >
+            {/* Subtle background glow for depth */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-50 h-125 bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
+
             <h3 className="text-[26px] font-extrabold text-white mb-3">Ready to Grow With Us?</h3>
-            <p className="text-[14px] leading-[1.65] text-white/48 mb-7">
+            <p className="text-base leading-[1.65] text-white/48 mb-7">
               Join our growing network of verified vendors and start receiving pre-qualified bulk
               orders from thousands of salaried professionals today.
             </p>
             <button
               type="button"
               onClick={() => setDialogType("vendor")}
-              className="inline-flex w-full items-center justify-center gap-2 px-7.5 py-3 rounded-[9px] font-bold text-[15px] text-[#0f2347] bg-[linear-gradient(135deg,#e8a830,#f5c96a)] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(232,168,48,0.4)] transition-all"
+              className="inline-flex w-full items-center justify-center gap-2 px-7.5 py-3 rounded-[9px] font-bold text-base text-[#0f2347] bg-[linear-gradient(135deg,#e8a830,#f5c96a)] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(232,168,48,0.4)] transition-all"
             >
               Become a Partner Vendor
             </button>

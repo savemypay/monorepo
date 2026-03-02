@@ -18,13 +18,14 @@ export default function Video() {
             data-reveal
             style={{ transitionDelay: "80ms" }}
           >
-            Real Savings Start When{" "}
+            Real Savings Start{" "}
+            <br/>
             <em className="not-italic bg-[linear-gradient(90deg,#e8a830,#f5c96a)] bg-clip-text text-transparent ">
-                We Buy Together 
+                When We Buy Together 
               </em>
           </h2>
           <p
-            className={`text-lg text-[#7A8CA3] leading-tight max-w-200 ${REVEAL}`}
+            className={`text-base text-[#7A8CA3] leading-tight max-w-200 ${REVEAL}`}
             data-reveal
             style={{ transitionDelay: "160ms" }}
           >

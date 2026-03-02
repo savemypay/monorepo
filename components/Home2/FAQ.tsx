@@ -6,8 +6,8 @@ const REVEAL =""
 
 export default function FAQ() {
   return (
-    <section id="faq" className="px-6 pb-12 md:pb-24 bg-[#f5f4f6]">
-      <div className="max-w-[1200px] mx-auto text-center">
+    <section id="faq" className="px-6 py-12 md:py-24 bg-[#ffffff]">
+      <div className="max-w-[1000px] mx-auto text-center">
         <div className="mb-10">
           {/* <span
             className={`inline-block bg-[#fdf3dc] text-[#e8a830] px-[13px] py-1 rounded-[20px] text-[11px] font-bold tracking-[1px] uppercase mb-5 ${REVEAL}`}
@@ -34,7 +34,7 @@ export default function FAQ() {
         <div className={REVEAL} data-reveal style={{ transitionDelay: "300ms" }}>
           <Accordion type="single" collapsible className="gap-3">
             {FAQ_ITEMS.map((item, index) => (
-              <AccordionItem key={item.question} value={`faq-${index + 1}`} className="rounded-xl px-3 md:px-5">
+              <AccordionItem key={item.question} value={`faq-${index + 1}`} className="rounded-xl py-4 px-3 md:px-5">
                 <AccordionTrigger className="text-[15px] md:text-lg text-black/90 font-medium hover:no-underline">
                   {item.question}
                 </AccordionTrigger>

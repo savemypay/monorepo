@@ -63,14 +63,14 @@ export default function Hero() {
             <p className="text-[#1b3a6b] text-lg sm:text-2xl lg:text-3xl font-semibold mb-7">
               Corporate Power for Every Salaried Indian 
             </p>
-            <p className="text-base sm:text-lg lg:text-lg max-w-4xl leading-tight mb-7 text-[#1b3a6b]/90">
+            <p className="text-base sm:text-lg lg:text-lg max-w-4xl leading-tight mb-7 text-[#7A8CA3]">
               Join thousands of working professionals and unlock huge discounts on insurance, cars, property, gadgets & more - through collective buying. 
             </p>
             <div className="flex w-full max-w-xl flex-col sm:flex-row sm:justify-center gap-3 sm:gap-[14px]">
               <button
                 type="button"
                 onClick={() => setDialogType("customer")}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-[30px] py-[13px] rounded-[9px] font-bold text-[15px] text-[#0f2347] bg-[linear-gradient(135deg,#e8a830,#f5c96a)] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(232,168,48,0.4)] transition-all"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-[30px] py-[13px] rounded-[9px] font-bold text-[15px] text-[#163B63] bg-[linear-gradient(135deg,#e8a830,#f5c96a)] hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(232,168,48,0.4)] transition-all"
               >
                 Start Saving Now
               </button>
