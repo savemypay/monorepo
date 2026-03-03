@@ -5,7 +5,7 @@ __pycache__/
 *.so
 .Python
 .vscode/
-app/db/migrations/versions/*
+# app/db/migrations/versions/*
 
 # Virtual environments
 venv/
