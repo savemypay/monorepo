@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import secrets
+import string
 from typing import Literal
 
 from fastapi import HTTPException, status
@@ -33,6 +34,8 @@ from app.notifications.notifier import send_email_async, send_sms_async
 from app.utils.response import error_response
 
 Audience = Literal["customer", "vendor"]
+REFERRAL_CODE_LENGTH = 8
+REFERRAL_CODE_ALPHABET = string.ascii_uppercase + string.digits
 
 
 def _now() -> datetime:
@@ -53,6 +56,25 @@ def _verify_hash(code: str, hashed: str) -> bool:
 def _generate_code(length: int) -> str:
     upper = 10**length
     return f"{secrets.randbelow(upper):0{length}d}"
+
+
+def _generate_referral_code(db: Session) -> str:
+    for _ in range(20):
+        code = "".join(secrets.choice(REFERRAL_CODE_ALPHABET) for _ in range(REFERRAL_CODE_LENGTH))
+        exists = db.query(User.id).filter(User.referral_code == code).first()
+        if not exists:
+            return code
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=error_response(message="Unable to generate referral code", code="server_error"),
+    )
+
+
+def _normalize_referral_code(value: str | None) -> str | None:
+    if value is None:
+        return None
+    code = value.strip().upper()
+    return code or None
 
 
 def _hash_refresh(token: str) -> str:
@@ -239,6 +261,8 @@ def _ensure_user_record(db: Session, payload: LoginRequest | OTPVerifyRequest, a
 
     if user:
         changed = False
+        referral_code = _normalize_referral_code(getattr(payload, "referral_code", None))
+
         if payload.email and not user.email:
             user.email = payload.email
             changed = True
@@ -251,11 +275,55 @@ def _ensure_user_record(db: Session, payload: LoginRequest | OTPVerifyRequest, a
         if user.role != desired_role:
             user.role = desired_role
             changed = True
+        if not user.referral_code and user.role == "customer":
+            user.referral_code = _generate_referral_code(db)
+            changed = True
+        if user.role == "customer" and referral_code and user.referred_by_user_id is None:
+            referrer = (
+                db.query(User)
+                .filter(
+                    User.referral_code == referral_code,
+                    User.role == "customer",
+                    User.is_active.is_(True),
+                )
+                .first()
+            )
+            if not referrer:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=error_response(message="Invalid referral code", code="invalid_referral_code"),
+                )
+            if referrer.id == user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=error_response(message="Self referral is not allowed", code="self_referral"),
+                )
+            user.referred_by_user_id = referrer.id
+            user.referred_at = _now()
+            changed = True
         if changed:
             db.add(user)
             db.commit()
             db.refresh(user)
         return user, is_new
+
+    referral_code = _normalize_referral_code(getattr(payload, "referral_code", None))
+    referrer = None
+    if desired_role == "customer" and referral_code:
+        referrer = (
+            db.query(User)
+            .filter(
+                User.referral_code == referral_code,
+                User.role == "customer",
+                User.is_active.is_(True),
+            )
+            .first()
+        )
+        if not referrer:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_response(message="Invalid referral code", code="invalid_referral_code"),
+            )
 
     user = User(
         email=payload.email,
@@ -263,11 +331,25 @@ def _ensure_user_record(db: Session, payload: LoginRequest | OTPVerifyRequest, a
         hashed_password=placeholder_hash,
         is_active=True,
         role=desired_role,
+        referral_code=_generate_referral_code(db) if desired_role == "customer" else None,
         created_by=audience,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    if desired_role == "customer" and referrer and user.referred_by_user_id is None:
+        if referrer.id == user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_response(message="Self referral is not allowed", code="self_referral"),
+            )
+        user.referred_by_user_id = referrer.id
+        user.referred_at = _now()
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
     is_new = True
     return user, is_new
 
@@ -339,6 +421,9 @@ def _issue_tokens_customer(db: Session, user: User, is_new: bool) -> dict:
             "email": user.email,
             "phone_number": user.phone_number,
             "is_active": user.is_active,
+            "referral_code": user.referral_code,
+            "referred_by_user_id": user.referred_by_user_id,
+            "referred_at": user.referred_at,
         },
     }
 

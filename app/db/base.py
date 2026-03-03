@@ -22,3 +22,4 @@ from app.entities import vendor_refresh_token  # noqa: E402,F401
 from app.entities import admin_account  # noqa: E402,F401
 from app.entities import game_user  # noqa: E402,F401
 from app.entities import game_score  # noqa: E402,F401
+from app.entities import referral_reward  # noqa: E402,F401

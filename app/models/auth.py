@@ -18,6 +18,7 @@ class LoginRequest(BaseModel):
 
 class OTPVerifyRequest(LoginRequest):
     code: str = Field(..., min_length=4, max_length=10)
+    referral_code: str | None = Field(default=None, min_length=4, max_length=20)
 
 
 class LoginResponseData(BaseModel):
