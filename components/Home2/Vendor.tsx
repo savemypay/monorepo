@@ -5,8 +5,7 @@ import { VENDOR_PERKS } from "./data";
 import { JoinDialog } from "@/components/ui/join-dialog";
 import Image from "next/image";
 
-const REVEAL =""
-  //"opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
+const REVEAL ="opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
 
 type DialogType = "customer" | "vendor" | null;
 
@@ -24,7 +23,7 @@ export default function Vendor() {
             <h2 className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight font-medium mb-4 ${REVEAL}`} data-reveal style={{ transitionDelay: "100ms" }}>
               Vendors, <em className="not-italic text-[#1b3a6b]"> Get Ready for Guaranteed Bulk Buyers </em>
             </h2>
-            <p className={`text-base md:text-lg text-[#7A8CA3] max-w-135 ${REVEAL}`} data-reveal style={{ transitionDelay: "200ms" }}>
+            <p className={`text-base md:text-lg text-[#7A8CA3] leading-tight max-w-135 ${REVEAL}`} data-reveal style={{ transitionDelay: "200ms" }}>
               Move inventory faster, cut marketing costs, and connect with pre-qualified buyers
               ready to purchase in volume.
             </p>

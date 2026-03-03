@@ -11,8 +11,8 @@ export default function CTA() {
   return (
     <section className="relative overflow-hidden text-center px-6 py-12 md:py-20 bg-[#0C111A]">
       {/* Subtle background glow for depth */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-200 h-125 bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
-      <h2 className="relative text-white font-bold text-[28px] md:text-[36px] lg:text-[48px] mb-3">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-300 h-125 bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
+      <h2 className="relative text-white font-bold text-[28px] md:text-[36px] lg:text-[48px] mb-4">
         Ready to{" "}
         <span className="not-italic bg-[linear-gradient(90deg,#e8a830,#f5c96a)] bg-clip-text text-transparent">
           Start Saving?

@@ -1,24 +1,23 @@
 import Image from "next/image";
 import { WEB3_CARDS, WEB3_FLOW } from "./data";
 
-const REVEAL =
-  ""; // "opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
+const REVEAL ="opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
 
 export default function Web3() {
   return (
     <section id="web3" className="px-6 py-12 md:py-30 bg-[#f5f4f6]">
-      <div className="max-w-[1200px] mx-auto">
+      <div className="max-w-300 mx-auto">
         <div className="relative overflow-hidden bg-[#f5f4f6]">
           <div className="relative">
             <h2
-              className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight font-medium mb-[14px] text-[#163B63] ${REVEAL}`}
+              className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight tracking-tight font-medium mb-4 text-[#163B63] ${REVEAL}`}
               data-reveal
               style={{ transitionDelay: "100ms" }}
             >
               Save Money.<br/> Earn blockchain based rewards.<br/> <em className="not-italic bg-[linear-gradient(90deg,#e8a830,#f5c96a)] bg-clip-text text-transparent">On Solana.</em>
             </h2>
             <p
-              className={`text-base text-[#7A8CA3] leading-tight max-w-150 ${REVEAL}`}
+              className={`text-base md:text-lg text-[#7A8CA3] leading-tight max-w-150 ${REVEAL}`}
               data-reveal
               style={{ transitionDelay: "200ms" }}
             >
@@ -79,7 +78,7 @@ export default function Web3() {
                           <Image src={item.icon} alt={item.value} width={30} height={30}/>
                           <span
                             className={`absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-extrabold ${
-                              isLast ? "bg-[#F2B705] text-[#0f2347]" : "bg-[#1CA7A6] text-[#0f2347]"
+                              isLast ? "bg-[#F2B705] text-[#0f2347]" : "bg-[#122E4E] text-[#F2B705]"
                             }`}
                           >
                             {index + 1}

@@ -1,4 +1,4 @@
-const REVEAL =""// "opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
+const REVEAL ="opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
 
 const VIDEO_EMBED_URL =
   process.env.NEXT_PUBLIC_HOME_VIDEO_URL ?? "https://www.youtube-nocookie.com/embed/igvorXfp-rA";
@@ -25,7 +25,7 @@ export default function Video() {
               </em>
           </h2>
           <p
-            className={`text-base text-[#7A8CA3] leading-tight max-w-200 ${REVEAL}`}
+            className={`text-base md:text-lg text-[#7A8CA3] leading-tight max-w-200 ${REVEAL}`}
             data-reveal
             style={{ transitionDelay: "160ms" }}
           >

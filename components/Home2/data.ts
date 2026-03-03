@@ -5,13 +5,6 @@ export const NAV_LINKS = [
   { label: "Vendors", href: "#partner" },
 ];
 
-export const SAVINGS_ITEMS = [
-  { icon: "🏠", label: "Home Insurance", amount: "Save ₹34,000", fill: 65 },
-  { icon: "🚗", label: "Car Purchase", amount: "Save ₹2,60,000", fill: 82 },
-  { icon: "🏘️", label: "Property Deal", amount: "Save ₹7,00,000", fill: 90 },
-  { icon: "🛡️", label: "Life Insurance", amount: "Save ₹46,000", fill: 72 },
-];
-
 export const TRUST_ITEMS = [
   "✅ No commitment to browse",
   "🔒 100% secure payments",
@@ -76,9 +69,9 @@ export const HOW_STEPS = [
       "Our platform groups buyers with similar needs. More people joining = better deals for everyone.",
   },
   {
-    title: "We Negotiate the Best Deal",
+    title: "Negotiate the Best Deal",
     description:
-      "Our expert team works directly with vendors, delivering 20-40% off regular retail prices on your behalf.",
+      "Our expert team works directly with vendors, delivering best off regular retail prices on your behalf.",
   },
   {
     title: "Review & Save",

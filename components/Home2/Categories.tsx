@@ -2,8 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { CATEGORIES } from "./data";
 
-const REVEAL =
-  ""; // "opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
+const REVEAL ="opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
 
 function CategoryCard({ item, index }: { item: (typeof CATEGORIES)[number]; index: number }) {
   return (
@@ -24,7 +23,7 @@ function CategoryCard({ item, index }: { item: (typeof CATEGORIES)[number]; inde
           {item.title}
         </h3> */}
       </div>
-      <h3 className="text-lg md:text-xl font-bold text-[#163B63] drop-shadow-sm px-5 pb-3">
+      <h3 className="text-lg md:text-xl font-medium text-[#163B63] drop-shadow-sm px-5 pb-3">
           {item.title}
         </h3>
       <p className="text-base leading-5 text-[#7A8CA3] px-5 pb-5">{item.description}</p>
@@ -47,18 +46,22 @@ export default function Categories() {
 
   return (
     <section id="categories" className="px-6 py-12 md:py-40 bg-[#f5f4f6]">
-      <div className="max-w-[1200px] mx-auto">
+      <div className="max-w-300 mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 ">
           <div className="text-left flex flex-col justify-center lg:col-span-2">
             <h2
-              className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight font-medium mb-4 text-[#163B63] ${REVEAL}`}
+              className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight tracking-tight font-medium mb-4 text-[#163B63] ${REVEAL}`}
               data-reveal
               style={{ transitionDelay: "100ms" }}
             >
-              Where <em className="not-italic bg-[linear-gradient(90deg,#e8a830,#f5c96a)] bg-clip-text text-transparent"><br/>Collective Power</em><br/> Changes Everything
+              Where 
+              <em className="not-italic bg-[linear-gradient(90deg,#e8a830,#f5c96a)] bg-clip-text text-transparent"><br/>
+              Collective Power
+              </em>
+              <br/> Changes Everything
             </h2>
             <p
-              className={`text-lg text-[#7A8CA3] leading-tight max-w-200 ${REVEAL}`}
+              className={`text-base md:text-lg text-[#7A8CA3] leading-tight max-w-200 ${REVEAL}`}
               data-reveal
               style={{ transitionDelay: "200ms" }}
             >

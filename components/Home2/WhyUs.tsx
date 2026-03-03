@@ -1,8 +1,7 @@
 import Image from "next/image";
 import { WHY_ITEMS } from "./data";
 
-const REVEAL =
-  ""; // "opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
+const REVEAL ="opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
 
 const WHY_STATS = [
   { icon: "/assets/Icon/Asset 37.svg", value: "Always Free", label: "To browse" },
@@ -35,7 +34,7 @@ export default function WhyUs() {
         <div className="relative max-w-300 mx-auto z-10">
         <div className="mb-16">
             <h2
-              className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight font-medium text-[#163B63] mb-[14px]${REVEAL}`}
+              className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight tracking-tight font-medium text-[#163B63] mb-4 ${REVEAL}`}
               data-reveal
               style={{ transitionDelay: "100ms" }}
             >
@@ -43,7 +42,7 @@ export default function WhyUs() {
               <em className="not-italic bg-[linear-gradient(90deg,#e8a830,#f5c96a)] bg-clip-text text-transparent">Real Financial Power.</em>
             </h2>
             <p 
-            className={`text-base text-slate-400 leading-relaxed ${REVEAL}`} 
+            className={`text-base md:text-lg text-[#7A8CA3] leading-tight ${REVEAL}`} 
             data-reveal 
             style={{ transitionDelay: "200ms" }}
           >

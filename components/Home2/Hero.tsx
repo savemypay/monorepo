@@ -63,7 +63,7 @@ export default function Hero() {
             <p className="text-[#1b3a6b] text-lg sm:text-2xl lg:text-3xl font-semibold mb-7">
               Corporate Power for Every Salaried Indian 
             </p>
-            <p className="text-base sm:text-lg lg:text-lg max-w-4xl leading-tight mb-7 text-[#7A8CA3]">
+            <p className="text-base md:text-lg max-w-4xl leading-tight mb-7 text-[#7A8CA3]">
               Join thousands of working professionals and unlock huge discounts on insurance, cars, property, gadgets & more - through collective buying. 
             </p>
             <div className="flex w-full max-w-xl flex-col sm:flex-row sm:justify-center gap-3 sm:gap-[14px]">
