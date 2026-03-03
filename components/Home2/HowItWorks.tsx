@@ -1,7 +1,6 @@
 import { HOW_STEPS } from "./data";
 
-const REVEAL = "";
-  //"opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
+const REVEAL = "opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
 
 export default function HowItWorks() {
   return (
@@ -17,7 +16,7 @@ export default function HowItWorks() {
         {/* Header - Centered for a better visual anchor */}
         <div className="mb-16 md:mb-24">
           <h2 
-            className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight tracking-tight font-medium text-white ${REVEAL}`} 
+            className={`text-[28px] md:text-[36px] lg:text-[48px] leading-tight tracking-tight font-medium text-white mb-4 ${REVEAL}`} 
             data-reveal 
             style={{ transitionDelay: "100ms" }}
           >
@@ -27,7 +26,7 @@ export default function HowItWorks() {
             </span>
           </h2>
           <p 
-            className={`text-lg text-slate-400 leading-relaxed ${REVEAL}`} 
+            className={`text-base md:text-lg text-[#7A8CA3] leading-tight ${REVEAL}`} 
             data-reveal 
             style={{ transitionDelay: "200ms" }}
           >
@@ -45,19 +44,19 @@ export default function HowItWorks() {
           {HOW_STEPS.map((step, index) => (
             <article
               key={step.title}
-              className={`group relative flex flex-col p-8 rounded-3xl bg-white/3 border border-white/8 backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.06] hover:border-white/[0.15] hover:-translate-y-2 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] ${REVEAL}`}
+              className={`group relative flex flex-col p-5 rounded-3xl bg-white/3 border border-white/8 backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.06] hover:border-white/[0.15] hover:-translate-y-2 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] ${REVEAL}`}
               data-reveal
               style={{ transitionDelay: `${(index + 1) * 100}ms` }}
             >
               {/* Step Number Badge */}
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F2B705] to-[#D9A304] flex items-center justify-center text-white text-xl font-bold shadow-[0_0_25px_rgba(245,158,11,0.25)] mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F2B705] to-[#D9A304] flex items-center justify-center text-white text-xl font-bold shadow-[0_0_25px_rgba(245,158,11,0.25)] mb-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                 {index + 1}
               </div>
 
-              <h4 className="text-xl font-semibold text-slate-100 mb-3 transition-colors group-hover:text-white">
+              <h3 className="text-lg md:text-xl font-semibold text-slate-100 mb-3 transition-colors group-hover:text-white">
                 {step.title}
-              </h4>
-              <p className="text-sm text-slate-400 leading-relaxed">
+              </h3>
+              <p className="text-base text-slate-400 leading-relaxed">
                 {step.description}
               </p>
               

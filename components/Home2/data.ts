@@ -5,13 +5,6 @@ export const NAV_LINKS = [
   { label: "Vendors", href: "#partner" },
 ];
 
-export const SAVINGS_ITEMS = [
-  { icon: "🏠", label: "Home Insurance", amount: "Save ₹34,000", fill: 65 },
-  { icon: "🚗", label: "Car Purchase", amount: "Save ₹2,60,000", fill: 82 },
-  { icon: "🏘️", label: "Property Deal", amount: "Save ₹7,00,000", fill: 90 },
-  { icon: "🛡️", label: "Life Insurance", amount: "Save ₹46,000", fill: 72 },
-];
-
 export const TRUST_ITEMS = [
   "✅ No commitment to browse",
   "🔒 100% secure payments",
@@ -66,7 +59,7 @@ export const CATEGORIES = [
 
 export const HOW_STEPS = [
   {
-    title: "Browse & Show Interest (No payment, no commitment)",
+    title: "Browse & Show Interest",
     description:
       "Explore categories and signal what you need. No commitment or payment required at this stage.",
   },
@@ -76,9 +69,9 @@ export const HOW_STEPS = [
       "Our platform groups buyers with similar needs. More people joining = better deals for everyone.",
   },
   {
-    title: "We Negotiate the Best Deal",
+    title: "Negotiate the Best Deal",
     description:
-      "Our expert team works directly with vendors, delivering 20-40% off regular retail prices on your behalf.",
+      "Our expert team works directly with vendors, delivering best off regular retail prices on your behalf.",
   },
   {
     title: "Review & Save",
@@ -96,74 +89,74 @@ export const STATS = [
 
 export const WEB3_CARDS = [
   {
-    icon: "⭐",
+    icon: "/assets/Icon/medal.svg",
     title: "Earn on Every Action",
     description:
       "Every purchase, referral, and engagement earns you reward points that accumulate over time.",
   },
   {
-    icon: "🪙",
+    icon: "/assets/Icon/Asset 24.svg",
     title: "Redeem/Swap Reward points",
     description:
       "Exchange accumulated rewards for our native tokens with real-world value on exchanges.",
   },
   {
-    icon: "📈",
+    icon: "/assets/Icon/Asset 25.svg",
     title: "Watch It Grow",
     description: "Hold for appreciation, trade on exchanges, or unlock exclusive platform benefits.",
   },
   {
-    icon: "🔐",
+    icon: "/assets/Icon/Asset 26.svg",
     title: "Blockchain Secured",
     description: "All transactions on-chain - complete transparency and security, always and forever.",
   },
 ];
 
 export const WEB3_FLOW = [
-  { icon: "🛒", step: "Step 1", value: "Make a Group Purchase" },
-  { icon: "⭐", step: "Step 2", value: "Earn & Claim Reward Points" },
-  { icon: "🪙", step: "Step 3", value: "Redeem/Swap Reward points" },
-  { icon: "💰", step: "Step 4", value: "Build Real Wealth" },
+  { icon: "/assets/Icon/Asset 30.svg", step: "Step 1", value: "Make a Group Purchase" },
+  { icon: "/assets/Icon/medal.svg", step: "Step 2", value: "Earn & Claim Reward Points" },
+  { icon: "/assets/Icon/Asset 24.svg", step: "Step 3", value: "Redeem/Swap Reward points" },
+  { icon: "/assets/Icon/Asset 27.svg", step: "Step 4", value: "Build Real Wealth" },
 ];
 
 export const WHY_ITEMS = [
   {
-    icon: "💰",
+    icon: "/assets/Icon/Asset 31.svg",
     title: "Unbeatable Savings",
     description:
       "Prices once reserved for corporations, now accessible to every salaried professional. Collective buying delivers what solo shopping never can — real, significant savings on everything that matters.",
     tone: "gold",
   },
   {
-    icon: "🤝",
+    icon: "/assets/Icon/Asset 34.svg",
     title: "We Negotiate For You",
     description:
       "No haggling needed. Our expert team handles all vendor discussions using the group's collective leverage — so you get the best deal without lifting a finger.",
     tone: "teal",
   },
   {
-    icon: "⚡",
+    icon: "/assets/Icon/Asset 32.svg",
     title: "Lightning Fast",
     description:
       "Express interest, we build the group, deals finalised in 1 week. Fast, efficient and completely transparent at every stage.",
     tone: "gold",
   },
   {
-    icon: "✅",
+    icon: "/assets/Icon/Asset 33.svg",
     title: "Trusted Vendors Only",
     description:
       "Every vendor thoroughly vetted before appearing on the platform. We partner exclusively with reputable, reliable businesses.",
     tone: "teal",
   },
   {
-    icon: "🔒",
+    icon: "/assets/Icon/Asset 35.svg",
     title: "100% Secure",
     description:
       "Protected payments, clear terms, full transparency in every transaction. Your financial security is our top priority.",
     tone: "gold",
   },
   {
-    icon: "📱",
+    icon: "/assets/Icon/Asset 36.svg",
     title: "Simple & Accessible",
     description:
       "An intuitive platform that makes the power of bulk buying available to everyone — not just large corporations.",
@@ -173,19 +166,19 @@ export const WHY_ITEMS = [
 
 export const VENDOR_PERKS = [
   {
-    icon: "🚀",
+    icon: "/assets/Icon/Asset 41.svg",
     title: "Move Stock Faster",
     description:
       "Clear inventory quickly with guaranteed bulk orders from our motivated, pre-qualified buyer groups.",
   },
   {
-    icon: "📈",
+    icon: "/assets/Icon/Asset 42.svg",
     title: "Predictable Revenue",
     description:
       "Large-volume purchases reduce uncertainty. Plan confidently with reliable order forecasting.",
   },
   {
-    icon: "💡",
+    icon: "/assets/Icon/Asset 43.svg",
     title: "Lower Marketing Costs",
     description:
       "We bring motivated, pre-qualified buyers directly to you. Spend less on acquisition, sell more.",

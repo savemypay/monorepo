@@ -8,19 +8,19 @@ const socialLinks = [
   {
     id: 1,
     name: "X (Twitter)",
-    icon: "/assets/X.svg",
+    icon: "/assets/socialIcons/X.svg",
     link: "https://x.com/Savemypay_xyz",
   },
   {
     id: 2,
     name: "Instagram",
-    icon: "/assets/instagram.svg",
+    icon: "/assets/socialIcons/instagram.svg",
     link: "https://www.instagram.com/savemypay",
   },
   {
     id: 3,
     name: "YouTube",
-    icon: "/assets/youtube.svg",
+    icon: "/assets/socialIcons/youtube.svg",
     link: "https://www.youtube.com/@savemypay",
   },
 ];
@@ -45,10 +45,6 @@ export default function Footer() {
             href="#"
             className="inline-flex items-center gap-3 text-white no-underline font-extrabold text-[30px]"
           >
-            {/* <span className="w-9 h-9 rounded-full border-2 border-[#e8a830] bg-[linear-gradient(135deg,#e8a830,#6ec6c0)] flex items-center justify-center text-[18px]">
-              💰
-            </span>
-            SaveMyPay */}
             <Image src="/assets/logo.png" alt="logo" height={60} width={180}/>
             
           </a>
@@ -127,7 +123,7 @@ export default function Footer() {
           {/* Social Links */}
           <div className="mt-4">
           <h5 className="text-[#e8a830] uppercase tracking-[1.2px] text-[12px] font-bold mb-3">
-            Social
+            Follow us on
           </h5>
           <div className="flex items-center gap-4">
             {socialLinks.map((item) => (
