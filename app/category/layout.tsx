@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { buildMetadata } from "@/lib/seo";
-import CategoryNavbar from "@/components/Home2/CategoryNavbar";
-import Footer from "@/components/Home2/Footer";
+import CategoryNavbar from "@/components/Home/CategoryNavbar";
+import Footer from "@/components/Home/Footer";
 
 export const metadata: Metadata = buildMetadata({
   title: "Category Guides | SaveMyPay",

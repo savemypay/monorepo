@@ -13,7 +13,7 @@ const sofiaPro = localFont({
     { path: "./fonts/sofia-pro/Sofia Pro Regular Italic Az.otf", weight: "400", style: "italic" },
   ],
   display: "swap",
-  // fallback: ["Inter", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+  fallback: ["Inter", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
 })
 
 export const metadata: Metadata = {
@@ -32,18 +32,41 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const siteUrl = getSiteUrl();
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${sofiaPro.className} antialiased`}
-      >
-            <main className="relative z-0 w-full ">
-               <main className="h-full w-full">{children}</main>
-            </main>
-            <Suspense fallback={null}>
-              <GoogleAnalytics measurementId={gaMeasurementId} />
-            </Suspense>
+      <body className={`${sofiaPro.className} antialiased`}>
+        <script
+          id="organization-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "SaveMyPay",
+              url: siteUrl,
+              logo: `${siteUrl}/logo.png`,
+              sameAs: ["https://x.com/Savemypay_xyz"],
+            }),
+          }}
+        />
+        <script
+          id="website-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "SaveMyPay",
+              url: siteUrl,
+            }),
+          }}
+        />
+        <main className="relative z-0 h-full w-full">{children}</main>
+        <Suspense fallback={null}>
+          <GoogleAnalytics measurementId={gaMeasurementId} />
+        </Suspense>
       </body>
     </html>
   );
