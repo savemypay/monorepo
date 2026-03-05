@@ -9,6 +9,10 @@ export const metadata: Metadata = buildMetadata({
   description:
     "Manage your group deals, favorites, and purchase journey from the SaveMyPay customer dashboard.",
   path: "/customer",
+  robots: {
+    index: false,
+    follow: false,
+  },
 });
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {

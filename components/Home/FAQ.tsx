@@ -1,11 +1,41 @@
+ "use client";
+
+import { useEffect, useRef } from "react";
 import { FAQ_ITEMS } from "./data";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const REVEAL ="opacity-0 translate-y-7 transition-all duration-700 [transition-timing-function:cubic-bezier(0.4,0,0.2,1)]";
 
 export default function FAQ() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const nodes = Array.from(section.querySelectorAll<HTMLElement>("[data-reveal]"));
+    if (!nodes.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+
+          entry.target.classList.remove("opacity-0", "translate-y-7");
+          entry.target.classList.add("opacity-100", "translate-y-0");
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    nodes.forEach((node) => observer.observe(node));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section id="faq" className="px-6 py-12 md:py-24 bg-[#ffffff]">
+    <section ref={sectionRef} id="faq" className="px-6 py-12 md:py-24 bg-[#ffffff]">
       <div className="max-w-[1000px] mx-auto text-center">
         <div className="mb-10">
           {/* <span

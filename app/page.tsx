@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { buildMetadata } from "@/lib/seo";
-import Home2 from "@/components/Home2";
+import Home2 from "@/components/Home";
 
 export const metadata: Metadata = buildMetadata({
   title: "SaveMyPay | Power in Numbers, Savings in Bulk",

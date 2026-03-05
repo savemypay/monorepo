@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { buildMetadata } from "@/lib/seo";
-import MyDealsPageClient from "./MyDealsPageClient";
 
 export const metadata: Metadata = buildMetadata({
   title: "My Deals | SaveMyPay",
@@ -10,5 +10,5 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default function MyDealsPage() {
-  return <MyDealsPageClient />;
+  redirect("/customer/my-orders");
 }
