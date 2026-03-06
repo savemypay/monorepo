@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, BadgeCheck, Edit2, Loader2, ShieldCheck, ShoppingBag, Users } from 'lucide-react';
+import { ArrowLeft, Edit2, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { AuthData, sendLoginOtp, verifyLoginOtp } from '@/lib/api/auth';
 
@@ -254,7 +254,7 @@ export default function LoginPage() {
 
   if (!hasHydrated || isAuthenticated || (user && accessToken)) {
     return (
-      <div className="w-full max-w-5xl min-h-[580px] rounded-3xl border border-slate-200 bg-white flex items-center justify-center">
+      <div className="w-full max-w-2xl min-h-[580px] rounded-3xl border border-slate-200 bg-white flex items-center justify-center">
         <div className="flex items-center gap-2 text-sm text-slate-500">
           <Loader2 size={16} className="animate-spin" />
           Redirecting...
@@ -264,58 +264,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_50px_-25px_rgba(15,23,42,0.35)]">
-      <div className="grid md:grid-cols-12">
-        <aside className="hidden md:flex relative overflow-hidden md:col-span-6 bg-gradient-to-br from-[#040B22] via-[#0A2E6B] to-[#0C9FB2] text-slate-100 p-6 sm:p-8 md:p-10 flex-col justify-between">
-          <div className="pointer-events-none absolute -top-20 -left-16 h-64 w-64 rounded-full bg-cyan-300/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -right-20 h-72 w-72 rounded-full bg-blue-300/20 blur-3xl" />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),transparent_45%)]" />
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-800/70 px-3 py-1 text-xs font-semibold tracking-wide uppercase text-slate-200">
-              <ShoppingBag size={14} />
-              SaveMyPay
-            </div>
-            <h2 className="mt-5 text-2xl sm:text-3xl font-bold leading-tight">
-              Trusted group deals, faster buying decisions
-            </h2>
-            <p className="mt-3 text-sm text-slate-300 leading-relaxed">
-              Sign in securely to access live pools, vendor-verified offers, and your saved deal activity.
-            </p>
-
-            <div className="mt-8 space-y-3">
-              <div className="flex items-start gap-3 rounded-xl border border-slate-700 bg-slate-800/60 p-3">
-                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-300" />
-                <p className="text-sm text-slate-200">Secure OTP-based authentication for every login.</p>
-              </div>
-              <div className="flex items-start gap-3 rounded-xl border border-slate-700 bg-slate-800/60 p-3">
-                <Users className="mt-0.5 h-5 w-5 shrink-0 text-blue-300" />
-                <p className="text-sm text-slate-200">Track buyer momentum and pool progress in real time.</p>
-              </div>
-              <div className="flex items-start gap-3 rounded-xl border border-slate-700 bg-slate-800/60 p-3">
-                <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-300" />
-                <p className="text-sm text-slate-200">Work with vetted vendors and transparent milestones.</p>
-              </div>
-            </div>
-          </div>
-          <p className="mt-8 text-xs text-slate-100/80">
-            Need help signing in? Contact support and our team will assist you quickly.
-          </p>
-        </aside>
-
-        <section className="md:col-span-6 p-5 sm:p-7 md:p-8 min-h-[500px] md:min-h-[580px] flex flex-col">
+    <div className="w-full max-w-2xl overflow-hidden">
+      <div className="flex justify-center items-center">
+        <section className="w-full p-5 sm:p-7 md:p-8 min-h-[500px] md:min-h-[580px] bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between">
             <button
               onClick={handleBack}
-              className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
               aria-label="Go Back"
             >
               <ArrowLeft size={18} />
               Back
             </button>
-
-            {/* <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Step {currentStep + 1} of 3
-            </span> */}
           </div>
 
           <div className="mt-5 mb-8">
@@ -325,16 +285,16 @@ export default function LoginPage() {
                   <div
                     className={`h-8 w-8 shrink-0 rounded-full border text-xs font-bold flex items-center justify-center ${
                       index <= currentStep
-                        ? "border-blue-700 bg-blue-700 text-white"
-                        : "border-slate-300 bg-white text-slate-500"
+                        ? "border-[#E8F0F8] bg-[#163B63] text-white"
+                        : "border-[#7A8CA3] bg-white text-[#7A8CA3]"
                     }`}
                   >
                     {index + 1}
                   </div>
-                  <p className={`hidden sm:block text-xs font-medium truncate ${index <= currentStep ? "text-slate-700" : "text-slate-400"}`}>
+                  <p className={`hidden sm:block text-xs font-medium truncate ${index <= currentStep ? "text-[#163B63]" : "text-slate-400"}`}>
                     {item}
                   </p>
-                  {index < stepItems.length - 1 && <div className={`h-px flex-1 ${index < currentStep ? "bg-blue-700" : "bg-slate-200"}`} />}
+                  {index < stepItems.length - 1 && <div className={`h-px flex-1 ${index < currentStep ? "bg-[#163B63]" : "bg-slate-200"}`} />}
                 </div>
               ))}
             </div>
@@ -342,13 +302,13 @@ export default function LoginPage() {
 
           {step === 'input' && (
             <div className="flex-1 flex flex-col animate-in fade-in duration-150">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Welcome back</h1>
-              <p className="mt-2 text-sm text-slate-600">
-                Sign in with your mobile number or email to continue to your SaveMyPay dashboard.
+              <h1 className="text-3xl sm:text-4xl font-bold text-[#163B63]">Login or Signup</h1>
+              <p className="mt-2 text-sm text-[#7A8CA3]">
+                We will send an otp to verify
               </p>
 
-              <div className="mt-7 space-y-2">
-                <label htmlFor="mobileInput" className="text-sm font-semibold text-slate-700">
+              <div className="mt-7">
+                <label htmlFor="mobileInput" className="text-sm font-semibold text-[#122E4E]">
                   Mobile number or email
                 </label>
                 <input
@@ -361,7 +321,7 @@ export default function LoginPage() {
                     setError(null);
                   }}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendOtp()}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3.5 text-slate-900 outline-none transition-all focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  className="w-full mt-2 rounded-xl border border-[#7A8CA3] px-4 py-3.5 text-[#122E4E] outline-none transition-all focus:border-[#122E4E] focus:ring-2 focus:ring-blue-100"
                   placeholder="name@example.com or 9876543210"
                 />
               </div>
@@ -376,14 +336,14 @@ export default function LoginPage() {
                 <button
                   onClick={() => handleSendOtp()}
                   disabled={isLoading}
-                  className="w-full rounded-xl bg-[#0037C5] py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-200 transition-colors hover:bg-[#002b99] disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center"
+                  className="w-full rounded-xl bg-[#163B63] py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-200 transition-colors hover:bg-[#122E4E] disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center"
                 >
                   {isLoading ? <Loader2 className="animate-spin" /> : 'Continue with OTP'}
                 </button>
                 <p className="mt-4 text-center text-xs text-slate-500">
                   By continuing, you agree to our{" "}
-                  <a href="#" className="font-semibold text-blue-700">Terms</a> and{" "}
-                  <a href="#" className="font-semibold text-blue-700">Privacy Policy</a>.
+                  <a href="#" className="font-medium text-[#163B63]">Terms</a> and{" "}
+                  <a href="#" className="font-medium text-[#163B63]">Privacy Policy</a>.
                 </p>
               </div>
             </div>
@@ -391,16 +351,16 @@ export default function LoginPage() {
 
           {step === 'otp' && (
             <div className="flex-1 flex flex-col animate-in fade-in duration-150">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Verify your account</h1>
-              <p className="mt-2 text-sm text-slate-600">
-                Enter the 6-digit OTP sent to <span className="font-semibold text-slate-800">{inputValue}</span>.
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#163B63]">Verify your account</h1>
+              <p className="mt-2 text-sm text-[#7A8CA3]">
+                Enter the 6-digit OTP sent to <span className="font-semibold text-[#122E4E]">{inputValue}</span>.
               </p>
 
               <div className="mt-6 mb-5 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <span className="truncate text-sm text-slate-600 max-w-[210px]">Code sent to {inputValue}</span>
+                <span className="truncate text-sm text-[#7A8CA3] max-w-[210px]">Code sent to {inputValue}</span>
                 <button
                   onClick={handleBack}
-                  className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-blue-700 hover:underline"
+                  className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#163B63] hover:underline"
                 >
                   <Edit2 size={14} />
                   Edit
@@ -420,8 +380,8 @@ export default function LoginPage() {
                     onPaste={handleOtpPaste}
                     className={`h-12 sm:h-14 rounded-xl border text-center text-lg sm:text-xl font-bold outline-none transition-all ${
                       digit
-                        ? "border-blue-600 bg-blue-50 text-blue-700"
-                        : "border-slate-300 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                        ? "border-[#163B63] bg-blue-50 text-[#163B63]"
+                        : "border-slate-300 text-[#163B63] focus:border-[#163B63] focus:ring-2 focus:ring-blue-100"
                     }`}
                   />
                 ))}
@@ -437,7 +397,7 @@ export default function LoginPage() {
                   <button
                     onClick={() => handleSendOtp(true)}
                     disabled={isLoading}
-                    className="font-semibold text-blue-700 hover:underline disabled:text-slate-400 disabled:no-underline"
+                    className="font-semibold text-[#163B63] hover:underline disabled:text-slate-400 disabled:no-underline"
                   >
                     Resend verification code
                   </button>
@@ -453,7 +413,7 @@ export default function LoginPage() {
               <button
                 onClick={handleVerifyOtp}
                 disabled={isLoading || otp.some((d) => !d)}
-                className="w-full mt-auto rounded-xl bg-[#0037C5] py-3.5 text-base font-semibold text-white transition-colors hover:bg-[#002b99] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 flex items-center justify-center"
+                className="w-full mt-auto rounded-xl bg-[#163B63] py-3.5 text-base font-semibold text-white transition-colors hover:bg-[#122E4E] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 flex items-center justify-center"
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Verify and continue'}
               </button>
@@ -462,13 +422,13 @@ export default function LoginPage() {
 
           {step === 'name' && (
             <div className="flex-1 flex flex-col animate-in fade-in duration-150">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Set up your profile</h1>
-              <p className="mt-2 text-sm text-slate-600">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#163B63]">Set up your profile</h1>
+              <p className="mt-2 text-sm text-[#7A8CA3]">
                 Add your full name to personalize your account and order updates.
               </p>
 
               <div className="mt-7 space-y-2">
-                <label htmlFor="nameInput" className="text-sm font-semibold text-slate-700">
+                <label htmlFor="nameInput" className="text-sm font-semibold text-[#122E4E]">
                   Full name
                 </label>
                 <input
@@ -481,7 +441,7 @@ export default function LoginPage() {
                     setError(null);
                   }}
                   onKeyDown={(e) => e.key === 'Enter' && handleFinalSubmit()}
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3.5 text-slate-900 outline-none transition-all focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  className="w-full mt-2 rounded-xl border border-[#7A8CA3] px-4 py-3.5 text-slate-900 outline-none transition-all focus:border-[#122E4E] focus:ring-2 focus:ring-[#E8F0F8]"
                   placeholder="Your full name"
                 />
               </div>
@@ -495,7 +455,7 @@ export default function LoginPage() {
               <button
                 onClick={handleFinalSubmit}
                 disabled={isLoading || name.trim().length < 2}
-                className="w-full mt-auto rounded-xl bg-[#0037C5] py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-200 transition-colors hover:bg-[#002b99] disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center"
+                className="w-full mt-auto rounded-xl bg-[#163B63] py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-200 transition-colors hover:bg-[#122E4E] disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center"
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Finish sign in'}
               </button>

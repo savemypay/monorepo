@@ -209,7 +209,7 @@ function ProfileSettingsSection() {
         type="button"
         onClick={handleSave}
         disabled={isSaving}
-        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold bg-[#1CA7A6] text-[#ffffff] hover:bg-[#168F8E] disabled:opacity-60"
       >
         {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
         Save Changes
