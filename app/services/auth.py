@@ -447,6 +447,7 @@ def _issue_tokens_customer(db: Session, user: User, is_new: bool) -> dict:
         "is_new_user": is_new,
         "user": {
             "id": user.id,
+            "name": user.name,
             "email": user.email,
             "phone_number": user.phone_number,
             "is_active": user.is_active,

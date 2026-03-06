@@ -26,6 +26,7 @@ def get_profile(db: Session = Depends(get_db), actor: dict = Depends(get_current
             )
         data = {
             "id": user.id,
+            "name": user.name,
             "email": user.email,
             "phone_number": user.phone_number,
             "role": user.role,

@@ -1,6 +1,6 @@
 from typing import Any, Generic, Optional, TypeVar
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 
 class LoginRequest(BaseModel):
@@ -19,6 +19,18 @@ class LoginRequest(BaseModel):
 class OTPVerifyRequest(LoginRequest):
     code: str = Field(..., min_length=4, max_length=10)
     referral_code: str | None = Field(default=None, min_length=4, max_length=20)
+
+
+class ProfileUpdateRequest(BaseModel):
+    email: EmailStr | None = None
+    phone_number: str | None = Field(default=None, max_length=30)
+    name: str | None = Field(default=None, max_length=255)
+
+    @model_validator(mode="after")
+    def validate_at_least_one_field(self):
+        if self.email is None and self.phone_number is None and self.name is None:
+            raise ValueError("At least one of email, phone_number, or name must be provided")
+        return self
 
 
 class LoginResponseData(BaseModel):

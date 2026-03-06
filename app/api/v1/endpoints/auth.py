@@ -1,14 +1,24 @@
 import logging
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
-from app.models.auth import LoginRequest, OTPVerifyRequest, LoginResponse, VerifyResponse, LogoutRequest
+from app.api.security import get_current_customer, get_current_vendor_id
+from app.entities.user import User
+from app.entities.vendor_account import VendorAccount
+from app.models.auth import (
+    LoginRequest,
+    OTPVerifyRequest,
+    LoginResponse,
+    VerifyResponse,
+    LogoutRequest,
+    ProfileUpdateRequest,
+)
 from app.models.admin import AdminLoginRequest, AdminLoginResponse
 from app.services.auth import issue_otp, verify_otp, logout
 from app.services.admin_auth import admin_login
-from app.utils.response import success_response
+from app.utils.response import error_response, success_response
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = logging.getLogger(__name__)
@@ -54,3 +64,133 @@ async def admin_login_endpoint(payload: AdminLoginRequest, db: Session = Depends
     tokens = admin_login(db, payload.username, payload.password)
     logger.info("Admin login success username=%s", payload.username)
     return success_response(message="Admin login", data=[tokens])
+
+
+@router.patch("/customer/profile", status_code=status.HTTP_200_OK)
+async def update_customer_profile(
+    payload: ProfileUpdateRequest,
+    db: Session = Depends(get_db),
+    actor: dict = Depends(get_current_customer),
+):
+    user_id = int(actor.get("user_id") or actor.get("sub"))
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error_response(message="User not found", code="user_not_found"),
+        )
+
+    if payload.email is not None:
+        email = payload.email.strip().lower()
+        existing = (
+            db.query(User.id)
+            .filter(User.email == email, User.id != user.id)
+            .first()
+        )
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=error_response(message="Email already in use", code="email_conflict"),
+            )
+        user.email = email
+
+    if payload.phone_number is not None:
+        phone_number = payload.phone_number.strip()
+        existing = (
+            db.query(User.id)
+            .filter(User.phone_number == phone_number, User.id != user.id)
+            .first()
+        )
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=error_response(message="Phone number already in use", code="phone_conflict"),
+            )
+        user.phone_number = phone_number
+
+    if payload.name is not None:
+        user.name = payload.name.strip()
+
+    user.updated_by = "customer_profile_update"
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return success_response(
+        message="Customer profile updated",
+        data=[{
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "phone_number": user.phone_number,
+            "role": user.role,
+            "is_active": user.is_active,
+            "referral_points": int(user.referral_points or 0),
+            "referral_code": user.referral_code,
+            "referred_by_user_id": user.referred_by_user_id,
+            "referred_at": user.referred_at,
+        }],
+    )
+
+
+@router.patch("/vendor/profile", status_code=status.HTTP_200_OK)
+async def update_vendor_profile(
+    payload: ProfileUpdateRequest,
+    db: Session = Depends(get_db),
+    vendor_id: int = Depends(get_current_vendor_id),
+):
+    vendor = db.query(VendorAccount).filter(VendorAccount.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error_response(message="Vendor not found", code="vendor_not_found"),
+        )
+
+    if payload.email is not None:
+        email = payload.email.strip().lower()
+        existing = (
+            db.query(VendorAccount.id)
+            .filter(VendorAccount.email == email, VendorAccount.id != vendor.id)
+            .first()
+        )
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=error_response(message="Email already in use", code="email_conflict"),
+            )
+        vendor.email = email
+
+    if payload.phone_number is not None:
+        phone_number = payload.phone_number.strip()
+        existing = (
+            db.query(VendorAccount.id)
+            .filter(VendorAccount.phone_number == phone_number, VendorAccount.id != vendor.id)
+            .first()
+        )
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=error_response(message="Phone number already in use", code="phone_conflict"),
+            )
+        vendor.phone_number = phone_number
+
+    if payload.name is not None:
+        vendor.name = payload.name.strip()
+
+    vendor.updated_by = "vendor_profile_update"
+    db.add(vendor)
+    db.commit()
+    db.refresh(vendor)
+
+    return success_response(
+        message="Vendor profile updated",
+        data=[{
+            "id": vendor.id,
+            "name": vendor.name,
+            "email": vendor.email,
+            "phone_number": vendor.phone_number,
+            "role": "vendor",
+            "is_active": vendor.is_active,
+            "category": vendor.category,
+        }],
+    )
