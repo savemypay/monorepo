@@ -147,7 +147,7 @@ export default function MyDealsPage() {
           </p>
         </div>
         <Link
-          href="/login?redirect=%2Fcustomer%2Fmy-deals"
+          href="/login?redirect=%2Fcustomer%2Fmy-orders"
           className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95"
         >
           Login Now

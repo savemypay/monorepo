@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import CategoryDetailPage from "@/components/Home2/CategoryDetailPage";
+import CategoryDetailPage from "@/components/Home/CategoryDetailPage";
 import { CATEGORY_PAGE_SLUGS, getCategoryPage } from "@/lib/category-pages";
 import { buildMetadata } from "@/lib/seo";
 
@@ -32,6 +32,12 @@ export async function generateMetadata({
     title: page.metaTitle,
     description: page.metaDescription,
     path: `/category/${slug}`,
+    keywords: [
+      `${page.categoryLabel} group deals`,
+      `${page.categoryLabel} bulk buying`,
+      `${page.categoryLabel} savings`,
+      `best ${page.categoryLabel.toLowerCase()} offers`,
+    ],
   });
 }
 

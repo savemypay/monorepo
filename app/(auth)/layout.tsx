@@ -8,6 +8,10 @@ export const metadata: Metadata = buildMetadata({
   description:
     "Sign in to SaveMyPay with secure OTP verification to manage deals, saved pools, and purchases.",
   path: "/login",
+  robots: {
+    index: false,
+    follow: false,
+  },
 });
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
