@@ -208,12 +208,12 @@ export default function CustomerNavbar() {
           <div className="hidden md:flex items-center gap-4 flex-shrink-0">
             {hasSession ? (
               <>
-                <Link
+                {/* <Link
                   href="/customer/my-orders"
                   className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                 >
                   <ShoppingBag size={22} />
-                </Link>
+                </Link> */}
 
                 <div className="relative" ref={dropdownRef}>
                   <button
@@ -223,7 +223,7 @@ export default function CustomerNavbar() {
                     aria-expanded={isProfileOpen}
                     className="flex items-center gap-3 pl-2 pr-3 py-1.5 rounded-full hover:bg-gray-50 transition-all border border-gray-200 hover:border-gray-300"
                   >
-                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white text-sm font-semibold flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-[#163B63] text-white text-sm font-semibold flex items-center justify-center">
                       {profileInitial}
                     </div>
                     <div className="text-left leading-tight">
@@ -297,7 +297,7 @@ export default function CustomerNavbar() {
             ) : (
               <Link
                 href="/login"
-                className="bg-blue-600 text-white px-6 py-2 rounded-full font-medium text-sm hover:bg-gray-800 transition-all shadow-md active:scale-95"
+                className="bg-[#122E4E] text-white px-6 py-2 rounded-full font-medium text-sm hover:bg-[#163B63] transition-all shadow-md active:scale-95"
               >
                 Login
               </Link>
@@ -313,11 +313,11 @@ export default function CustomerNavbar() {
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-gray-100 shadow-xl z-40">
-          <div className="p-4 space-y-4">
+        <div className="md:hidden absolute left-0 right-0 top-full max-h-[calc(100dvh-5rem)] overflow-y-auto bg-white border-b border-gray-100 shadow-xl z-50">
+          <div className="p-4 pb-8 space-y-4">
             <form
               onSubmit={handleSearchSubmit}
-              className="flex items-center bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none focus-within:ring-2 focus-within:ring-blue-500"
+              className="flex items-center bg-gray-50 px-4 py-3 rounded-xl text-sm border border-gray-200 outline-none focus-within:ring-2 focus-within:ring-[#122E4E]"
             >
               <input
                 type="text"
@@ -327,7 +327,7 @@ export default function CustomerNavbar() {
                 className="w-full outline-none bg-transparent"
                 aria-label="Search deals"
               />
-              <button type="submit" className="text-gray-400 hover:text-blue-600 transition-colors">
+              <button type="submit" className="text-gray-400 hover:text-[#122E4E] transition-colors">
                 <Search className="h-4 w-4" />
               </button>
             </form>
@@ -393,7 +393,7 @@ export default function CustomerNavbar() {
                 <Link
                   href="/login"
                   onClick={() => setIsMenuOpen(false)}
-                  className="block w-full px-6 py-4 text-center text-sm transition-all active:scale-95 bg-blue-600 text-white rounded-xl font-bold shadow-md"
+                  className="block w-full px-6 py-4 text-center text-sm transition-all active:scale-95 bg-[#122E4E] text-white rounded-xl font-bold shadow-md"
                 >
                   Login / Signup
                 </Link>

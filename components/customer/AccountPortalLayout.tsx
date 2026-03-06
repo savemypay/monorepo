@@ -70,7 +70,7 @@ export default function AccountPortalLayout({ children }: { children: React.Reac
                       href={href}
                       className={`mx-2 my-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                         isActive
-                          ? "bg-blue-50 text-blue-700 font-semibold"
+                          ? "bg-[#E8F0F8] text-[#1CA7A6] font-semibold"
                           : "text-slate-700 hover:bg-slate-50"
                       }`}
                     >
