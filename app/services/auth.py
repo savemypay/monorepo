@@ -18,6 +18,7 @@ from app.core.config import (
     OTP_PEPPER,
     OTP_RESEND_COOLDOWN_SECONDS,
     OTP_TTL_MINUTES,
+    REGISTER_REFERRAL_POINTS,
     REFRESH_TOKEN_EXPIRE_DAYS,
     REFRESH_TOKEN_PEPPER,
 )
@@ -29,6 +30,7 @@ from app.entities.vendor import VendorInterest
 from app.entities.vendor_account import VendorAccount
 from app.entities.admin_account import AdminAccount
 from app.entities.vendor_refresh_token import VendorRefreshToken
+from app.entities.referral_reward import ReferralReward
 from app.models.auth import LoginRequest, OTPVerifyRequest
 from app.notifications.notifier import send_email_async, send_sms_async
 from app.utils.response import error_response
@@ -36,6 +38,7 @@ from app.utils.response import error_response
 Audience = Literal["customer", "vendor"]
 REFERRAL_CODE_LENGTH = 8
 REFERRAL_CODE_ALPHABET = string.ascii_uppercase + string.digits
+REFERRAL_REGISTER_EVENT = "register_referral"
 
 
 def _now() -> datetime:
@@ -75,6 +78,64 @@ def _normalize_referral_code(value: str | None) -> str | None:
         return None
     code = value.strip().upper()
     return code or None
+
+
+def _resolve_referrer(db: Session, referral_code: str, user_id: int | None = None) -> User:
+    referrer = (
+        db.query(User)
+        .filter(
+            User.referral_code == referral_code,
+            User.role == "customer",
+            User.is_active.is_(True),
+        )
+        .first()
+    )
+    if not referrer:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="Invalid referral code", code="invalid_referral_code"),
+        )
+    if user_id is not None and referrer.id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="Self referral is not allowed", code="self_referral"),
+        )
+    return referrer
+
+
+def _apply_referral_reward(db: Session, user: User, referrer: User) -> None:
+    if user.referred_by_user_id is not None:
+        return
+
+    user.referred_by_user_id = referrer.id
+    user.referred_at = _now()
+    db.add(user)
+
+    existing = (
+        db.query(ReferralReward.id)
+        .filter(
+            ReferralReward.referred_user_id == user.id,
+            ReferralReward.event_type == REFERRAL_REGISTER_EVENT,
+        )
+        .first()
+    )
+    if existing:
+        return
+
+    reward_points = max(REGISTER_REFERRAL_POINTS, 0)
+    referrer.referral_points = int(referrer.referral_points or 0) + reward_points
+    db.add(referrer)
+
+    reward = ReferralReward(
+        referrer_user_id=referrer.id,
+        referred_user_id=user.id,
+        payment_id=None,
+        event_type=REFERRAL_REGISTER_EVENT,
+        reward_amount=reward_points,
+        status="credited",
+        created_by="referral",
+    )
+    db.add(reward)
 
 
 def _hash_refresh(token: str) -> str:
@@ -279,27 +340,8 @@ def _ensure_user_record(db: Session, payload: LoginRequest | OTPVerifyRequest, a
             user.referral_code = _generate_referral_code(db)
             changed = True
         if user.role == "customer" and referral_code and user.referred_by_user_id is None:
-            referrer = (
-                db.query(User)
-                .filter(
-                    User.referral_code == referral_code,
-                    User.role == "customer",
-                    User.is_active.is_(True),
-                )
-                .first()
-            )
-            if not referrer:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=error_response(message="Invalid referral code", code="invalid_referral_code"),
-                )
-            if referrer.id == user.id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=error_response(message="Self referral is not allowed", code="self_referral"),
-                )
-            user.referred_by_user_id = referrer.id
-            user.referred_at = _now()
+            referrer = _resolve_referrer(db, referral_code, user_id=user.id)
+            _apply_referral_reward(db, user, referrer)
             changed = True
         if changed:
             db.add(user)
@@ -310,20 +352,7 @@ def _ensure_user_record(db: Session, payload: LoginRequest | OTPVerifyRequest, a
     referral_code = _normalize_referral_code(getattr(payload, "referral_code", None))
     referrer = None
     if desired_role == "customer" and referral_code:
-        referrer = (
-            db.query(User)
-            .filter(
-                User.referral_code == referral_code,
-                User.role == "customer",
-                User.is_active.is_(True),
-            )
-            .first()
-        )
-        if not referrer:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=error_response(message="Invalid referral code", code="invalid_referral_code"),
-            )
+        referrer = _resolve_referrer(db, referral_code)
 
     user = User(
         email=payload.email,
@@ -338,14 +367,14 @@ def _ensure_user_record(db: Session, payload: LoginRequest | OTPVerifyRequest, a
     db.commit()
     db.refresh(user)
 
-    if desired_role == "customer" and referrer and user.referred_by_user_id is None:
+    if desired_role == "customer" and referrer:
+        # guard against unlikely self-referral after user row gets an id
         if referrer.id == user.id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=error_response(message="Self referral is not allowed", code="self_referral"),
             )
-        user.referred_by_user_id = referrer.id
-        user.referred_at = _now()
+        _apply_referral_reward(db, user, referrer)
         db.add(user)
         db.commit()
         db.refresh(user)
@@ -421,6 +450,7 @@ def _issue_tokens_customer(db: Session, user: User, is_new: bool) -> dict:
             "email": user.email,
             "phone_number": user.phone_number,
             "is_active": user.is_active,
+            "referral_points": int(user.referral_points or 0),
             "referral_code": user.referral_code,
             "referred_by_user_id": user.referred_by_user_id,
             "referred_at": user.referred_at,

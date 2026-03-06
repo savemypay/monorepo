@@ -30,6 +30,7 @@ def get_profile(db: Session = Depends(get_db), actor: dict = Depends(get_current
             "phone_number": user.phone_number,
             "role": user.role,
             "is_active": user.is_active,
+            "referral_points": int(user.referral_points or 0),
             "referral_code": user.referral_code,
             "referred_by_user_id": user.referred_by_user_id,
             "referred_at": user.referred_at,

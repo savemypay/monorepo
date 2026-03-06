@@ -19,6 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    op.add_column("users", sa.Column("referral_points", sa.Integer(), server_default="0", nullable=False))
     op.add_column("users", sa.Column("referral_code", sa.String(length=20), nullable=True))
     op.add_column("users", sa.Column("referred_by_user_id", sa.Integer(), nullable=True))
     op.add_column("users", sa.Column("referred_at", sa.DateTime(timezone=True), nullable=True))
@@ -37,9 +38,9 @@ def upgrade() -> None:
         sa.Column("referrer_user_id", sa.Integer(), nullable=False),
         sa.Column("referred_user_id", sa.Integer(), nullable=False),
         sa.Column("payment_id", sa.Integer(), nullable=True),
-        sa.Column("event_type", sa.String(length=50), nullable=False),
-        sa.Column("reward_amount", sa.Integer(), nullable=False),
-        sa.Column("status", sa.String(length=20), nullable=False),
+        sa.Column("event_type", sa.String(length=50), server_default="register_referral", nullable=False),
+        sa.Column("reward_amount", sa.Integer(), server_default="0", nullable=False),
+        sa.Column("status", sa.String(length=20), server_default="credited", nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
@@ -74,4 +75,4 @@ def downgrade() -> None:
     op.drop_column("users", "referred_at")
     op.drop_column("users", "referred_by_user_id")
     op.drop_column("users", "referral_code")
-
+    op.drop_column("users", "referral_points")
