@@ -159,10 +159,6 @@ export default function MyDealsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
-          <p className="text-sm text-gray-500 mt-1">Deals you have already joined using token payment.</p>
-        </div>
         {sortedOrders.length > 0 && !isLoading && (
           <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-xs font-semibold w-fit">
             {sortedOrders.length} order{sortedOrders.length > 1 ? "s" : ""}
@@ -204,7 +200,7 @@ export default function MyDealsPage() {
             <div>
               <p className="text-gray-900 font-medium">No purchased deals yet.</p>
               <p className="text-gray-500 text-sm mb-4">Join a pool to see your orders here.</p>
-              <Link href="/customer" className="inline-block text-blue-600 font-bold hover:underline">
+              <Link href="/customer" className="inline-block  text-[#168F8E] font-bold hover:underline">
                 Browse Active Pools
               </Link>
             </div>

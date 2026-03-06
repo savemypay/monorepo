@@ -10,14 +10,20 @@ export default function CustomerRouteGuard({ children }: { children: React.React
   const pathname = usePathname();
   const { user, accessToken, hasHydrated } = useAuthStore();
 
+  const isPublicRoute =
+    pathname === "/customer" || pathname.startsWith("/customer/deals/");
   const isAuthorized = Boolean(user && accessToken);
 
   useEffect(() => {
-    if (!hasHydrated || isAuthorized) return;
+    if (isPublicRoute || !hasHydrated || isAuthorized) return;
 
     const redirectPath = pathname || "/customer";
     router.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
-  }, [hasHydrated, isAuthorized, pathname, router]);
+  }, [isPublicRoute, hasHydrated, isAuthorized, pathname, router]);
+
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
 
   if (!hasHydrated || !isAuthorized) {
     return (
