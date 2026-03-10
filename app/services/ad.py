@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.entities.ad import Ad
+from app.entities.ad_favorite import AdFavorite
 from app.entities.ad_tier import AdTier
 from app.models.ad import AdCreate
 from app.repositories.ad import AdRepository
@@ -57,15 +58,35 @@ def create_ad(db: Session, vendor_id: int, payload: AdCreate) -> Ad:
     return ad
 
 
-def list_ads(db: Session, vendor_id: int | None, active_only: bool = False) -> List[Ad]:
+def list_ads(
+    db: Session,
+    vendor_id: int | None,
+    active_only: bool = False,
+    customer_user_id: int | None = None,
+) -> List[Ad]:
     q = db.query(Ad)
     if vendor_id is not None:
         q = q.filter(Ad.vendor_id == vendor_id)
     if active_only:
         q = q.filter(Ad.status == "active")
     ads = q.order_by(Ad.created_at.desc()).all()
+
+    favorite_ids: set[int] = set()
+    if customer_user_id is not None and ads:
+        ad_ids = [ad.id for ad in ads]
+        rows = (
+            db.query(AdFavorite.ad_id)
+            .filter(
+                AdFavorite.user_id == customer_user_id,
+                AdFavorite.ad_id.in_(ad_ids),
+            )
+            .all()
+        )
+        favorite_ids = {row.ad_id for row in rows}
+
     for ad in ads:
         _annotate_slots(ad)
+        ad.is_favorite = ad.id in favorite_ids
     return ads
 
 
@@ -93,3 +114,41 @@ def publish_ad(db: Session, ad_id: int, vendor_id: int | None) -> Ad:
     db.refresh(ad)
     _annotate_slots(ad)
     return ad
+
+
+def set_ad_favorite(db: Session, *, ad_id: int, user_id: int, is_favorite: bool) -> dict:
+    ad = db.query(Ad).filter(Ad.id == ad_id).first()
+    if not ad:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error_response(message="Ad not found", code="ad_not_found"),
+        )
+
+    favorite = (
+        db.query(AdFavorite)
+        .filter(AdFavorite.ad_id == ad_id, AdFavorite.user_id == user_id)
+        .first()
+    )
+
+    changed = False
+    if is_favorite:
+        if not favorite:
+            favorite = AdFavorite(
+                ad_id=ad_id,
+                user_id=user_id,
+                created_by="customer",
+            )
+            db.add(favorite)
+            db.commit()
+            changed = True
+    else:
+        if favorite:
+            db.delete(favorite)
+            db.commit()
+            changed = True
+
+    return {
+        "ad_id": ad_id,
+        "is_favorite": is_favorite,
+        "changed": changed,
+    }

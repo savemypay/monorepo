@@ -7,10 +7,11 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_db
 from app.api.security import (
     get_current_admin_or_vendor,
-    get_current_user_optional,
+    get_current_customer,
+    get_current_user_optional,get_current_user
 )
-from app.models.ad import AdCreate, AdListResponse, AdResponse, ImageAttachRequest
-from app.services.ad import create_ad, list_ads, get_ad, publish_ad
+from app.models.ad import AdCreate, AdListResponse, AdResponse, ImageAttachRequest, FavoriteUpdateRequest
+from app.services.ad import create_ad, list_ads, get_ad, publish_ad, set_ad_favorite
 from app.services.s3 import generate_presigned_upload
 from app.utils.response import success_response
 
@@ -46,6 +47,7 @@ def list_ads_endpoint(
 ):
     effective_vendor_id = vendor_id
     active_only = False
+    customer_user_id: int | None = None
 
     if actor is None:
         # Public callers can only see active ads.
@@ -56,9 +58,10 @@ def list_ads_endpoint(
             effective_vendor_id = int(actor.get("vendor_id") or actor.get("sub"))
         elif role == "customer":
             active_only = True
+            customer_user_id = int(actor.get("user_id") or actor.get("sub"))
             # customer can optionally filter by vendor_id; if none provided, see all active ads
 
-    ads = list_ads(db, effective_vendor_id, active_only=active_only)
+    ads = list_ads(db, effective_vendor_id, active_only=active_only, customer_user_id=customer_user_id)
     return success_response(message="Ads fetched", data=ads)
 
 
@@ -127,3 +130,16 @@ def attach_ad_image(
     db.refresh(ad)
 
     return success_response(message="Image attached", data=[{"url": public_url}])
+
+
+@router.put("/{ad_id}/favorite", status_code=status.HTTP_200_OK)
+def favorite_ad(
+    ad_id: int,
+    payload: FavoriteUpdateRequest,
+    db: Session = Depends(get_db),
+    actor: dict = Depends(get_current_customer),
+):
+    user_id = int(actor.get("user_id") or actor.get("sub"))
+    result = set_ad_favorite(db, ad_id=ad_id, user_id=user_id, is_favorite=payload.is_favorite)
+    message = "Ad marked as favorite" if payload.is_favorite else "Ad removed from favorites"
+    return success_response(message=message, data=[result])

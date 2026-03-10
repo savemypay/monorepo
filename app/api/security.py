@@ -1,4 +1,4 @@
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 
@@ -6,6 +6,7 @@ from app.core.config import JWT_ALGORITHM, JWT_SECRET_KEY
 from app.utils.response import error_response
 
 bearer_scheme = HTTPBearer(auto_error=True)
+optional_bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def decode_token(token: str) -> dict:
@@ -63,17 +64,25 @@ def get_current_user(
 
 
 def get_current_user_optional(
-    authorization: str | None = Header(default=None),
+    request: Request,
+    creds: HTTPAuthorizationCredentials | None = Depends(optional_bearer_scheme),
 ) -> dict | None:
     """Allow anonymous access, but decode token when present."""
-    if not authorization:
+    token: str | None = None
+    if creds and creds.credentials:
+        token = creds.credentials
+    if token:
+        authorization = request.headers.get("authorization")
+        if authorization:
+            scheme, _, raw_token = authorization.partition(" ")
+            if scheme.lower() != "bearer" or not raw_token:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=error_response(message="Invalid token", code="invalid_token"),
+                )
+            token = raw_token
+    if not token:
         return None
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=error_response(message="Invalid token", code="invalid_token"),
-        )
     return decode_token(token)
 
 

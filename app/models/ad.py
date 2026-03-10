@@ -69,6 +69,7 @@ class AdOut(BaseModel):
     terms: Optional[str]
     valid_from: Optional[datetime]
     valid_to: Optional[datetime]
+    is_favorite: bool = False
     tiers: List[AdTierOut]
 
     class Config:
@@ -86,3 +87,7 @@ class AdListResponse(ApiResponse[AdOut]):
 class ImageAttachRequest(BaseModel):
     key: str
     public_url: Optional[str] = None
+
+
+class FavoriteUpdateRequest(BaseModel):
+    is_favorite: bool = True
