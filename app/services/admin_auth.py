@@ -20,8 +20,15 @@ def _verify_password(password: str, hashed: str) -> bool:
     return hmac.compare_digest(_hash_password(password), hashed)
 
 
-def admin_login(db: Session, username: str, password: str) -> dict:
-    admin = db.query(AdminAccount).filter(AdminAccount.username == username, AdminAccount.is_active.is_(True)).first()
+def admin_login(db: Session, password: str, username: str | None = None, email: str | None = None) -> dict:
+    q = db.query(AdminAccount).filter(AdminAccount.is_active.is_(True))
+    if email:
+        admin = q.filter(AdminAccount.email == email.lower().strip()).first()
+    elif username:
+        admin = q.filter(AdminAccount.username == username).first()
+    else:
+        admin = None
+
     if not admin or not _verify_password(password, admin.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

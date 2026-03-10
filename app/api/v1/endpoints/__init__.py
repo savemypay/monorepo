@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     category,
     customer_interest,
     customer_purchases,
+    engagement,
     game,
     paid_users,
     payment,
@@ -26,3 +27,4 @@ router.include_router(payment_maintenance.router)
 router.include_router(customer_purchases.router)
 router.include_router(profile.router)
 router.include_router(game.router)
+router.include_router(engagement.router)

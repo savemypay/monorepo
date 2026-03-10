@@ -26,7 +26,7 @@ if [ -f "$PID_FILE" ]; then
 fi
 
 echo "Starting uvicorn..."
-nohup "$VENV_DIR/bin/uvicorn" main:app --host 0.0.0.0 --port 8001 --root-path /smp > "$LOG_FILE" 2>&1 &
+nohup "$VENV_DIR/bin/uvicorn" main:app --host 0.0.0.0 --port 8002 --root-path /smp > "$LOG_FILE" 2>&1 &
 echo $! > "$PID_FILE"
 deactivate
 echo "uvicorn started with pid $(cat $PID_FILE)"

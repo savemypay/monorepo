@@ -61,8 +61,8 @@ async def logout_user(payload: LogoutRequest, db: Session = Depends(get_db)):
 
 @router.post("/admin/login", status_code=status.HTTP_200_OK, response_model=AdminLoginResponse)
 async def admin_login_endpoint(payload: AdminLoginRequest, db: Session = Depends(get_db)):
-    tokens = admin_login(db, payload.username, payload.password)
-    logger.info("Admin login success username=%s", payload.username)
+    tokens = admin_login(db, password=payload.password, username=payload.username, email=payload.email)
+    logger.info("Admin login success username=%s email=%s", payload.username, payload.email)
     return success_response(message="Admin login", data=[tokens])
 
 
