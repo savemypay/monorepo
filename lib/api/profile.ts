@@ -1,6 +1,6 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
 const PROFILE_ENDPOINT = "/api/v1/profile";
-const PROFILE_UPDATE_ENDPOINT = process.env.NEXT_PUBLIC_PROFILE_UPDATE_ENDPOINT?.trim() || PROFILE_ENDPOINT;
+const PROFILE_UPDATE_ENDPOINT = process.env.NEXT_PUBLIC_PROFILE_UPDATE_ENDPOINT?.trim();
 const PROFILE_UPDATE_METHOD = (process.env.NEXT_PUBLIC_PROFILE_UPDATE_METHOD?.trim() || "PATCH").toUpperCase();
 
 export interface Profile {

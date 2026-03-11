@@ -79,10 +79,10 @@ export default function CustomerNavbar() {
   const profileInitial = (
     profile?.email?.[0] ||
     profile?.name?.[0] ||
-    profile?.phone_number?.[0] ||
+    // profile?.phone_number?.[0] ||
     user?.email?.[0] ||
     user?.name?.[0] ||
-    user?.phone_number?.[0] ||
+    // user?.phone_number?.[0] ||
     "U"
   ).toUpperCase();
 
@@ -297,7 +297,7 @@ export default function CustomerNavbar() {
             ) : (
               <Link
                 href="/login"
-                className="bg-[#122E4E] text-white px-6 py-2 rounded-full font-medium text-sm hover:bg-[#163B63] transition-all shadow-md active:scale-95"
+                className="bg-[#122E4E] text-white px-6 py-2 rounded-full font-medium text-base hover:bg-[#163B63] transition-all shadow-md active:scale-95"
               >
                 Login
               </Link>

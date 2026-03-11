@@ -71,8 +71,8 @@ function dedupeKeywords(keywords: string[]) {
 export function buildMetadata(input: SeoInput): Metadata {
   const image = input.image ?? {
     url: DEFAULT_OG_IMAGE,
-    width: 1160,
-    height: 652,
+    width: 1200,
+    height: 630,
     alt: `${SITE_NAME} preview image`,
   };
 
