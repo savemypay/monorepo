@@ -13,7 +13,7 @@ from app.api.security import (
 from app.models.ad import AdCreate, AdListResponse, AdResponse, ImageAttachRequest, FavoriteUpdateRequest
 from app.services.ad import create_ad, list_ads, get_ad, publish_ad, set_ad_favorite
 from app.services.s3 import generate_presigned_upload
-from app.utils.response import success_response
+from app.utils.response import error_response, success_response
 
 router = APIRouter(prefix="/ads", tags=["ads"])
 logger = logging.getLogger(__name__)
@@ -43,15 +43,30 @@ def create_ad_endpoint(
 def list_ads_endpoint(
     db: Session = Depends(get_db),
     vendor_id: Optional[int] = Query(default=None),
+    status_filter: Optional[str] = Query(
+        default=None,
+        alias="status",
+        pattern="^(draft|active|filled|expired|canceled)$",
+    ),
     actor: Optional[dict] = Depends(get_current_user_optional),
 ):
     effective_vendor_id = vendor_id
     active_only = False
     customer_user_id: int | None = None
+    effective_status = status_filter
 
     if actor is None:
         # Public callers can only see active ads.
         active_only = True
+        if status_filter is not None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_response(
+                    message="status filter is allowed only for admin/vendor",
+                    code="validation_error",
+                ),
+            )
+        effective_status = None
     else:
         role = actor.get("role")
         if role == "vendor":
@@ -59,9 +74,24 @@ def list_ads_endpoint(
         elif role == "customer":
             active_only = True
             customer_user_id = int(actor.get("user_id") or actor.get("sub"))
+            if status_filter is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=error_response(
+                        message="status filter is allowed only for admin/vendor",
+                        code="validation_error",
+                    ),
+                )
+            effective_status = None
             # customer can optionally filter by vendor_id; if none provided, see all active ads
 
-    ads = list_ads(db, effective_vendor_id, active_only=active_only, customer_user_id=customer_user_id)
+    ads = list_ads(
+        db,
+        effective_vendor_id,
+        active_only=active_only,
+        customer_user_id=customer_user_id,
+        status=effective_status,
+    )
     return success_response(message="Ads fetched", data=ads)
 
 

@@ -63,10 +63,13 @@ def list_ads(
     vendor_id: int | None,
     active_only: bool = False,
     customer_user_id: int | None = None,
+    status: str | None = None,
 ) -> List[Ad]:
     q = db.query(Ad)
     if vendor_id is not None:
         q = q.filter(Ad.vendor_id == vendor_id)
+    if status is not None:
+        q = q.filter(Ad.status == status)
     if active_only:
         q = q.filter(Ad.status == "active")
     ads = q.order_by(Ad.created_at.desc()).all()
