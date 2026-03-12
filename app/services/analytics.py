@@ -1,11 +1,16 @@
 from collections import defaultdict
+from decimal import Decimal
 from datetime import date, datetime, time, timedelta, timezone
 from typing import Literal
 
 from fastapi import HTTPException, status
+from sqlalchemy import Integer, String, cast, func
 from sqlalchemy.orm import Session
 
+from app.entities.ad import Ad
+from app.entities.payment import Payment
 from app.entities.user import User
+from app.payments.base import PaymentStatus
 from app.utils.response import error_response
 
 Granularity = Literal["day", "week", "month", "year"]
@@ -136,5 +141,134 @@ def get_user_onboarding_trend(
         "date_to": date_to.isoformat(),
         "total_new_users": sum(item["new_users"] for item in trend),
         "total_users_till_to_date": running_total,
+        "trend": trend,
+    }
+
+
+def get_ads_by_category_analytics(
+    db: Session,
+    *,
+    category: str | None = None,
+    vendor_id: int | None = None,
+) -> dict:
+    q = db.query(Ad)
+    normalized_category = category.strip() if category else None
+
+    if vendor_id is not None:
+        q = q.filter(Ad.vendor_id == vendor_id)
+    if normalized_category:
+        q = q.filter(Ad.category.ilike(normalized_category))
+
+    grouped_rows = (
+        q.with_entities(
+            Ad.category,
+            func.count(Ad.id).label("ads_count"),
+        )
+        .group_by(Ad.category)
+        .order_by(func.count(Ad.id).desc(), Ad.category.asc())
+        .all()
+    )
+
+    by_category = [
+        {
+            "category": row.category or "",
+            "ads_count": int(row.ads_count or 0),
+        }
+        for row in grouped_rows
+    ]
+
+    return {
+        "category_filter": normalized_category,
+        "vendor_id": vendor_id,
+        "total_ads": sum(item["ads_count"] for item in by_category),
+        "by_category": by_category,
+    }
+
+
+def _minor_to_major(amount_minor: int) -> float:
+    return float(Decimal(int(amount_minor)) / Decimal("100"))
+
+
+def get_transactions_trend(
+    db: Session,
+    *,
+    granularity: Granularity,
+    date_from: date,
+    date_to: date,
+    vendor_id: int | None = None,
+) -> dict:
+    if date_from > date_to:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="date_from must be <= date_to", code="validation_error"),
+        )
+
+    range_start = _to_utc_start(date_from)
+    range_end_exclusive = _to_utc_end_exclusive(date_to)
+
+    q = (
+        db.query(Payment.created_at, Payment.amount, Payment.customer_ref)
+        .filter(
+            Payment.status == PaymentStatus.SUCCEEDED,
+            Payment.created_at >= range_start,
+            Payment.created_at < range_end_exclusive,
+        )
+    )
+    if vendor_id is not None:
+        q = (
+            q.join(Ad, cast(Ad.id, String) == Payment.deal_ref)
+            .filter(Ad.vendor_id == vendor_id)
+        )
+
+    rows = q.all()
+
+    bucket_counts: dict[date, dict] = defaultdict(
+        lambda: {"transactions_count": 0, "amount_minor": 0, "users": set()}
+    )
+    unique_users_total: set[str] = set()
+
+    for created_at, amount, customer_ref in rows:
+        if created_at is None:
+            continue
+        bucket_key = _bucket_start(created_at, granularity)
+        bucket_counts[bucket_key]["transactions_count"] += 1
+        bucket_counts[bucket_key]["amount_minor"] += int(amount or 0)
+        if customer_ref:
+            key = str(customer_ref).strip()
+            if key:
+                bucket_counts[bucket_key]["users"].add(key)
+                unique_users_total.add(key)
+
+    trend: list[dict] = []
+    cumulative_minor = 0
+    cursor = _align_cursor_start(date_from, granularity)
+    while cursor <= date_to:
+        bucket = bucket_counts.get(cursor)
+        tx_count = int(bucket["transactions_count"]) if bucket else 0
+        amount_minor = int(bucket["amount_minor"]) if bucket else 0
+        users_count = len(bucket["users"]) if bucket else 0
+        cumulative_minor += amount_minor
+        trend.append(
+            {
+                "period_start": cursor.isoformat(),
+                "period_end": _bucket_end(cursor, granularity, date_to).isoformat(),
+                "transactions_count": tx_count,
+                "unique_paying_users": users_count,
+                "paid_amount": _minor_to_major(amount_minor),
+                "cumulative_paid_amount": _minor_to_major(cumulative_minor),
+            }
+        )
+        cursor = _next_bucket(cursor, granularity)
+
+    total_amount_minor = sum(int(row.amount or 0) for row in rows)
+
+    return {
+        "granularity": granularity,
+        "date_from": date_from.isoformat(),
+        "date_to": date_to.isoformat(),
+        "vendor_id": vendor_id,
+        "total_transactions": len(rows),
+        "total_unique_paying_users": len(unique_users_total),
+        "total_paid_amount": _minor_to_major(total_amount_minor),
         "trend": trend,
     }

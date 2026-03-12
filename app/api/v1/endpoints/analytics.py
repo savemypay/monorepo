@@ -6,8 +6,16 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
 from app.api.security import get_current_admin_or_vendor
-from app.models.analytics import OnboardingTrendResponse
-from app.services.analytics import get_user_onboarding_trend
+from app.models.analytics import (
+    OnboardingTrendResponse,
+    AdCategoryAnalyticsResponse,
+    TransactionsAnalyticsResponse,
+)
+from app.services.analytics import (
+    get_user_onboarding_trend,
+    get_ads_by_category_analytics,
+    get_transactions_trend,
+)
 from app.utils.response import error_response, success_response
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -41,3 +49,53 @@ def user_onboarding_trend(
         role=role,  # type: ignore[arg-type]
     )
     return success_response(message="User onboarding trend fetched", data=[stats])
+
+
+@router.get("/ads-by-category", status_code=status.HTTP_200_OK, response_model=AdCategoryAnalyticsResponse)
+def ads_by_category(
+    category: str | None = Query(default=None),
+    vendor_id: int | None = Query(default=None),
+    db: Session = Depends(get_db),
+    actor: dict = Depends(get_current_admin_or_vendor),
+):
+    role = actor.get("role")
+    if role == "vendor":
+        effective_vendor_id = int(actor.get("vendor_id") or actor.get("sub"))
+    else:
+        effective_vendor_id = vendor_id
+
+    data = get_ads_by_category_analytics(
+        db,
+        category=category,
+        vendor_id=effective_vendor_id,
+    )
+    return success_response(message="Ads category analytics fetched", data=[data])
+
+
+@router.get("/transactions-trend", status_code=status.HTTP_200_OK, response_model=TransactionsAnalyticsResponse)
+def transactions_trend(
+    granularity: str = Query(default="day", pattern="^(day|week|month|year)$"),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
+    vendor_id: int | None = Query(default=None),
+    db: Session = Depends(get_db),
+    actor: dict = Depends(get_current_admin_or_vendor),
+):
+    role = actor.get("role")
+    if role == "vendor":
+        effective_vendor_id = int(actor.get("vendor_id") or actor.get("sub"))
+    else:
+        effective_vendor_id = vendor_id
+
+    today = date.today()
+    effective_to = date_to or today
+    effective_from = date_from or (effective_to - timedelta(days=29))
+
+    data = get_transactions_trend(
+        db,
+        granularity=granularity,  # type: ignore[arg-type]
+        date_from=effective_from,
+        date_to=effective_to,
+        vendor_id=effective_vendor_id,
+    )
+    return success_response(message="Transactions trend fetched", data=[data])

@@ -28,3 +28,43 @@ class OnboardingTrendData(BaseModel):
 
 class OnboardingTrendResponse(ApiResponse[OnboardingTrendData]):
     pass
+
+
+class AdCategoryCountPoint(BaseModel):
+    category: str
+    ads_count: int
+
+
+class AdCategoryAnalyticsData(BaseModel):
+    category_filter: str | None = None
+    vendor_id: int | None = None
+    total_ads: int
+    by_category: list[AdCategoryCountPoint]
+
+
+class AdCategoryAnalyticsResponse(ApiResponse[AdCategoryAnalyticsData]):
+    pass
+
+
+class TransactionTrendPoint(BaseModel):
+    period_start: str
+    period_end: str
+    transactions_count: int
+    unique_paying_users: int
+    paid_amount: float
+    cumulative_paid_amount: float
+
+
+class TransactionsAnalyticsData(BaseModel):
+    granularity: Granularity
+    date_from: str
+    date_to: str
+    vendor_id: int | None = None
+    total_transactions: int
+    total_unique_paying_users: int
+    total_paid_amount: float
+    trend: list[TransactionTrendPoint]
+
+
+class TransactionsAnalyticsResponse(ApiResponse[TransactionsAnalyticsData]):
+    pass
