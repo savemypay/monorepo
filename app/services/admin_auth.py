@@ -6,6 +6,7 @@ from typing import Literal
 
 from fastapi import HTTPException, status
 from jose import jwt
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.core.config import JWT_ACCESS_TOKEN_EXPIRE_MINUTES, JWT_ALGORITHM, JWT_SECRET_KEY, REFRESH_TOKEN_EXPIRE_DAYS, REFRESH_TOKEN_PEPPER
@@ -66,17 +67,24 @@ def list_admin_users(
     db: Session,
     *,
     role: Literal["all", "customer", "vendor"] = "all",
+    search: str | None = None,
 ) -> dict:
     customers: list[dict] = []
     vendors: list[dict] = []
+    search_term = search.strip() if search else None
+    pattern = f"%{search_term}%" if search_term else None
 
     if role in ("all", "customer"):
-        rows = (
-            db.query(User)
-            .filter(User.role == "customer")
-            .order_by(User.created_at.desc())
-            .all()
-        )
+        q = db.query(User).filter(User.role == "customer")
+        if pattern:
+            q = q.filter(
+                or_(
+                    User.name.ilike(pattern),
+                    User.email.ilike(pattern),
+                    User.phone_number.ilike(pattern),
+                )
+            )
+        rows = q.order_by(User.created_at.desc()).all()
         customers = [
             {
                 "id": row.id,
@@ -91,11 +99,17 @@ def list_admin_users(
         ]
 
     if role in ("all", "vendor"):
-        rows = (
-            db.query(VendorAccount)
-            .order_by(VendorAccount.created_at.desc())
-            .all()
-        )
+        q = db.query(VendorAccount)
+        if pattern:
+            q = q.filter(
+                or_(
+                    VendorAccount.name.ilike(pattern),
+                    VendorAccount.email.ilike(pattern),
+                    VendorAccount.phone_number.ilike(pattern),
+                    VendorAccount.category.ilike(pattern),
+                )
+            )
+        rows = q.order_by(VendorAccount.created_at.desc()).all()
         vendors = [
             {
                 "id": row.id,

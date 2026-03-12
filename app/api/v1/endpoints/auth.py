@@ -69,6 +69,7 @@ async def admin_login_endpoint(payload: AdminLoginRequest, db: Session = Depends
 @router.get("/admin/users", status_code=status.HTTP_200_OK, response_model=AdminUsersListResponse)
 async def admin_users_list(
     role: str = Query(default="all", pattern="^(all|customer|vendor)$"),
+    search: str | None = Query(default=None, max_length=255),
     db: Session = Depends(get_db),
     actor: dict = Depends(get_current_admin_or_vendor),
 ):
@@ -78,7 +79,7 @@ async def admin_users_list(
             detail=error_response(message="Only admin can access this resource", code="forbidden"),
         )
 
-    data = list_admin_users(db, role=role)  # type: ignore[arg-type]
+    data = list_admin_users(db, role=role, search=search)  # type: ignore[arg-type]
     return success_response(message="Admin users fetched", data=[data])
 
 
