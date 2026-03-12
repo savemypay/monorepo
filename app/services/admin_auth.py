@@ -2,17 +2,21 @@ from datetime import timedelta, datetime
 import hashlib
 import hmac
 import secrets
+from decimal import Decimal
 from typing import Literal
 
 from fastapi import HTTPException, status
 from jose import jwt
-from sqlalchemy import or_
-from sqlalchemy.orm import Session
+from sqlalchemy import String, and_, cast, func, or_
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import JWT_ACCESS_TOKEN_EXPIRE_MINUTES, JWT_ALGORITHM, JWT_SECRET_KEY, REFRESH_TOKEN_EXPIRE_DAYS, REFRESH_TOKEN_PEPPER
+from app.entities.ad import Ad
 from app.entities.admin_account import AdminAccount
+from app.entities.payment import Payment
 from app.entities.user import User
 from app.entities.vendor_account import VendorAccount
+from app.payments.base import PaymentStatus
 from app.utils.response import error_response
 
 
@@ -133,4 +137,97 @@ def list_admin_users(
         "total_count": total_customers + total_vendors,
         "customers": customers,
         "vendors": vendors,
+    }
+
+
+def _minor_to_major(amount_minor: int) -> float:
+    return float(Decimal(int(amount_minor)) / Decimal("100"))
+
+
+def get_vendor_ads_revenue(db: Session, *, vendor_id: int) -> dict:
+    vendor = db.query(VendorAccount).filter(VendorAccount.id == vendor_id).first()
+    if not vendor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error_response(message="Vendor not found", code="vendor_not_found"),
+        )
+
+    ads_rows = (
+        db.query(Ad)
+        .options(joinedload(Ad.tiers))
+        .filter(Ad.vendor_id == vendor_id)
+        .order_by(Ad.created_at.desc())
+        .all()
+    )
+    revenue_rows = (
+        db.query(
+            Ad.id.label("ad_id"),
+            func.coalesce(func.sum(Payment.amount), 0).label("revenue_minor"),
+            func.count(Payment.id).label("successful_payments"),
+        )
+        .outerjoin(
+            Payment,
+            and_(
+                cast(Ad.id, String) == Payment.deal_ref,
+                Payment.status == PaymentStatus.SUCCEEDED,
+            ),
+        )
+        .filter(Ad.vendor_id == vendor_id)
+        .group_by(Ad.id)
+        .all()
+    )
+    revenue_map = {
+        int(row.ad_id): {
+            "revenue_minor": int(row.revenue_minor or 0),
+            "successful_payments": int(row.successful_payments or 0),
+        }
+        for row in revenue_rows
+    }
+
+    ads = []
+    vendor_total_revenue_minor = 0
+    for ad in ads_rows:
+        stats = revenue_map.get(ad.id, {"revenue_minor": 0, "successful_payments": 0})
+        vendor_total_revenue_minor += stats["revenue_minor"]
+        ads.append(
+            {
+                "id": ad.id,
+                "vendor_id": ad.vendor_id,
+                "title": ad.title,
+                "product_name": ad.product_name,
+                "category": ad.category,
+                "token_amount": float(ad.token_amount),
+                "original_price": float(ad.original_price),
+                "total_qty": ad.total_qty,
+                "slots_remaining": ad.slots_remaining,
+                "slots_sold": int(ad.total_qty - ad.slots_remaining),
+                "status": ad.status,
+                "description": ad.description,
+                "terms": ad.terms,
+                "valid_from": ad.valid_from,
+                "valid_to": ad.valid_to,
+                "is_favorite": False,
+                "tiers": [
+                    {
+                        "id": tier.id,
+                        "seq": tier.seq,
+                        "qty": tier.qty,
+                        "discount_pct": float(tier.discount_pct),
+                        "label": tier.label,
+                    }
+                    for tier in ad.tiers
+                ],
+                "revenue_generated": _minor_to_major(stats["revenue_minor"]),
+                "successful_payments": stats["successful_payments"],
+            }
+        )
+
+    return {
+        "vendor_id": vendor.id,
+        "vendor_name": vendor.name,
+        "vendor_email": vendor.email,
+        "vendor_phone_number": vendor.phone_number,
+        "total_ads": len(ads),
+        "vendor_total_revenue": _minor_to_major(vendor_total_revenue_minor),
+        "ads": ads,
     }

@@ -15,9 +15,14 @@ from app.models.auth import (
     LogoutRequest,
     ProfileUpdateRequest,
 )
-from app.models.admin import AdminLoginRequest, AdminLoginResponse, AdminUsersListResponse
+from app.models.admin import (
+    AdminLoginRequest,
+    AdminLoginResponse,
+    AdminUsersListResponse,
+    AdminVendorAdsRevenueResponse,
+)
 from app.services.auth import issue_otp, verify_otp, logout
-from app.services.admin_auth import admin_login, list_admin_users
+from app.services.admin_auth import admin_login, list_admin_users, get_vendor_ads_revenue
 from app.utils.response import error_response, success_response
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -81,6 +86,26 @@ async def admin_users_list(
 
     data = list_admin_users(db, role=role, search=search)  # type: ignore[arg-type]
     return success_response(message="Admin users fetched", data=[data])
+
+
+@router.get(
+    "/admin/vendors/{vendor_id}/ads-revenue",
+    status_code=status.HTTP_200_OK,
+    response_model=AdminVendorAdsRevenueResponse,
+)
+async def admin_vendor_ads_revenue(
+    vendor_id: int,
+    db: Session = Depends(get_db),
+    actor: dict = Depends(get_current_admin_or_vendor),
+):
+    if actor.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=error_response(message="Only admin can access this resource", code="forbidden"),
+        )
+
+    data = get_vendor_ads_revenue(db, vendor_id=vendor_id)
+    return success_response(message="Vendor ads revenue fetched", data=[data])
 
 
 @router.patch("/customer/profile", status_code=status.HTTP_200_OK)

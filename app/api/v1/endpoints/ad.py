@@ -8,7 +8,7 @@ from app.api.dependencies import get_db
 from app.api.security import (
     get_current_admin_or_vendor,
     get_current_customer,
-    get_current_user_optional,get_current_user
+    get_current_user_optional,
 )
 from app.models.ad import AdCreate, AdListResponse, AdResponse, ImageAttachRequest, FavoriteUpdateRequest
 from app.services.ad import create_ad, list_ads, get_ad, publish_ad, set_ad_favorite
@@ -93,6 +93,39 @@ def list_ads_endpoint(
         status=effective_status,
     )
     return success_response(message="Ads fetched", data=ads)
+
+
+@router.get("/{ad_id}", status_code=status.HTTP_200_OK, response_model=AdResponse)
+def get_ad_by_id_endpoint(
+    ad_id: int,
+    db: Session = Depends(get_db),
+    actor: Optional[dict] = Depends(get_current_user_optional),
+):
+    if actor is None:
+        ad = get_ad(db, ad_id, vendor_id=None)
+        if not ad or ad.status != "active":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=error_response(message="Ad not found", code="ad_not_found"),
+            )
+        return success_response(message="Ad fetched", data=[ad])
+
+    role = actor.get("role")
+    if role == "vendor":
+        vendor_id = int(actor.get("vendor_id") or actor.get("sub"))
+        ad = get_ad(db, ad_id, vendor_id=vendor_id)
+    else:
+        ad = get_ad(db, ad_id, vendor_id=None)
+        if role != "admin" and ad and ad.status != "active":
+            ad = None
+
+    if not ad:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error_response(message="Ad not found", code="ad_not_found"),
+        )
+
+    return success_response(message="Ad fetched", data=[ad])
 
 
 @router.post("/{ad_id}/publish", status_code=status.HTTP_200_OK, response_model=AdResponse)

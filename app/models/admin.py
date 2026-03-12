@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 from app.models.auth import ApiResponse
+from app.models.ad import AdTierOut
 
 
 class AdminLoginRequest(BaseModel):
@@ -50,4 +51,40 @@ class AdminUsersListData(BaseModel):
 
 
 class AdminUsersListResponse(ApiResponse[AdminUsersListData]):
+    pass
+
+
+class AdminVendorAdRevenueEntry(BaseModel):
+    id: int
+    vendor_id: int
+    title: str
+    product_name: str | None = None
+    category: str
+    token_amount: float
+    original_price: float
+    total_qty: int
+    slots_remaining: int
+    slots_sold: int
+    status: str
+    description: str | None = None
+    terms: str | None = None
+    valid_from: datetime | None = None
+    valid_to: datetime | None = None
+    is_favorite: bool = False
+    tiers: list[AdTierOut]
+    revenue_generated: float
+    successful_payments: int
+
+
+class AdminVendorAdsRevenueData(BaseModel):
+    vendor_id: int
+    vendor_name: str | None = None
+    vendor_email: str | None = None
+    vendor_phone_number: str | None = None
+    total_ads: int
+    vendor_total_revenue: float
+    ads: list[AdminVendorAdRevenueEntry]
+
+
+class AdminVendorAdsRevenueResponse(ApiResponse[AdminVendorAdsRevenueData]):
     pass
