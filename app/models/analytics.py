@@ -68,3 +68,17 @@ class TransactionsAnalyticsData(BaseModel):
 
 class TransactionsAnalyticsResponse(ApiResponse[TransactionsAnalyticsData]):
     pass
+
+
+class DashboardOverviewData(BaseModel):
+    live_deals: int
+    pending_approval: int
+    collections_today: float
+    active_vendors: int
+    new_customers: int
+    failed_payments: int
+    new_customers_window_days: int = 15
+
+
+class DashboardOverviewResponse(ApiResponse[DashboardOverviewData]):
+    pass

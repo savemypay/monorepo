@@ -10,11 +10,13 @@ from app.models.analytics import (
     OnboardingTrendResponse,
     AdCategoryAnalyticsResponse,
     TransactionsAnalyticsResponse,
+    DashboardOverviewResponse,
 )
 from app.services.analytics import (
     get_user_onboarding_trend,
     get_ads_by_category_analytics,
     get_transactions_trend,
+    get_dashboard_overview_stats,
 )
 from app.utils.response import error_response, success_response
 
@@ -99,3 +101,18 @@ def transactions_trend(
         vendor_id=effective_vendor_id,
     )
     return success_response(message="Transactions trend fetched", data=[data])
+
+
+@router.get("/dashboard-overview", status_code=status.HTTP_200_OK, response_model=DashboardOverviewResponse)
+def dashboard_overview(
+    db: Session = Depends(get_db),
+    actor: dict = Depends(get_current_admin_or_vendor),
+):
+    if actor.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=error_response(message="Only admin can access analytics", code="forbidden"),
+        )
+
+    stats = get_dashboard_overview_stats(db, new_customers_window_days=15)
+    return success_response(message="Dashboard overview fetched", data=[stats])

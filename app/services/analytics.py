@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.entities.ad import Ad
 from app.entities.payment import Payment
 from app.entities.user import User
+from app.entities.vendor_account import VendorAccount
 from app.payments.base import PaymentStatus
 from app.utils.response import error_response
 
@@ -271,4 +272,77 @@ def get_transactions_trend(
         "total_unique_paying_users": len(unique_users_total),
         "total_paid_amount": _minor_to_major(total_amount_minor),
         "trend": trend,
+    }
+
+
+def get_dashboard_overview_stats(
+    db: Session,
+    *,
+    new_customers_window_days: int = 15,
+) -> dict:
+    today_utc = datetime.now(timezone.utc).date()
+    today_start = _to_utc_start(today_utc)
+    tomorrow_start = _to_utc_end_exclusive(today_utc)
+
+    live_deals = (
+        db.query(func.count(Ad.id))
+        .filter(Ad.status == "active")
+        .scalar()
+        or 0
+    )
+
+    pending_approval = (
+        db.query(func.count(Ad.id))
+        .filter(Ad.status == "draft")
+        .scalar()
+        or 0
+    )
+
+    collections_today_minor = (
+        db.query(func.coalesce(func.sum(Payment.amount), 0))
+        .filter(
+            Payment.status == PaymentStatus.SUCCEEDED,
+            Payment.created_at >= today_start,
+            Payment.created_at < tomorrow_start,
+        )
+        .scalar()
+        or 0
+    )
+
+    active_vendors = (
+        db.query(func.count(VendorAccount.id))
+        .filter(VendorAccount.is_active.is_(True))
+        .scalar()
+        or 0
+    )
+
+    window_days = max(int(new_customers_window_days), 1)
+    customers_from_date = today_utc - timedelta(days=window_days - 1)
+    customers_from_start = _to_utc_start(customers_from_date)
+    new_customers = (
+        db.query(func.count(User.id))
+        .filter(
+            User.role == "customer",
+            User.created_at >= customers_from_start,
+            User.created_at < tomorrow_start,
+        )
+        .scalar()
+        or 0
+    )
+
+    failed_payments = (
+        db.query(func.count(Payment.id))
+        .filter(Payment.status == PaymentStatus.FAILED)
+        .scalar()
+        or 0
+    )
+
+    return {
+        "live_deals": int(live_deals),
+        "pending_approval": int(pending_approval),
+        "collections_today": _minor_to_major(int(collections_today_minor)),
+        "active_vendors": int(active_vendors),
+        "new_customers": int(new_customers),
+        "failed_payments": int(failed_payments),
+        "new_customers_window_days": int(window_days),
     }
