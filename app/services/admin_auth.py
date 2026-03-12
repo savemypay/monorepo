@@ -2,6 +2,7 @@ from datetime import timedelta, datetime
 import hashlib
 import hmac
 import secrets
+from typing import Literal
 
 from fastapi import HTTPException, status
 from jose import jwt
@@ -9,6 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import JWT_ACCESS_TOKEN_EXPIRE_MINUTES, JWT_ALGORITHM, JWT_SECRET_KEY, REFRESH_TOKEN_EXPIRE_DAYS, REFRESH_TOKEN_PEPPER
 from app.entities.admin_account import AdminAccount
+from app.entities.user import User
+from app.entities.vendor_account import VendorAccount
 from app.utils.response import error_response
 
 
@@ -56,4 +59,64 @@ def admin_login(db: Session, password: str, username: str | None = None, email: 
         "token_type": "bearer",
         "role": "admin",
         "user_id": str(admin.id),
+    }
+
+
+def list_admin_users(
+    db: Session,
+    *,
+    role: Literal["all", "customer", "vendor"] = "all",
+) -> dict:
+    customers: list[dict] = []
+    vendors: list[dict] = []
+
+    if role in ("all", "customer"):
+        rows = (
+            db.query(User)
+            .filter(User.role == "customer")
+            .order_by(User.created_at.desc())
+            .all()
+        )
+        customers = [
+            {
+                "id": row.id,
+                "role": "customer",
+                "name": row.name,
+                "email": row.email,
+                "phone_number": row.phone_number,
+                "is_active": bool(row.is_active),
+                "created_at": row.created_at,
+            }
+            for row in rows
+        ]
+
+    if role in ("all", "vendor"):
+        rows = (
+            db.query(VendorAccount)
+            .order_by(VendorAccount.created_at.desc())
+            .all()
+        )
+        vendors = [
+            {
+                "id": row.id,
+                "role": "vendor",
+                "name": row.name,
+                "email": row.email,
+                "phone_number": row.phone_number,
+                "is_active": bool(row.is_active),
+                "created_at": row.created_at,
+            }
+            for row in rows
+        ]
+
+    total_customers = len(customers) if role in ("all", "customer") else 0
+    total_vendors = len(vendors) if role in ("all", "vendor") else 0
+
+    return {
+        "role_filter": role,
+        "total_customers": total_customers,
+        "total_vendors": total_vendors,
+        "total_count": total_customers + total_vendors,
+        "customers": customers,
+        "vendors": vendors,
     }

@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Literal
+
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 from app.models.auth import ApiResponse
@@ -24,4 +27,27 @@ class AdminLoginData(BaseModel):
 
 
 class AdminLoginResponse(ApiResponse[AdminLoginData]):
+    pass
+
+
+class AdminUserEntry(BaseModel):
+    id: int
+    role: Literal["customer", "vendor"]
+    name: str | None = None
+    email: str | None = None
+    phone_number: str | None = None
+    is_active: bool
+    created_at: datetime | None = None
+
+
+class AdminUsersListData(BaseModel):
+    role_filter: Literal["all", "customer", "vendor"]
+    total_customers: int
+    total_vendors: int
+    total_count: int
+    customers: list[AdminUserEntry]
+    vendors: list[AdminUserEntry]
+
+
+class AdminUsersListResponse(ApiResponse[AdminUsersListData]):
     pass

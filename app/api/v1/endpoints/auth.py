@@ -1,10 +1,10 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
-from app.api.security import get_current_customer, get_current_vendor_id
+from app.api.security import get_current_admin_or_vendor, get_current_customer, get_current_vendor_id
 from app.entities.user import User
 from app.entities.vendor_account import VendorAccount
 from app.models.auth import (
@@ -15,9 +15,9 @@ from app.models.auth import (
     LogoutRequest,
     ProfileUpdateRequest,
 )
-from app.models.admin import AdminLoginRequest, AdminLoginResponse
+from app.models.admin import AdminLoginRequest, AdminLoginResponse, AdminUsersListResponse
 from app.services.auth import issue_otp, verify_otp, logout
-from app.services.admin_auth import admin_login
+from app.services.admin_auth import admin_login, list_admin_users
 from app.utils.response import error_response, success_response
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -64,6 +64,22 @@ async def admin_login_endpoint(payload: AdminLoginRequest, db: Session = Depends
     tokens = admin_login(db, password=payload.password, username=payload.username, email=payload.email)
     logger.info("Admin login success username=%s email=%s", payload.username, payload.email)
     return success_response(message="Admin login", data=[tokens])
+
+
+@router.get("/admin/users", status_code=status.HTTP_200_OK, response_model=AdminUsersListResponse)
+async def admin_users_list(
+    role: str = Query(default="all", pattern="^(all|customer|vendor)$"),
+    db: Session = Depends(get_db),
+    actor: dict = Depends(get_current_admin_or_vendor),
+):
+    if actor.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=error_response(message="Only admin can access this resource", code="forbidden"),
+        )
+
+    data = list_admin_users(db, role=role)  # type: ignore[arg-type]
+    return success_response(message="Admin users fetched", data=[data])
 
 
 @router.patch("/customer/profile", status_code=status.HTTP_200_OK)
