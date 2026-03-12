@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     ad,
+    analytics,
     auth,
     category,
     customer_interest,
@@ -19,6 +20,7 @@ router = APIRouter()
 router.include_router(customer_interest.router)
 router.include_router(vendor.router)
 router.include_router(category.router)
+router.include_router(analytics.router)
 router.include_router(auth.router)
 router.include_router(payment.router)
 router.include_router(ad.router)
