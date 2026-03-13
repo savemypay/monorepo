@@ -52,10 +52,12 @@ const expiringDeals = [
 export default function AdminOverview() {
   
   // Formatter for currency in charts
-  const formatCurrency = (value: number) => {
-    if (value >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`;
-    if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
-    return `₹${value.toLocaleString('en-IN')}`;
+  const formatCurrency = (value: number | string | undefined) => {
+    const numericValue = typeof value === 'number' ? value : Number(value ?? 0);
+
+    if (numericValue >= 10000000) return `₹${(numericValue / 10000000).toFixed(1)}Cr`;
+    if (numericValue >= 100000) return `₹${(numericValue / 100000).toFixed(1)}L`;
+    return `₹${numericValue.toLocaleString('en-IN')}`;
   };
 
   return (
@@ -106,7 +108,7 @@ export default function AdminOverview() {
                 <YAxis yAxisId="left" axisLine={false} tickLine={false} tickFormatter={formatCurrency} tick={{fill: '#6b7280', fontSize: 12}} />
                 <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tickFormatter={formatCurrency} tick={{fill: '#6b7280', fontSize: 12}} />
                 <Tooltip 
-                  formatter={(value: number) => formatCurrency(value)}
+                  formatter={(value: number | string | undefined) => formatCurrency(value)}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
@@ -141,7 +143,7 @@ export default function AdminOverview() {
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value: number) => [`${value}%`, 'Share']}
+                  formatter={(value: number | string | undefined) => [`${Number(value ?? 0)}%`, 'Share']}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
               </PieChart>
