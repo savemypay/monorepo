@@ -18,6 +18,15 @@ const sofiaPro = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
+  icons: {
+    icon: [
+      { url: "/assets/Logo-icon.png", type: "image/png" },
+    ],
+    shortcut: ["/assets/Logo-icon.png"],
+    apple: [
+      { url: "/assets/Logo-icon.png", type: "image/png" },
+    ],
+  },
   ...buildMetadata({
     title: "SaveMyPay | Group Buying Deals & Bulk Savings",
     description:
