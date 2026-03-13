@@ -23,6 +23,7 @@ const toneByStatus: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",
   failed: "bg-rose-100 text-rose-800",
   refunded: "bg-sky-100 text-sky-800",
+  inactive: "bg-slate-200 text-slate-700",
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {
