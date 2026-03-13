@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { adminLogin } from "@/lib/admin/api";
 import { ADMIN_COOKIE, buildAdminProfile, persistAdminAuth } from "@/lib/admin/auth";
 import Image from "next/image";
 
-export default function LoginForm() {
+type LoginFormProps = {
+  redirectPath: string;
+};
+
+export default function LoginForm({ redirectPath }: LoginFormProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectPath = useMemo(() => searchParams.get("redirect") || "/", [searchParams]);
 
   const [form, setForm] = useState({
     identifier: "",

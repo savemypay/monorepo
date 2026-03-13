@@ -1,53 +1,168 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { customers, formatCurrency } from "@/lib/admin/mock-data";
+import { getAdminUsers, type AdminUserItem } from "@/lib/admin/api";
+import { readStoredAdminSession } from "@/lib/admin/auth";
+
+function formatDate(dateTime: string) {
+  const parsed = new Date(dateTime);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return dateTime;
+  }
+
+  return parsed.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export default function CustomersPage() {
+  const [accessToken, setAccessToken] = useState<string | null | undefined>(undefined);
+  const [search, setSearch] = useState("");
+  const [customers, setCustomers] = useState<AdminUserItem[]>([]);
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const sessionReady = accessToken !== undefined;
+  const resolvedError = sessionReady && !accessToken ? "Admin session not found" : error;
+
+  useEffect(() => {
+    void Promise.resolve().then(() => {
+      setAccessToken(readStoredAdminSession()?.accessToken ?? null);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!sessionReady || !accessToken) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const timeoutId = window.setTimeout(() => {
+      void Promise.resolve()
+        .then(() => {
+          if (isCancelled) {
+            throw new Error("cancelled");
+          }
+
+          setLoading(true);
+          setError(null);
+          return getAdminUsers({
+            accessToken,
+            role: "customer",
+            search,
+          });
+        })
+        .then((data) => {
+          if (!data || isCancelled) {
+            return;
+          }
+
+          setCustomers(data.customers ?? []);
+          setTotalCustomers(data.total_customers);
+        })
+        .catch((fetchError: unknown) => {
+          if (isCancelled || (fetchError instanceof Error && fetchError.message === "cancelled")) {
+            return;
+          }
+
+          setError(fetchError instanceof Error ? fetchError.message : "Failed to load customers");
+        })
+        .finally(() => {
+          if (!isCancelled) {
+            setLoading(false);
+          }
+        });
+    }, 250);
+
+    return () => {
+      isCancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [accessToken, search, sessionReady]);
+
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Customer Oversight"
         title="Customers"
-        description="Support customers, monitor order history, and flag suspicious or abusive marketplace behavior."
+        description="Review customer accounts using live admin user records from the platform."
       />
 
-      <div className="admin-panel overflow-x-auto p-5">
-        <table className="table-grid">
-          <thead>
-            <tr>
-              <th>Customer</th>
-              <th>Orders</th>
-              <th>Spend</th>
-              <th>Rewards</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customers.map((customer) => (
-              <tr key={customer.id}>
-                <td>
-                  <p className="font-bold text-slate-900">{customer.name}</p>
-                  <p className="text-sm text-muted">
-                    {customer.email} · {customer.phone}
-                  </p>
-                </td>
-                <td>{customer.orders}</td>
-                <td>{formatCurrency(customer.spend)}</td>
-                <td>{formatCurrency(customer.rewards)}</td>
-                <td>
-                  <StatusBadge status={customer.status} />
-                </td>
-                <td>
-                  <Link href={`/customers/${customer.id}`} className="text-sm font-bold text-brand">
-                    Open
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="admin-panel p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap gap-3">
+            <div className="rounded-2xl bg-blue-50 border border-blue-100 px-4 py-3">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">Total Customers</p>
+              <p className="mt-2 text-2xl font-bold text-brand">{loading ? "--" : totalCustomers.toLocaleString("en-IN")}</p>
+            </div>
+          </div>
+
+          <div className="w-full max-w-sm">
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search customer name, email, or phone"
+              className="h-11 w-full rounded-2xl border border-line bg-white px-4 text-sm outline-none focus:border-brand"
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 overflow-x-auto">
+          {resolvedError ? (
+            <div className="flex min-h-40 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-6 text-center text-sm font-medium text-rose-700">
+              {resolvedError}
+            </div>
+          ) : loading ? (
+            <div className="flex min-h-40 items-center justify-center rounded-2xl border border-line px-6 text-sm font-medium text-muted">
+              Loading customers...
+            </div>
+          ) : customers.length === 0 ? (
+            <div className="flex min-h-40 items-center justify-center rounded-2xl border border-line px-6 text-center text-sm font-medium text-muted">
+              No customers found.
+            </div>
+          ) : (
+            <table className="table-grid">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customers.map((customer) => (
+                  <tr key={customer.id}>
+                    <td>
+                      <p className="text-sm text-muted">{customer.name || `ID ${customer.id}`}</p>
+                    </td>
+                    <td>{customer.email || "NA"}</td>
+                    <td>{customer.phone_number || "NA"}</td>
+                    <td>
+                      <StatusBadge status={customer.is_active ? "Active" : "Inactive"} />
+                    </td>
+                    <td>{formatDate(customer.created_at)}</td>
+                    <td>
+                      {/* <Link href={`/customers/${customer.id}`} className="text-sm font-bold text-brand">
+                        Open
+                      </Link> */}
+                      <p className="text-gray-200">open</p>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );

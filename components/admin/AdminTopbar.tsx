@@ -41,7 +41,7 @@ export function AdminTopbar({ onOpenSidebar }: AdminTopbarProps) {
             </button>
           </div>
           <div className="">
-            <p className="text-lg font-bold uppercase tracking-[0.1em] text-accent">Operations Center</p>
+            <p className="text-lg font-bold uppercase tracking-[0.1em] text-accent hidden md:block">Operations Center</p>
             {/* <h1 className="mt-1 text-2xl font-extrabold text-brand">{title}</h1> */}
           </div>
         </div>

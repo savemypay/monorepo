@@ -180,7 +180,7 @@ function TrendTooltip({ active, payload, label }: TrendTooltipPayload) {
 type DonutTooltipPayload = {
   name?: string;
   value?: number;
-  payload?: { payload?: { label?: string; adsCount?: number } };
+  payload?: { label?: string; adsCount?: number };
 };
 
 type DonutTooltipProps = {
@@ -308,13 +308,13 @@ function DonutTooltip({ active, payload }: DonutTooltipProps) {
   if (!active || !payload?.length) return null;
 
   const item = payload[0];
-  const label = item.payload?.payload?.label || item.name || "Category";
+  const label = item.payload?.label || item.name || "Category";
 
   return (
     <div className="rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-lg">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-gray-500">{label}</p>
       <p className="mt-1 text-sm font-bold text-gray-900">
-        {(item.payload?.payload?.adsCount ?? 0).toLocaleString("en-IN")} ads
+        {(item.payload?.adsCount ?? 0).toLocaleString("en-IN")} ads
       </p>
       <p className="mt-1 text-xs font-semibold text-gray-500">{item.value}% contribution</p>
     </div>
@@ -1122,7 +1122,7 @@ export default function OverviewPage() {
                       </TableCell>
                       <TableCell className="px-6 py-4 text-right">
                         <Link
-                          href="/deals"
+                          href={`/deals/${item.id}`}
                           className="inline-flex items-center justify-center text-sm font-medium text-[#163B63] transition hover:underline"
                         >
                           Review

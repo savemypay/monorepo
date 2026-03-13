@@ -138,7 +138,7 @@ type AdsListRequest = {
   vendorId?: string;
 };
 
-type AdTierItem = {
+export type AdTierItem = {
   id: number;
   seq: number;
   qty: number;
@@ -146,7 +146,7 @@ type AdTierItem = {
   label: string;
 };
 
-type AdListItem = {
+export type AdListItem = {
   id: number;
   vendor_id: number;
   title: string;
@@ -177,7 +177,17 @@ type AdsListResponse = {
   } | null;
 };
 
-type PaidUserItem = {
+type PublishAdResponse = {
+  success: boolean;
+  message: string;
+  data: AdListItem[];
+  error: {
+    code?: string;
+    details?: string;
+  } | null;
+};
+
+export type PaidUserItem = {
   payment_id: number;
   order_id: string;
   deal_ref: string;
@@ -196,6 +206,85 @@ type PaidUsersResponse = {
   success: boolean;
   message: string;
   data: PaidUserItem[];
+  error: {
+    code?: string;
+    details?: string;
+  } | null;
+};
+
+type AdminUsersRole = "all" | "customer" | "vendor";
+
+type AdminUsersRequest = {
+  accessToken: string;
+  role?: AdminUsersRole;
+  search?: string;
+};
+
+export type AdminUserItem = {
+  id: number;
+  role: "customer" | "vendor";
+  name: string;
+  email: string;
+  phone_number: string;
+  is_active: boolean;
+  created_at: string;
+};
+
+type AdminUsersSummaryItem = {
+  role_filter: AdminUsersRole;
+  total_customers: number;
+  total_vendors: number;
+  total_count: number;
+  customers: AdminUserItem[];
+  vendors: AdminUserItem[];
+};
+
+type AdminUsersResponse = {
+  success: boolean;
+  message: string;
+  data: AdminUsersSummaryItem[];
+  error: {
+    code?: string;
+    details?: string;
+  } | null;
+};
+
+export type VendorRevenueAdItem = {
+  id: number;
+  vendor_id: number;
+  title: string;
+  product_name: string;
+  category: string;
+  token_amount: number;
+  original_price: number;
+  total_qty: number;
+  slots_remaining: number;
+  slots_sold: number;
+  status: string;
+  description: string;
+  terms: string;
+  valid_from: string;
+  valid_to: string;
+  is_favorite: boolean;
+  tiers: AdTierItem[];
+  revenue_generated: number;
+  successful_payments: number;
+};
+
+export type VendorAdsRevenueItem = {
+  vendor_id: number;
+  vendor_name: string | null;
+  vendor_email: string | null;
+  vendor_phone_number: string | null;
+  total_ads: number;
+  vendor_total_revenue: number;
+  ads: VendorRevenueAdItem[];
+};
+
+type VendorAdsRevenueResponse = {
+  success: boolean;
+  message: string;
+  data: VendorAdsRevenueItem[];
   error: {
     code?: string;
     details?: string;
@@ -402,6 +491,42 @@ export async function getAds(payload: AdsListRequest): Promise<AdListItem[]> {
   return parsed.data ?? [];
 }
 
+export async function publishAd(accessToken: string, adId: number): Promise<AdListItem> {
+  const response = await fetch(`${resolveBaseUrl()}/api/v1/ads/${adId}/publish`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    const message =
+      typeof data === "object" &&
+      data !== null &&
+      "message" in data &&
+      typeof (data as { message?: unknown }).message === "string"
+        ? (data as { message: string }).message
+        : "Failed to publish ad";
+
+    throw new Error(message);
+  }
+
+  const parsed = data as PublishAdResponse;
+  if (!parsed.success || !parsed.data?.length) {
+    throw new Error(parsed.message || parsed.error?.details || "Failed to publish ad");
+  }
+
+  return parsed.data[0];
+}
+
 export async function getPaidUsers(accessToken: string): Promise<PaidUserItem[]> {
   const response = await fetch(`${resolveBaseUrl()}/api/v1/payments/paid-users`, {
     headers: {
@@ -435,6 +560,84 @@ export async function getPaidUsers(accessToken: string): Promise<PaidUserItem[]>
   }
 
   return parsed.data ?? [];
+}
+
+export async function getAdminUsers(payload: AdminUsersRequest): Promise<AdminUsersSummaryItem> {
+  const searchParams = new URLSearchParams({
+    role: payload.role ?? "all",
+  });
+
+  if (payload.search?.trim()) {
+    searchParams.set("search", payload.search.trim());
+  }
+
+  const response = await fetch(`${resolveBaseUrl()}/api/v1/auth/admin/users?${searchParams.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${payload.accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    const message =
+      typeof data === "object" &&
+      data !== null &&
+      "message" in data &&
+      typeof (data as { message?: unknown }).message === "string"
+        ? (data as { message: string }).message
+        : "Failed to fetch admin users";
+
+    throw new Error(message);
+  }
+
+  const parsed = data as AdminUsersResponse;
+  if (!parsed.success || !parsed.data?.length) {
+    throw new Error(parsed.message || parsed.error?.details || "Failed to fetch admin users");
+  }
+
+  return parsed.data[0];
+}
+
+export async function getVendorAdsRevenue(accessToken: string, vendorId: number): Promise<VendorAdsRevenueItem> {
+  const response = await fetch(`${resolveBaseUrl()}/api/v1/auth/admin/vendors/${vendorId}/ads-revenue`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    const message =
+      typeof data === "object" &&
+      data !== null &&
+      "message" in data &&
+      typeof (data as { message?: unknown }).message === "string"
+        ? (data as { message: string }).message
+        : "Failed to fetch vendor revenue";
+
+    throw new Error(message);
+  }
+
+  const parsed = data as VendorAdsRevenueResponse;
+  if (!parsed.success || !parsed.data?.length) {
+    throw new Error(parsed.message || parsed.error?.details || "Failed to fetch vendor revenue");
+  }
+
+  return parsed.data[0];
 }
 
 export async function getAdsByCategory(payload: AdsByCategoryRequest): Promise<AdsByCategoryItem> {
