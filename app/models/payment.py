@@ -18,6 +18,7 @@ class PaymentResponseData(BaseModel):
     id: int
     provider: str
     provider_order_id: Optional[str] = None
+    provider_payment_id: Optional[str] = None
     status: str
     amount: int
     currency: str

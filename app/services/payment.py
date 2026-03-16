@@ -173,6 +173,7 @@ def _serialize(payment: Payment) -> dict:
         "id": payment.id,
         "provider": payment.provider,
         "provider_order_id": payment.provider_order_id,
+        "provider_payment_id": payment.provider_order_id,
         "status": payment.status,
         "amount": payment.amount,
         "currency": payment.currency,
