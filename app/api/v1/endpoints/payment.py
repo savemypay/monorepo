@@ -1,22 +1,16 @@
-import logging
 from typing import Optional
 
-from decimal import Decimal
-
-from fastapi import APIRouter, Depends, Header, Request, HTTPException, status
+from fastapi import APIRouter, Depends, Header, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
 from app.api.security import get_current_customer
-from app.core.config import PAYMENT_IDEMPOTENCY_HEADER, PAYMENT_CURRENCY
-from app.entities.ad import Ad
+from app.core.config import PAYMENT_IDEMPOTENCY_HEADER
 from app.models.payment import PaymentInitRequest, PaymentInitResponse
-from app.services.payment import handle_webhook, initiate_payment, reserve_slot, release_slot
-from app.utils.response import error_response, success_response
+from app.services.payment import handle_webhook, initiate_payment, initiate_token_payment
 from app.utils.response import success_response
 
 router = APIRouter(prefix="/payments", tags=["payments"])
-logger = logging.getLogger(__name__)
 
 
 @router.post("/initiate", status_code=status.HTTP_200_OK, response_model=PaymentInitResponse)
@@ -52,29 +46,11 @@ def token_payment(
     actor: dict = Depends(get_current_customer),
     idempotency_key: Optional[str] = Header(default=None, convert_underscores=False, alias=PAYMENT_IDEMPOTENCY_HEADER),
 ):
-    # Reserve a slot atomically (locks row); release if payment fails to initiate
-    ad = reserve_slot(db, ad_id)
-    if ad.token_amount is None:
-        release_slot(db, ad_id)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error_response(message="Token amount not configured", code="token_missing"),
-        )
-    token_amount = ad.token_amount
-    amount_minor = int(Decimal(token_amount) * 100)
-
-    try:
-        payment = initiate_payment(
-            db,
-            amount=amount_minor,
-            currency=PAYMENT_CURRENCY,
-            customer_ref=str(actor.get("user_id") or actor.get("sub")),
-            deal_ref=str(ad.id),
-            metadata={"ad_id": ad.id, "vendor_id": ad.vendor_id, "customer_id": actor.get("user_id")},
-            idempotency_key=idempotency_key,
-        )
-    except Exception:
-        release_slot(db, ad_id)
-        raise
-
+    payment = initiate_token_payment(
+        db,
+        ad_id=ad_id,
+        customer_ref=str(actor.get("user_id") or actor.get("sub")),
+        customer_id=actor.get("user_id"),
+        idempotency_key=idempotency_key,
+    )
     return success_response(message="Token payment initiated", data=[payment])

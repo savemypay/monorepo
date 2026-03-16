@@ -226,13 +226,12 @@ async def issue_otp(db: Session, audience: Audience, payload: LoginRequest) -> i
 
     message = f"Your login code is {code}. It expires in {OTP_TTL_MINUTES} minutes."
     if payload.email:
-        pass
-        # await send_email_async(
-        #     to=payload.email,
-        #     subject="Your login code",
-        #     body_text=message,
-        #     body_html=None,
-        # )
+        await send_email_async(
+            to=payload.email,
+            subject="Your login code",
+            body_text=message,
+            body_html=None,
+        )
     elif payload.phone_number:
         pass
         # await send_sms_async(to=payload.phone_number, message=message)
