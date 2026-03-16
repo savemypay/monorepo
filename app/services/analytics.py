@@ -152,7 +152,7 @@ def get_ads_by_category_analytics(
     category: str | None = None,
     vendor_id: int | None = None,
 ) -> dict:
-    q = db.query(Ad)
+    q = db.query(Ad).filter(Ad.status != "draft")
     normalized_category = category.strip() if category else None
 
     if vendor_id is not None:
