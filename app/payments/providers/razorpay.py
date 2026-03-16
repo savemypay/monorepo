@@ -123,16 +123,17 @@ class RazorpayPaymentProvider(PaymentProvider):
             )
 
     def parse_webhook(self, raw_body: bytes, headers: dict[str, str]) -> WebhookEvent:
-        signature = headers.get("X-Razorpay-Signature", "")
+        signature = headers.get("x-razorpay-signature") or headers.get("X-Razorpay-Signature", "")
         if not RAZORPAY_WEBHOOK_SECRET:
             raise ValueError("RAZORPAY_WEBHOOK_SECRET not set")
+        body_text = raw_body.decode("utf-8")
         try:
-            self.client.utility.verify_webhook_signature(raw_body, signature, RAZORPAY_WEBHOOK_SECRET)
+            self.client.utility.verify_webhook_signature(body_text, signature, RAZORPAY_WEBHOOK_SECRET)
         except SignatureVerificationError as exc:
             logger.warning("[Payment][razorpay] webhook signature invalid: %s", exc)
             raise
 
-        payload = json.loads(raw_body.decode("utf-8"))
+        payload = json.loads(body_text)
         event_type = payload.get("event")
         entity = payload.get("payload", {}).get("payment", {}).get("entity", {})
         provider_payment_id = entity.get("id") or payload.get("payload", {}).get("order", {}).get("entity", {}).get("id")
