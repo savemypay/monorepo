@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { getAds, type AdListItem } from "@/lib/admin/api";
-import { readStoredAdminSession } from "@/lib/admin/auth";
-import { formatCurrency } from "@/lib/admin/mock-data";
+import { getAds } from "@/lib/admin/api";
+import { useAdminAuthStore } from "@/lib/admin/auth-store";
+import { formatCurrency } from "@/lib/admin/presentation";
+import type { AdListItem } from "@/lib/admin/types";
 
 type DealStatusFilter = "all" | "draft" | "active" | "filled" | "expired" | "canceled";
 
@@ -34,22 +35,16 @@ function formatDate(dateTime: string) {
 }
 
 export default function DealsPage() {
-  const [accessToken, setAccessToken] = useState<string | null | undefined>(undefined);
+  const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
+  const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [activeFilter, setActiveFilter] = useState<DealStatusFilter>("all");
   const [deals, setDeals] = useState<AdListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const sessionReady = accessToken !== undefined;
-  const resolvedError = sessionReady && !accessToken ? "Admin session not found" : error;
+  const resolvedError = hydrated && !accessToken ? "Admin session not found" : error;
 
   useEffect(() => {
-    void Promise.resolve().then(() => {
-      setAccessToken(readStoredAdminSession()?.accessToken ?? null);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -65,11 +60,7 @@ export default function DealsPage() {
         setError(null);
 
         if (activeFilter === "all") {
-          return Promise.all(
-            DEAL_STATUS_FILTERS.filter((filter) => filter.value !== "all").map((filter) =>
-              getAds({ accessToken, status: filter.value }),
-            ),
-          ).then((responses) => responses.flat());
+          return getAds({ accessToken });
         }
 
         return getAds({ accessToken, status: activeFilter });
@@ -79,8 +70,7 @@ export default function DealsPage() {
           return;
         }
 
-        const uniqueDeals = Array.from(new Map(data.map((deal) => [deal.id, deal])).values());
-        setDeals(uniqueDeals);
+        setDeals(data);
       })
       .catch((fetchError: unknown) => {
         if (isCancelled || (fetchError instanceof Error && fetchError.message === "cancelled")) {
@@ -98,7 +88,7 @@ export default function DealsPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, activeFilter, sessionReady]);
+  }, [accessToken, activeFilter, hydrated]);
 
   return (
     <div className="space-y-6">

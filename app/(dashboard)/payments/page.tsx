@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { getPaidUsers, type PaidUserItem } from "@/lib/admin/api";
-import { readStoredAdminSession } from "@/lib/admin/auth";
-import { formatCurrency } from "@/lib/admin/mock-data";
+import { getPaidUsers } from "@/lib/admin/api";
+import { useAdminAuthStore } from "@/lib/admin/auth-store";
+import { formatCurrency } from "@/lib/admin/presentation";
+import type { PaidUserItem } from "@/lib/admin/types";
 
 function formatDateTime(dateTime: string) {
   const parsed = new Date(dateTime);
@@ -26,21 +27,15 @@ function formatDateTime(dateTime: string) {
 }
 
 export default function PaymentsPage() {
-  const [accessToken, setAccessToken] = useState<string | null | undefined>(undefined);
+  const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
+  const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [payments, setPayments] = useState<PaidUserItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const sessionReady = accessToken !== undefined;
-  const resolvedError = sessionReady && !accessToken ? "Admin session not found" : error;
+  const resolvedError = hydrated && !accessToken ? "Admin session not found" : error;
 
   useEffect(() => {
-    void Promise.resolve().then(() => {
-      setAccessToken(readStoredAdminSession()?.accessToken ?? null);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -79,7 +74,7 @@ export default function PaymentsPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, sessionReady]);
+  }, [accessToken, hydrated]);
 
   return (
     <div className="space-y-6">
@@ -134,10 +129,9 @@ export default function PaymentsPage() {
                   <td>{formatCurrency(payment.amount)}</td>
                   <td>{formatDateTime(payment.created_at)}</td>
                   <td>
-                    {/* <Link href={`/payments/${payment.payment_id}`} className="text-sm font-bold text-brand">
+                    <Link href={`/payments/${payment.payment_id}`} className="text-sm font-bold text-brand">
                       Review
-                    </Link> */}
-                    <button className="text-gray-300">Review</button>
+                    </Link>
                   </td>
                 </tr>
               ))}

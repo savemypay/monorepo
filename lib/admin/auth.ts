@@ -1,10 +1,5 @@
 import type { AdminRole } from "@/lib/admin/types";
 
-export const ADMIN_COOKIE = "admin_authenticated";
-export const ADMIN_PROFILE_STORAGE_KEY = "smp-admin-profile";
-export const ADMIN_SESSION_STORAGE_KEY = "smp-admin-session";
-export const ADMIN_PROFILE_UPDATED_EVENT = "admin-profile-updated";
-
 export type AdminProfile = {
   name: string;
   email: string;
@@ -21,20 +16,13 @@ export type AdminSession = {
   email: string;
 };
 
-const DEFAULT_ADMIN_PROFILE: AdminProfile = {
+export const DEFAULT_ADMIN_PROFILE: AdminProfile = {
   name: "Admin User",
   email: "",
   role: "Admin",
 };
 
-export function normalizeAdminRole(role: string | null | undefined): AdminRole {
-  const normalized = (role || "").trim().toLowerCase();
-
-  if (normalized === "super_admin" || normalized === "super admin") return "Super Admin";
-  if (normalized === "operations_admin" || normalized === "operations admin") return "Operations Admin";
-  if (normalized === "finance_admin" || normalized === "finance admin") return "Finance Admin";
-  if (normalized === "support_admin" || normalized === "support admin") return "Support Admin";
-  if (normalized === "growth_admin" || normalized === "growth admin") return "Growth Admin";
+export function normalizeAdminRole(): AdminRole {
   return "Admin";
 }
 
@@ -48,52 +36,44 @@ export function buildAdminProfile(input: {
   return {
     name: input.username || "Admin User",
     email: input.email || identifier,
-    role: normalizeAdminRole(input.role),
+    role: normalizeAdminRole(),
   };
 }
 
-export function readStoredAdminProfile(): AdminProfile {
-  if (typeof window === "undefined") {
-    return DEFAULT_ADMIN_PROFILE;
+function decodeBase64Url(value: string) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "=");
+
+  if (typeof globalThis.atob === "function") {
+    return globalThis.atob(padded);
   }
 
-  const raw = window.localStorage.getItem(ADMIN_PROFILE_STORAGE_KEY);
-  if (!raw) {
-    return DEFAULT_ADMIN_PROFILE;
-  }
-
-  try {
-    return JSON.parse(raw) as AdminProfile;
-  } catch {
-    return DEFAULT_ADMIN_PROFILE;
-  }
+  return Buffer.from(padded, "base64").toString("utf-8");
 }
 
-export function readStoredAdminSession(): AdminSession | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const raw = window.localStorage.getItem(ADMIN_SESSION_STORAGE_KEY);
-  if (!raw) {
-    return null;
-  }
-
+export function getAdminTokenExpiryMs(accessToken: string) {
   try {
-    return JSON.parse(raw) as AdminSession;
+    const [, payload] = accessToken.split(".");
+    if (!payload) {
+      return null;
+    }
+
+    const parsed = JSON.parse(decodeBase64Url(payload)) as { exp?: number };
+    return typeof parsed.exp === "number" ? parsed.exp * 1000 : null;
   } catch {
     return null;
   }
 }
 
-export function persistAdminAuth(profile: AdminProfile, session: AdminSession) {
-  window.localStorage.setItem(ADMIN_PROFILE_STORAGE_KEY, JSON.stringify(profile));
-  window.localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify(session));
-  window.dispatchEvent(new Event(ADMIN_PROFILE_UPDATED_EVENT));
-}
+export function isAdminSessionExpired(session: AdminSession | null) {
+  if (!session?.accessToken) {
+    return true;
+  }
 
-export function clearAdminAuth() {
-  window.localStorage.removeItem(ADMIN_PROFILE_STORAGE_KEY);
-  window.localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
-  window.dispatchEvent(new Event(ADMIN_PROFILE_UPDATED_EVENT));
+  const expiryMs = getAdminTokenExpiryMs(session.accessToken);
+  if (!expiryMs) {
+    return false;
+  }
+
+  return Date.now() >= expiryMs;
 }

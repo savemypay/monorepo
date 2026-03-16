@@ -1,54 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import {
-  ADMIN_PROFILE_UPDATED_EVENT,
-  ADMIN_PROFILE_STORAGE_KEY,
-  readStoredAdminProfile,
-  type AdminProfile,
-} from "@/lib/admin/auth";
+import { useAdminAuthStore } from "@/lib/admin/auth-store";
 
 export default function ProfileForm() {
-  const [profile, setProfile] = useState<AdminProfile>(() => readStoredAdminProfile());
-  const [message, setMessage] = useState("Update your admin identity and preferences.");
-
-  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    window.localStorage.setItem(ADMIN_PROFILE_STORAGE_KEY, JSON.stringify(profile));
-    window.dispatchEvent(new Event(ADMIN_PROFILE_UPDATED_EVENT));
-    setMessage("Profile updated locally. Wire this form to admin profile APIs next.");
-  };
+  const profile = useAdminAuthStore((state) => state.profile);
 
   return (
     <div className="admin-panel p-6">
-      <form className="grid gap-5 lg:grid-cols-2" onSubmit={handleSave}>
-        <label className="block">
-          <span className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Name</span>
-          <input
-            value={profile.name}
-            onChange={(event) => setProfile((current) => ({ ...current, name: event.target.value }))}
-            className="mt-2 h-12 w-full rounded-2xl border border-line bg-white px-4"
-          />
-        </label>
-        <label className="block">
-          <span className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Email</span>
-          <input
-            value={profile.email}
-            onChange={(event) => setProfile((current) => ({ ...current, email: event.target.value }))}
-            className="mt-2 h-12 w-full rounded-2xl border border-line bg-white px-4"
-          />
-        </label>
-        <label className="block lg:col-span-2">
-          <span className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Role</span>
-          <input value={profile.role} disabled className="mt-2 h-12 w-full rounded-2xl border border-line bg-panel-strong px-4 text-slate-600" />
-        </label>
-        <div className="lg:col-span-2 flex items-center gap-3">
-          <button type="submit" className="rounded-full bg-brand px-5 py-3 text-sm font-bold text-white">
-            Save Profile
-          </button>
-          <span className="text-sm font-medium text-muted">{message}</span>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Name</p>
+          <p className="mt-2 text-lg font-extrabold text-slate-700">{profile.name || "Admin User"}</p>
         </div>
-      </form>
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Email</p>
+          <p className="mt-2 text-lg font-extrabold text-slate-700">{profile.email || "Not available"}</p>
+        </div>
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 sm:col-span-2">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Role</p>
+          <p className="mt-2 text-lg font-extrabold text-slate-700">{profile.role}</p>
+        </div>
+      </div>
     </div>
   );
 }

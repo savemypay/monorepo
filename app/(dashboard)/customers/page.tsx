@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { getAdminUsers, type AdminUserItem } from "@/lib/admin/api";
-import { readStoredAdminSession } from "@/lib/admin/auth";
+import { getAdminUsers } from "@/lib/admin/api";
+import { useAdminAuthStore } from "@/lib/admin/auth-store";
+import type { AdminUserItem } from "@/lib/admin/types";
 
 function formatDate(dateTime: string) {
   const parsed = new Date(dateTime);
@@ -22,23 +22,17 @@ function formatDate(dateTime: string) {
 }
 
 export default function CustomersPage() {
-  const [accessToken, setAccessToken] = useState<string | null | undefined>(undefined);
+  const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
+  const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [search, setSearch] = useState("");
   const [customers, setCustomers] = useState<AdminUserItem[]>([]);
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const sessionReady = accessToken !== undefined;
-  const resolvedError = sessionReady && !accessToken ? "Admin session not found" : error;
+  const resolvedError = hydrated && !accessToken ? "Admin session not found" : error;
 
   useEffect(() => {
-    void Promise.resolve().then(() => {
-      setAccessToken(readStoredAdminSession()?.accessToken ?? null);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -85,7 +79,7 @@ export default function CustomersPage() {
       isCancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [accessToken, search, sessionReady]);
+  }, [accessToken, hydrated, search]);
 
   return (
     <div className="space-y-6">

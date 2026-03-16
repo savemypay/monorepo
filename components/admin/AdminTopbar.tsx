@@ -2,26 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { LogOut, Menu, UserRound } from "lucide-react";
-import {
-  ADMIN_COOKIE,
-  clearAdminAuth,
-} from "@/lib/admin/auth";
+import { LogoutConfirmDialog } from "@/components/admin/LogoutConfirmDialog";
 
 type AdminTopbarProps = {
   onOpenSidebar?: () => void;
 };
 
 export function AdminTopbar({ onOpenSidebar }: AdminTopbarProps) {
-  const router = useRouter();
-
-  const handleLogout = () => {
-    document.cookie = `${ADMIN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
-    clearAdminAuth();
-    router.replace("/login");
-  };
-
   return (
     <header className="admin-panel mb-6 px-5 py-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -55,15 +43,16 @@ export function AdminTopbar({ onOpenSidebar }: AdminTopbarProps) {
           >
             <UserRound size={18} className="group-hover:text-[#D9A304]"/>
           </Link>
-          <button
-            type="button"
-            onClick={handleLogout}
-            aria-label="Logout"
-            title="Logout"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-slate-800 transition hover:bg-red-50 group hover:border-red-500"
-          >
-            <LogOut size={18} className="group-hover:text-red-500"/>
-          </button>
+          <LogoutConfirmDialog>
+            <button
+              type="button"
+              aria-label="Logout"
+              title="Logout"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-slate-800 transition hover:bg-red-50 group hover:border-red-500"
+            >
+              <LogOut size={18} className="group-hover:text-red-500" />
+            </button>
+          </LogoutConfirmDialog>
         </div>
       </div>
     </header>

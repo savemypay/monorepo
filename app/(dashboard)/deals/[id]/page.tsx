@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { notFound, useParams } from "next/navigation";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { getAds, publishAd, type AdListItem } from "@/lib/admin/api";
-import { readStoredAdminSession } from "@/lib/admin/auth";
-import { formatCurrency } from "@/lib/admin/mock-data";
+import { getAdById, publishAd } from "@/lib/admin/api";
+import { useAdminAuthStore } from "@/lib/admin/auth-store";
+import { formatCurrency } from "@/lib/admin/presentation";
+import type { AdListItem } from "@/lib/admin/types";
 
 function formatDate(dateTime: string) {
   const parsed = new Date(dateTime);
@@ -26,28 +27,22 @@ export default function DealDetailPage() {
   const params = useParams<{ id: string }>();
   const dealId = Number(params.id);
   const invalidDealId = !Number.isFinite(dealId);
-  const [accessToken, setAccessToken] = useState<string | null | undefined>(undefined);
+  const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
+  const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [deal, setDeal] = useState<AdListItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const sessionReady = accessToken !== undefined;
-  const resolvedError = sessionReady && !accessToken ? "Admin session not found" : error;
-
-  useEffect(() => {
-    void Promise.resolve().then(() => {
-      setAccessToken(readStoredAdminSession()?.accessToken ?? null);
-    });
-  }, []);
+  const resolvedError = hydrated && !accessToken ? "Admin session not found" : error;
 
   useEffect(() => {
     if (invalidDealId) {
       return;
     }
 
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -62,19 +57,23 @@ export default function DealDetailPage() {
         setLoading(true);
         setError(null);
         setMissing(false);
-        return getAds({ accessToken });
+        return getAdById(accessToken, dealId);
       })
       .then((data) => {
         if (!data || isCancelled) {
           return;
         }
 
-        const matchedDeal = data.find((item) => item.id === dealId) ?? null;
-        setDeal(matchedDeal);
-        setMissing(!matchedDeal);
+        setDeal(data);
+        setMissing(false);
       })
       .catch((fetchError: unknown) => {
         if (isCancelled || (fetchError instanceof Error && fetchError.message === "cancelled")) {
+          return;
+        }
+
+        if (fetchError instanceof Error && /not found/i.test(fetchError.message)) {
+          setMissing(true);
           return;
         }
 
@@ -89,7 +88,7 @@ export default function DealDetailPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, dealId, invalidDealId, sessionReady]);
+  }, [accessToken, dealId, hydrated, invalidDealId]);
 
   if (invalidDealId || missing) {
     notFound();

@@ -48,7 +48,7 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import {
   formatCurrency,
   overviewTrendRangeOptions,
-} from "@/lib/admin/mock-data";
+} from "@/lib/admin/presentation";
 import type { TrendRange } from "@/lib/admin/types";
 import {
   getAds,
@@ -58,7 +58,7 @@ import {
   getTransactionTrend,
   getUserOnboardingTrend,
 } from "@/lib/admin/api";
-import { readStoredAdminSession } from "@/lib/admin/auth";
+import { useAdminAuthStore } from "@/lib/admin/auth-store";
 
 type TrendEntity = "customer" | "vendor";
 type EntityTrendPoint = {
@@ -170,7 +170,7 @@ function TrendTooltip({ active, payload, label }: TrendTooltipPayload) {
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-lg">
+    <div className="rounded-2xl border border-blue-100 bg-white px-4 py-3 shadow-lg">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-gray-500">{label}</p>
       <p className="mt-1 text-sm font-bold text-gray-900">{formatCurrency(Number(payload[0].value) || 0)}</p>
     </div>
@@ -311,7 +311,7 @@ function DonutTooltip({ active, payload }: DonutTooltipProps) {
   const label = item.payload?.label || item.name || "Category";
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-lg">
+    <div className="rounded-2xl border border-blue-100 bg-white px-4 py-3 shadow-lg">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-gray-500">{label}</p>
       <p className="mt-1 text-sm font-bold text-gray-900">
         {(item.payload?.adsCount ?? 0).toLocaleString("en-IN")} ads
@@ -325,7 +325,7 @@ function CountTooltip({ active, payload, label, unitLabel }: CountTooltipPayload
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-lg">
+    <div className="rounded-2xl border border-blue-100 bg-white px-4 py-3 shadow-lg">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-gray-500">{label}</p>
       <p className="mt-1 text-sm font-bold text-gray-900">
         {Number(payload[0].value).toLocaleString("en-IN")} {unitLabel}
@@ -335,7 +335,8 @@ function CountTooltip({ active, payload, label, unitLabel }: CountTooltipPayload
 }
 
 export default function OverviewPage() {
-  const [accessToken, setAccessToken] = useState<string | null | undefined>(undefined);
+  const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
+  const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [collectionRange, setCollectionRange] = useState<TrendRange>("last_week");
   const [entityRange, setEntityRange] = useState<TrendRange>("one_month");
   const [trendEntity, setTrendEntity] = useState<TrendEntity>("customer");
@@ -376,8 +377,7 @@ export default function OverviewPage() {
   const entityTrend = entityTrendData?.points ?? [];
   const revenueTrend = collectionTrendData?.points ?? [];
   const overviewMetrics = overviewData?.metrics ?? [];
-  const sessionReady = accessToken !== undefined;
-  const sessionMissingMessage = sessionReady && !accessToken ? "Admin session not found" : null;
+  const sessionMissingMessage = hydrated && !accessToken ? "Admin session not found" : null;
   const resolvedOverviewError = sessionMissingMessage || overviewError;
   const resolvedApprovalQueueError = sessionMissingMessage || approvalQueueError;
   const resolvedDealsSnapshotError = sessionMissingMessage || dealsSnapshotError;
@@ -387,13 +387,7 @@ export default function OverviewPage() {
   const resolvedEntityTrendError = sessionMissingMessage || entityTrendError;
 
   useEffect(() => {
-    void Promise.resolve().then(() => {
-      setAccessToken(readStoredAdminSession()?.accessToken ?? null);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -459,10 +453,10 @@ export default function OverviewPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, sessionReady]);
+  }, [accessToken, hydrated]);
 
   useEffect(() => {
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -511,10 +505,10 @@ export default function OverviewPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, sessionReady]);
+  }, [accessToken, hydrated]);
 
   useEffect(() => {
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -567,10 +561,10 @@ export default function OverviewPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, sessionReady]);
+  }, [accessToken, hydrated]);
 
   useEffect(() => {
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -621,10 +615,10 @@ export default function OverviewPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, sessionReady]);
+  }, [accessToken, hydrated]);
 
   useEffect(() => {
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -672,10 +666,10 @@ export default function OverviewPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, sessionReady]);
+  }, [accessToken, hydrated]);
 
   useEffect(() => {
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -731,10 +725,10 @@ export default function OverviewPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, collectionRange, sessionReady]);
+  }, [accessToken, collectionRange, hydrated]);
 
   useEffect(() => {
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -790,7 +784,7 @@ export default function OverviewPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, entityRange, sessionReady, trendEntity]);
+  }, [accessToken, entityRange, hydrated, trendEntity]);
 
   return (
     <div className="space-y-8">
@@ -808,7 +802,7 @@ export default function OverviewPage() {
           const theme = METRIC_THEMES[iconKey];
 
           return (
-            <Card key={metric.label} className="admin-panel rounded-3xl border-gray-100 shadow-sm">
+            <Card key={metric.label} className="admin-panel rounded-3xl border-blue-100">
               <CardContent className="">
                 <div className="mb-4 flex items-start gap-4">
                   <div className={`rounded-xl p-2.5 ${theme.bgClassName} ${theme.iconClassName}`}>
@@ -838,7 +832,7 @@ export default function OverviewPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="admin-panel rounded-3xl border-gray-100 shadow-sm lg:col-span-2">
+        <Card className="admin-panel rounded-3xl border-blue-100 shadow-sm lg:col-span-2">
           <CardHeader className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <CardTitle className="text-lg font-bold text-gray-900">Revenue Trend</CardTitle>
@@ -848,7 +842,7 @@ export default function OverviewPage() {
               value={collectionRange}
               onValueChange={(value) => {
                 setCollectionTrendLoading(Boolean(accessToken));
-                setCollectionTrendError(accessToken ? null : "Admin session not found");
+                setCollectionTrendError(accessToken || !hydrated ? null : "Admin session not found");
                 setCollectionRange(value as TrendRange);
               }}
             >
@@ -909,7 +903,7 @@ export default function OverviewPage() {
           </CardContent>
         </Card>
 
-        <Card className="admin-panel rounded-3xl border-gray-100 shadow-sm">
+        <Card className="admin-panel rounded-3xl border-blue-100 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-bold text-gray-900">Category Contribution</CardTitle>
             <CardDescription className="mt-1 text-sm text-gray-500">{categoryLoading ? "Loading active category mix." : `${categoryTotalAds} total ads in distribution.`}</CardDescription>
@@ -969,7 +963,7 @@ export default function OverviewPage() {
       </section>
 
       <section className="mb-8">
-        <Card className="admin-panel rounded-3xl border-gray-100 shadow-sm">
+        <Card className="admin-panel rounded-3xl border-blue-100 shadow-sm">
           <CardHeader className="flex flex-col gap-4 pb-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <CardTitle className="text-lg font-bold text-gray-900">{entityChartTitle}</CardTitle>
@@ -980,7 +974,7 @@ export default function OverviewPage() {
                 value={trendEntity}
                 onValueChange={(value) => {
                   setEntityTrendLoading(Boolean(accessToken));
-                  setEntityTrendError(accessToken ? null : "Admin session not found");
+                  setEntityTrendError(accessToken || !hydrated ? null : "Admin session not found");
                   setTrendEntity(value as TrendEntity);
                 }}
               >
@@ -997,7 +991,7 @@ export default function OverviewPage() {
                 value={entityRange}
                 onValueChange={(value) => {
                   setEntityTrendLoading(Boolean(accessToken));
-                  setEntityTrendError(accessToken ? null : "Admin session not found");
+                  setEntityTrendError(accessToken || !hydrated ? null : "Admin session not found");
                   setEntityRange(value as TrendRange);
                 }}
               >
@@ -1138,7 +1132,7 @@ export default function OverviewPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <Card className="admin-panel rounded-3xl border-gray-100 shadow-sm">
+        <Card className="admin-panel rounded-3xl border-blue-100 shadow-sm">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -1168,7 +1162,7 @@ export default function OverviewPage() {
                 const progressPct = deal.totalQty > 0 ? Math.min((deal.slotsSold / deal.totalQty) * 100, 100) : 0;
 
                 return (
-                  <div key={deal.id} className="rounded-2xl border border-gray-100 p-4">
+                  <div key={deal.id} className="rounded-2xl border border-blue-100 p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="font-bold text-gray-900">{deal.title}</p>
@@ -1195,7 +1189,7 @@ export default function OverviewPage() {
           </CardContent>
         </Card>
 
-        <Card className="admin-panel rounded-3xl border-gray-100 shadow-sm">
+        <Card className="admin-panel rounded-3xl border-blue-100 shadow-sm">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -1222,7 +1216,7 @@ export default function OverviewPage() {
               </div>
             ) : (
               recentPaymentsData.map((payment) => (
-                <div key={payment.id} className="rounded-2xl border border-gray-100 p-4">
+                <div key={payment.id} className="rounded-2xl border border-blue-100 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="font-bold text-gray-900">{payment.orderId}</p>
