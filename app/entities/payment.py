@@ -13,7 +13,8 @@ class Payment(BaseModelMixin, Base):
     )
 
     provider = Column(String(50), nullable=False, index=True)
-    provider_payment_id = Column(String(255), nullable=True, index=True)
+    provider_order_id = Column(String(255), nullable=True, index=True)
+    payment_id = Column(String(255), nullable=True, index=True)
     status = Column(String(50), nullable=False, index=True)  # pending, requires_action, succeeded, failed, canceled
     amount = Column(Integer, nullable=False)  # minor units (e.g., cents)
     currency = Column(String(10), nullable=False)

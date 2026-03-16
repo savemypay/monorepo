@@ -55,7 +55,7 @@ class RazorpayPaymentProvider(PaymentProvider):
                 )
             )
             return PaymentResult(
-                provider_payment_id=order["id"],
+                provider_order_id=order["id"],
                 status=PaymentStatus.PENDING,  # actual payment comes via webhook/client confirmation
                 amount=order["amount"],
                 currency=order["currency"],
@@ -65,7 +65,7 @@ class RazorpayPaymentProvider(PaymentProvider):
         except BadRequestError as exc:
             logger.exception("[Payment][razorpay] create order failed: %s", exc)
             return PaymentResult(
-                provider_payment_id="",
+                provider_order_id="",
                 status=PaymentStatus.FAILED,
                 amount=amount,
                 currency=currency,
@@ -74,11 +74,11 @@ class RazorpayPaymentProvider(PaymentProvider):
                 raw={"error": str(exc)},
             )
 
-    def capture(self, provider_payment_id: str, amount: int | None = None) -> PaymentResult:
+    def capture(self, provider_order_id: str, amount: int | None = None) -> PaymentResult:
         try:
-            payment = self.client.payment.capture(provider_payment_id, amount)
+            payment = self.client.payment.capture(provider_order_id, amount)
             return PaymentResult(
-                provider_payment_id=payment["id"],
+                provider_order_id=payment["id"],
                 status=_map_status(payment.get("status", "")),
                 amount=payment.get("amount", 0),
                 currency=payment.get("currency", PAYMENT_CURRENCY),
@@ -87,7 +87,7 @@ class RazorpayPaymentProvider(PaymentProvider):
         except BadRequestError as exc:
             logger.exception("[Payment][razorpay] capture failed: %s", exc)
             return PaymentResult(
-                provider_payment_id=provider_payment_id,
+                provider_order_id=provider_order_id,
                 status=PaymentStatus.FAILED,
                 amount=amount or 0,
                 currency=PAYMENT_CURRENCY,
@@ -96,15 +96,15 @@ class RazorpayPaymentProvider(PaymentProvider):
                 raw={"error": str(exc)},
             )
 
-    def cancel(self, provider_payment_id: str) -> PaymentResult:
+    def cancel(self, provider_order_id: str) -> PaymentResult:
         # Razorpay payments cannot be "canceled" after capture; we treat as refund flow.
-        return self.refund(provider_payment_id, amount=None, reason="canceled")
+        return self.refund(provider_order_id, amount=None, reason="canceled")
 
-    def refund(self, provider_payment_id: str, amount: int | None = None, reason: str | None = None) -> PaymentResult:
+    def refund(self, provider_order_id: str, amount: int | None = None, reason: str | None = None) -> PaymentResult:
         try:
-            refund = self.client.payment.refund(provider_payment_id, {"amount": amount, "notes": {"reason": reason}})
+            refund = self.client.payment.refund(provider_order_id, {"amount": amount, "notes": {"reason": reason}})
             return PaymentResult(
-                provider_payment_id=provider_payment_id,
+                provider_order_id=provider_order_id,
                 status=_map_status(refund.get("status", "")),
                 amount=refund.get("amount", amount or 0),
                 currency=refund.get("currency", PAYMENT_CURRENCY),
@@ -113,7 +113,7 @@ class RazorpayPaymentProvider(PaymentProvider):
         except BadRequestError as exc:
             logger.exception("[Payment][razorpay] refund failed: %s", exc)
             return PaymentResult(
-                provider_payment_id=provider_payment_id,
+                provider_order_id=provider_order_id,
                 status=PaymentStatus.FAILED,
                 amount=amount or 0,
                 currency=PAYMENT_CURRENCY,
@@ -127,6 +127,7 @@ class RazorpayPaymentProvider(PaymentProvider):
         if not RAZORPAY_WEBHOOK_SECRET:
             raise ValueError("RAZORPAY_WEBHOOK_SECRET not set")
         body_text = raw_body.decode("utf-8")
+        logger.info("[Payment][razorpay] webhook payload=%s", body_text)
         try:
             self.client.utility.verify_webhook_signature(body_text, signature, RAZORPAY_WEBHOOK_SECRET)
         except SignatureVerificationError as exc:
@@ -136,16 +137,18 @@ class RazorpayPaymentProvider(PaymentProvider):
         payload = json.loads(body_text)
         event_type = payload.get("event")
         entity = payload.get("payload", {}).get("payment", {}).get("entity", {})
-        provider_payment_id = entity.get("id") or payload.get("payload", {}).get("order", {}).get("entity", {}).get("id")
+        provider_order_id = entity.get("order_id") or payload.get("payload", {}).get("order", {}).get("entity", {}).get("id")
+        payment_id = entity.get("id")
         amount = entity.get("amount", 0)
         currency = entity.get("currency", PAYMENT_CURRENCY)
         status = _map_status(entity.get("status", ""))
 
         return WebhookEvent(
-            provider_payment_id=provider_payment_id,
+            provider_order_id=provider_order_id,
             status=status,
             amount=amount,
             currency=currency,
             type=event_type or "razorpay.event",
             raw=payload,
+            payment_id=payment_id,
         )

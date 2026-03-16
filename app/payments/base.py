@@ -13,7 +13,7 @@ class PaymentStatus:
 
 @dataclass
 class PaymentResult:
-    provider_payment_id: str
+    provider_order_id: str
     status: str
     amount: int
     currency: str
@@ -25,12 +25,13 @@ class PaymentResult:
 
 @dataclass
 class WebhookEvent:
-    provider_payment_id: str
+    provider_order_id: str
     status: str
     amount: int
     currency: str
     type: str
     raw: Dict[str, Any]
+    payment_id: Optional[str] = None
 
 
 class PaymentProvider(abc.ABC):
@@ -48,13 +49,13 @@ class PaymentProvider(abc.ABC):
     ) -> PaymentResult: ...
 
     @abc.abstractmethod
-    def capture(self, provider_payment_id: str, amount: int | None = None) -> PaymentResult: ...
+    def capture(self, provider_order_id: str, amount: int | None = None) -> PaymentResult: ...
 
     @abc.abstractmethod
-    def cancel(self, provider_payment_id: str) -> PaymentResult: ...
+    def cancel(self, provider_order_id: str) -> PaymentResult: ...
 
     @abc.abstractmethod
-    def refund(self, provider_payment_id: str, amount: int | None = None, reason: str | None = None) -> PaymentResult: ...
+    def refund(self, provider_order_id: str, amount: int | None = None, reason: str | None = None) -> PaymentResult: ...
 
     @abc.abstractmethod
     def parse_webhook(self, raw_body: bytes, headers: dict[str, str]) -> WebhookEvent: ...

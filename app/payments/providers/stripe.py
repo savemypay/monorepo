@@ -46,7 +46,7 @@ class StripePaymentProvider(PaymentProvider):
                 idempotency_key=idempotency_key,
             )
             return PaymentResult(
-                provider_payment_id=intent.id,
+                provider_order_id=intent.id,
                 status=_map_status(intent),
                 amount=amount,
                 currency=currency,
@@ -56,7 +56,7 @@ class StripePaymentProvider(PaymentProvider):
         except StripeError as exc:
             logger.exception("[Payment][stripe] create intent failed: %s", exc)
             return PaymentResult(
-                provider_payment_id="",
+                provider_order_id="",
                 status=PaymentStatus.FAILED,
                 amount=amount,
                 currency=currency,
@@ -65,11 +65,11 @@ class StripePaymentProvider(PaymentProvider):
                 raw={"error": str(exc)},
             )
 
-    def capture(self, provider_payment_id: str, amount: int | None = None) -> PaymentResult:
+    def capture(self, provider_order_id: str, amount: int | None = None) -> PaymentResult:
         try:
-            intent = stripe.PaymentIntent.capture(provider_payment_id, amount_to_capture=amount)
+            intent = stripe.PaymentIntent.capture(provider_order_id, amount_to_capture=amount)
             return PaymentResult(
-                provider_payment_id=intent.id,
+                provider_order_id=intent.id,
                 status=_map_status(intent),
                 amount=intent.amount_received or amount or 0,
                 currency=intent.currency,
@@ -78,7 +78,7 @@ class StripePaymentProvider(PaymentProvider):
         except StripeError as exc:
             logger.exception("[Payment][stripe] capture failed: %s", exc)
             return PaymentResult(
-                provider_payment_id=provider_payment_id,
+                provider_order_id=provider_order_id,
                 status=PaymentStatus.FAILED,
                 amount=amount or 0,
                 currency="",
@@ -87,11 +87,11 @@ class StripePaymentProvider(PaymentProvider):
                 raw={"error": str(exc)},
             )
 
-    def cancel(self, provider_payment_id: str) -> PaymentResult:
+    def cancel(self, provider_order_id: str) -> PaymentResult:
         try:
-            intent = stripe.PaymentIntent.cancel(provider_payment_id)
+            intent = stripe.PaymentIntent.cancel(provider_order_id)
             return PaymentResult(
-                provider_payment_id=intent.id,
+                provider_order_id=intent.id,
                 status=_map_status(intent),
                 amount=intent.amount or 0,
                 currency=intent.currency,
@@ -100,7 +100,7 @@ class StripePaymentProvider(PaymentProvider):
         except StripeError as exc:
             logger.exception("[Payment][stripe] cancel failed: %s", exc)
             return PaymentResult(
-                provider_payment_id=provider_payment_id,
+                provider_order_id=provider_order_id,
                 status=PaymentStatus.FAILED,
                 amount=0,
                 currency="",
@@ -109,12 +109,12 @@ class StripePaymentProvider(PaymentProvider):
                 raw={"error": str(exc)},
             )
 
-    def refund(self, provider_payment_id: str, amount: int | None = None, reason: str | None = None) -> PaymentResult:
+    def refund(self, provider_order_id: str, amount: int | None = None, reason: str | None = None) -> PaymentResult:
         try:
-            refund = stripe.Refund.create(payment_intent=provider_payment_id, amount=amount, reason=reason)
+            refund = stripe.Refund.create(payment_intent=provider_order_id, amount=amount, reason=reason)
             status = PaymentStatus.SUCCEEDED if refund.status == "succeeded" else PaymentStatus.PENDING
             return PaymentResult(
-                provider_payment_id=provider_payment_id,
+                provider_order_id=provider_order_id,
                 status=status,
                 amount=amount or 0,
                 currency=refund.currency,
@@ -123,7 +123,7 @@ class StripePaymentProvider(PaymentProvider):
         except StripeError as exc:
             logger.exception("[Payment][stripe] refund failed: %s", exc)
             return PaymentResult(
-                provider_payment_id=provider_payment_id,
+                provider_order_id=provider_order_id,
                 status=PaymentStatus.FAILED,
                 amount=amount or 0,
                 currency="",
@@ -145,12 +145,12 @@ class StripePaymentProvider(PaymentProvider):
             raise
 
         obj = event["data"]["object"]
-        provider_payment_id = obj.get("payment_intent") or obj.get("id")
+        provider_order_id = obj.get("payment_intent") or obj.get("id")
         amount = obj.get("amount_received") or obj.get("amount") or 0
         currency = obj.get("currency") or "usd"
         status = _map_status(obj) if hasattr(obj, "status") else PaymentStatus.PENDING
         return WebhookEvent(
-            provider_payment_id=provider_payment_id,
+            provider_order_id=provider_order_id,
             status=status,
             amount=amount,
             currency=currency,

@@ -76,7 +76,7 @@ def initiate_payment(
 
     payment = Payment(
         provider=PAYMENT_PROVIDER,
-        provider_payment_id=result.provider_payment_id,
+        provider_order_id=result.provider_order_id,
         status=result.status,
         amount=result.amount,
         currency=result.currency,
@@ -114,7 +114,7 @@ def handle_webhook(db: Session, *, raw_body: bytes, headers: dict[str, str]) -> 
     payment = (
         db.execute(
             select(Payment).where(
-                Payment.provider_payment_id == event.provider_payment_id,
+                Payment.provider_order_id == event.provider_order_id,
                 Payment.provider == PAYMENT_PROVIDER,
             )
         )
@@ -122,9 +122,11 @@ def handle_webhook(db: Session, *, raw_body: bytes, headers: dict[str, str]) -> 
         .first()
     )
     if not payment:
-        logger.warning("Payment webhook for unknown payment_id=%s", event.provider_payment_id)
+        logger.warning("Payment webhook for unknown order_id=%s", event.provider_order_id)
         return
 
+    if event.payment_id:
+        payment.payment_id = event.payment_id
     payment.status = event.status
     payment.raw_webhook = json.dumps(event.raw)
     db.add(payment)
@@ -170,7 +172,7 @@ def _serialize(payment: Payment) -> dict:
     return {
         "id": payment.id,
         "provider": payment.provider,
-        "provider_payment_id": payment.provider_payment_id,
+        "provider_order_id": payment.provider_order_id,
         "status": payment.status,
         "amount": payment.amount,
         "currency": payment.currency,
