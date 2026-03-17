@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShoppingBag, Users,IndianRupeeIcon, X } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Users, IndianRupeeIcon, X, User } from "lucide-react";
+import Image from "next/image";
 
 // --- Configuration ---
 const sidebarItems = [
@@ -10,6 +11,7 @@ const sidebarItems = [
   { label: "My Deals", href: "/my-deals", icon: ShoppingBag },
   { label: "Leads", href: "/leads", icon: Users },
   { label: "Earnings", href: "/earnings", icon: IndianRupeeIcon },
+  { label: "Profile", href: "/profile", icon: User },
 ];
 
 // --- Types ---
@@ -28,17 +30,16 @@ function SidebarContent({ pathname, closeMobileMenu }: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full bg-white border-r border-gray-200">
       {/* Brand Header */}
-      <div className="p-6 border-b border-gray-100 flex justify-between items-center h-16">
+      <div className="p-6 border-b border-gray-100 flex justify-between items-center h-20">
         <div>
-          <h1 className="text-xl font-bold text-blue-700">
-            Save<span className="text-slate-800">My</span>Pay
-          </h1>
-          <p className="text-xs text-gray-400">Vendor Portal</p>
+          <a href="#" className="inline-flex items-center gap-2.75 text-white no-underline font-extrabold text-2xl">
+          <Image src="/assets/logo.svg" alt="logo" height={80} width={180}/>
+        </a>
         </div>
         {/* Close Button (Visible on Mobile Only) */}
-        <button 
+        <button
           onClick={closeMobileMenu} 
-          className="md:hidden p-1 text-gray-500 hover:bg-gray-100 rounded-full"
+          className="md:hidden p-1 text-gray-500 hover:bg-gray-100 rounded-full absolute top-1 right-1"
         >
           <X size={20} />
         </button>
@@ -47,7 +48,8 @@ function SidebarContent({ pathname, closeMobileMenu }: SidebarContentProps) {
       {/* Navigation Links */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {sidebarItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isRoot = item.href === "/";
+          const isActive = isRoot ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
 
           return (
@@ -57,7 +59,7 @@ function SidebarContent({ pathname, closeMobileMenu }: SidebarContentProps) {
               onClick={closeMobileMenu} // Close drawer on click (mobile UX)
               className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-blue-50 text-blue-700"
+                  ? "bg-[#E7F6F6] text-[#1CA7A6]"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
@@ -69,10 +71,10 @@ function SidebarContent({ pathname, closeMobileMenu }: SidebarContentProps) {
       </nav>
 
       {/* Footer Area */}
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-4 border-t border-[#E7F6F6]">
         <div className="bg-blue-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-blue-800 text-sm">Need Help?</h4>
-          <p className="text-xs text-blue-600 mt-1">Contact platform support for assistance.</p>
+          <h4 className="font-semibold text-[#1CA7A6] text-sm">Need Help?</h4>
+          <p className="text-xs text-[#1CA7A6] mt-1">Contact platform support for assistance.</p>
         </div>
       </div>
     </div>

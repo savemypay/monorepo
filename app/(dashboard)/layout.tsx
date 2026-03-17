@@ -53,14 +53,14 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
       />
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 transition-all duration-300 flex flex-col min-h-screen">
+      <main className="flex-1 md:ml-64 transition-all duration-300 flex flex-col min-h-screen min-w-0">
         
         {/* Navbar */}
         <VendorNavbar 
           onMenuClick={() => setIsSidebarOpen(true)} 
         />
 
-        <div className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto overflow-x-hidden min-w-0">
             {children}
         </div>
         

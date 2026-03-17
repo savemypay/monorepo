@@ -6,23 +6,12 @@ import {
   ArrowLeft, Clock, Tag, Calendar, AlertCircle, Loader2, Users, Download, 
   User, Mail, Smartphone, CheckCircle
 } from "lucide-react";
-import { useVendorStore } from "@/lib/store/authStore";
 import { getLeads, Lead } from "@/lib/api/leads";
-import { getVendorDeals } from "@/lib/api/deals";
+import { getDealById } from "@/lib/api/deals";
 import { Deal, getMaxDiscount, getTimeLeft } from "@/lib/dealHelpers";
 
 // --- 1. Main Component Logic ---
-function PoolDetailsContent({ params }: { params: Promise<{ id: string }> }) {
-  
-  // Unwrap params using standard state (Safe for all Next.js versions)
-  const [dealId, setDealId] = useState<string | null>(null);
-
-  useEffect(() => {
-    params.then((p) => setDealId(p.id));
-  }, [params]);
-
-  // Auth & Data State
-  const vendorId = useVendorStore(state => state.vendor?.id);
+function PoolDetailsContent({ dealId }: { dealId: string }) {
   const [deal, setDeal] = useState<Deal | null>(null);
   const [customerlist, setCustomerList] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,16 +20,13 @@ function PoolDetailsContent({ params }: { params: Promise<{ id: string }> }) {
 
   // Fetch Deal
   useEffect(() => {
-    if (!vendorId || !dealId) return;
+    if (!dealId) return;
     const fetchDealDetails = async () => {
       try {
         setLoading(true);
-        const json = await getVendorDeals(vendorId);
-        if (json.success) {
-          const foundDeal = json.data.find((d: Deal) => String(d.id) === dealId);
-          if (foundDeal) setDeal(foundDeal);
-          else setError("Deal not found");
-        }
+        const json = await getDealById(dealId);
+        if (json.success) setDeal(json.data?.[0] ?? null);
+        if (json.success && (!json.data || json.data.length === 0)) setError("Deal not found");
       } catch (err) {
         console.error(err);
         setError("Error loading deal.");
@@ -49,7 +35,7 @@ function PoolDetailsContent({ params }: { params: Promise<{ id: string }> }) {
       }
     };
     fetchDealDetails();
-  }, [dealId, vendorId]);
+  }, [dealId]);
 
   // Fetch Customers
   useEffect(() => {
@@ -73,13 +59,13 @@ function PoolDetailsContent({ params }: { params: Promise<{ id: string }> }) {
   const formatDateTime = (d: string) => new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: '2-digit', minute:'2-digit' });
 
   // --- Render Loading/Error ---
-  if (loading || !dealId) return <div className="h-96 flex flex-col items-center justify-center text-gray-400"><Loader2 className="animate-spin mb-4 text-blue-600" size={40} /><p>Loading details...</p></div>;
+  if (loading) return <div className="h-96 flex flex-col items-center justify-center text-gray-400"><Loader2 className="animate-spin mb-4 text-blue-600" size={40} /><p>Loading details...</p></div>;
   if (error || !deal) return <div className="max-w-4xl mx-auto mt-10 text-center text-red-600"><p>{error || "Deal not found"}</p><Link href="/my-deals" className="underline mt-4 block">Back</Link></div>;
 
   const progress = deal.total_qty > 0 ? Math.min((deal.slots_sold / deal.total_qty) * 100, 100) : 0;
 
   return (
-    <div className="space-y-6 md:space-y-8 max-w-6xl mx-auto pb-20 px-4 md:px-0">
+    <div className="space-y-6 md:space-y-8 max-w-6xl pb-20 px-4 md:px-0">
       
       {/* Back Navigation */}
       <Link href="/my-deals" className="inline-flex items-center text-gray-500 hover:text-blue-600 font-medium text-sm">
@@ -271,5 +257,13 @@ function PoolDetailsContent({ params }: { params: Promise<{ id: string }> }) {
 
 // --- 2. Default Export ---
 export default function PoolDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  return <PoolDetailsContent params={params} />;
+  const [dealId, setDealId] = useState<string | null>(null);
+
+  useEffect(() => {
+    params.then((p) => setDealId(p.id));
+  }, [params]);
+
+  if (!dealId) return <div className="h-96 flex flex-col items-center justify-center text-gray-400"><Loader2 className="animate-spin mb-4 text-blue-600" size={40} /><p>Loading details...</p></div>;
+
+  return <PoolDetailsContent dealId={dealId} />;
 }

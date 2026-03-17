@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, ShieldCheck, Store, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
 import { sendLoginOtp, verifyLoginOtp } from '@/lib/api/auth';
 import { useVendorStore } from '@/lib/store/authStore';
 
@@ -184,44 +184,30 @@ export default function VendorLoginPage() {
   };
   
   return(
-  <div className="min-h-screen flex bg-white font-sans text-slate-900">
-      {/* LEFT SIDE: Login Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 sm:p-12 lg:p-24 relative">
-        
-        {/* Logo */}
-        <div className="absolute top-8 left-8 sm:left-12">
-           <div className="flex items-center gap-2 text-blue-700">
-             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-md">
-               <Store size={18} />
-             </div>
-             <span className="font-extrabold text-2xl tracking-tight text-slate-900">
-                Save<span className="text-blue-600">My</span>Pay
-             </span>
-           </div>
-        </div>
-
+  <div className="bg-white rounded-2xl flex text-slate-900 relative overflow-hidden shadow-sm m-4">
+      <div className="w-full flex flex-col justify-center p-8 sm:p-12 lg:p-16 relative">
         <div className="max-w-md w-full mx-auto">
-          
           {/* Header */}
           <div className="mb-8">
             {step === 'otp' && (
               <button 
                 onClick={() => { setStep('input'); setError(null); }}
-                className="text-sm text-gray-500 hover:text-blue-600 flex items-center gap-1 mb-4 transition-colors font-medium"
+                className="text-sm text-gray-500 hover:text-[#1E2F46] flex items-center gap-1 mb-4 transition-colors font-medium"
               >
                 <ArrowLeft size={16} /> Change {isEmail ? "email": "number"}
               </button>
             )}
             
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-wide mb-3">
-              {step === 'input' ? 'Login/signup' : 'Verify Account'}
+            <h1 className="text-2xl sm:text-3xl font-medium mb-3 text-[#163B63]">
+              {step === 'input' ? 'Login / Signup' : 'Verify Account'}
             </h1>
-            <p className="text-gray-500 text-lg">
+            
+            <p className="text-[#7A8CA3] text-sm sm:text-base">
               {step === 'input' 
-                ? 'Enter your email or mobile number to access your dashboard.' 
+                ? 'Enter your email or mobile number to receive a one-time passcode and access the dashboard.' 
                 : <span>
                     Enter the code sent to your {inputLabel} <br/> 
-                    <span className="font-semibold text-gray-800">{inputValue}</span>
+                    <span className="font-medium text-[#122E4E]">{inputValue}</span>
                   </span>}
             </p>
           </div>
@@ -236,7 +222,7 @@ export default function VendorLoginPage() {
                   type="text"
                   value={inputValue}
                   onChange={(e) => { setInputValue(e.target.value); setError(null); }}
-                  className="peer w-full border border-gray-300 rounded-xl px-4 py-4 text-lg text-gray-900 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all placeholder-transparent bg-gray-50 focus:bg-white"
+                  className="peer w-full border border-gray-300 rounded-xl px-4 py-4 text-lg text-gray-900 outline-none focus:border-[#122E4E] focus:ring-4 focus:ring-[#E8F0F8] transition-all placeholder-transparent bg-gray-50 focus:bg-white"
                   placeholder="Mobile Number"
                   id="mobileInput"
                   onKeyDown={(e) => e.key === 'Enter' && handleSendOtp()}
@@ -245,7 +231,7 @@ export default function VendorLoginPage() {
                   htmlFor="mobileInput"
                   className="absolute left-4 -top-2.5 bg-white px-1 text-xs text-gray-500 transition-all 
                              peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:bg-transparent
-                             peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:bg-white font-medium pointer-events-none"
+                             peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-[#122E4E] peer-focus:bg-white font-medium pointer-events-none"
                 >
                   Mobile Number or Email
                 </label>
@@ -261,7 +247,7 @@ export default function VendorLoginPage() {
               <button 
                 onClick={handleSendOtp}
                 disabled={isLoading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                className="w-full bg-[#163B63] hover:bg-[#0C111A] text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : (
                     <>
@@ -291,10 +277,10 @@ export default function VendorLoginPage() {
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(i, e)}
                     onPaste={handleOtpPaste}
-                    className={`w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold rounded-xl border-2 outline-none transition-all
+                    className={`w-10 h-10 sm:w-14 sm:h-16 text-center text-xl md:text-2xl font-semibold rounded-lg md:rounded-xl border-2 outline-none transition-all
                       ${digit 
-                        ? 'border-blue-600 bg-blue-50/30 text-blue-700 shadow-sm' 
-                        : 'border-gray-200 bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-50'
+                        ? 'border-[#122E4E] bg-blue-50/30 text-[#122E4E] shadow-sm' 
+                        : 'border-gray-200 bg-white focus:border-[#122E4E] focus:ring-4 focus:ring-blue-50'
                       }
                     `}
                   />
@@ -310,7 +296,7 @@ export default function VendorLoginPage() {
               <button 
                 onClick={handleVerifyOtp}
                 disabled={isLoading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
+                className="w-full bg-[#122E4E] hover:bg-[#0C111A] text-white font-semibold py-4 rounded-xl transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : (
                   <>
@@ -325,7 +311,7 @@ export default function VendorLoginPage() {
                     onClick={canResend ? handleSendOtp : undefined}
                     className={`text-sm font-medium transition-colors ${
                         canResend 
-                        ? 'text-blue-600 hover:underline cursor-pointer' 
+                        ? 'text-[#122E4E] hover:underline cursor-pointer' 
                         : 'text-gray-400 cursor-not-allowed'
                     }`}
                 >
@@ -336,36 +322,6 @@ export default function VendorLoginPage() {
           )}
         </div>
       </div>
-
-      {/* RIGHT SIDE: Branding */}
-      <div className="hidden lg:flex w-1/2 bg-slate-900 relative overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-slate-900 opacity-90" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-500 rounded-full blur-3xl opacity-20" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-500 rounded-full blur-3xl opacity-20" />
-
-        <div className="relative z-10 p-12 text-white max-w-lg">
-          <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-8 border border-white/20 shadow-2xl">
-             <Store size={32} className="text-blue-300" />
-          </div>
-          <h2 className="text-4xl font-bold mb-6 leading-tight">
-            Grow your business with the power of Group Buying.
-          </h2>
-          <p className="text-blue-100 text-lg leading-relaxed mb-8">
-            Manage your deals, track earnings, and connect with thousands of local customers in real-time.
-          </p>
-
-          <div className="flex items-center gap-4 pt-8 border-t border-white/10">
-            <div className="flex -space-x-3">
-              {[1,2,3].map(i => (
-                <div key={i} className="w-10 h-10 rounded-full bg-slate-400 border-2 border-slate-800" />
-              ))}
-            </div>
-            <p className="text-sm font-medium text-blue-200">Trusted by 2,000+ Vendors</p>
-          </div>
-        </div>
-      </div>
-
     </div>
   )
 }

@@ -31,10 +31,13 @@ export interface CreateDealPayload {
   token_amount: number;
 }
 
-export const getVendorDeals = async (vendorId: number): Promise<ApiResponse<Deal[]>> => {
+export const getVendorDeals = async (
+  vendorId: number,
+  status?: string
+): Promise<ApiResponse<Deal[]>> => {
   return apiRequest<ApiResponse<Deal[]>>("/api/v1/ads", {
     method: "GET",
-    query: { vendor_id: vendorId },
+    query: { vendor_id: vendorId, status },
   });
 };
 
@@ -44,5 +47,11 @@ export const createDeal = async (
   return apiRequest<ApiResponse<Deal>>("/api/v1/ads", {
     method: "POST",
     body: payload,
+  });
+};
+
+export const getDealById = async (adId: string | number): Promise<ApiResponse<Deal[]>> => {
+  return apiRequest<ApiResponse<Deal[]>>(`/api/v1/ads/${adId}`, {
+    method: "GET",
   });
 };
