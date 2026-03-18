@@ -38,10 +38,13 @@ export default function DealsPage() {
   const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
   const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [activeFilter, setActiveFilter] = useState<DealStatusFilter>("all");
+  const [page, setPage] = useState(1);
+  const limit = 10;
   const [deals, setDeals] = useState<AdListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const resolvedError = hydrated && !accessToken ? "Admin session not found" : error;
+  const hasNextPage = deals.length === limit;
 
   useEffect(() => {
     if (!hydrated || !accessToken) {
@@ -60,10 +63,10 @@ export default function DealsPage() {
         setError(null);
 
         if (activeFilter === "all") {
-          return getAds({ accessToken });
+          return getAds({ accessToken, page, limit });
         }
 
-        return getAds({ accessToken, status: activeFilter });
+        return getAds({ accessToken, status: activeFilter, page, limit });
       })
       .then((data) => {
         if (!data || isCancelled) {
@@ -88,7 +91,7 @@ export default function DealsPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, activeFilter, hydrated]);
+  }, [accessToken, activeFilter, hydrated, limit, page]);
 
   return (
     <div className="space-y-6">
@@ -96,9 +99,10 @@ export default function DealsPage() {
         eyebrow="Deal Governance"
         title="Deals"
         description="Review deal quality, monitor performance, and move campaigns through their approval lifecycle."
+        actionClassName="text-[#D9A304] hover:underline transition"
         action={
-          <Link href="/deals/new" className="rounded-full bg-accent px-4 py-2.5 text-sm font-bold text-white">
-            New Deal
+          <Link href="/deals/new" className="text-base font-bold">
+            + New Deal
           </Link>
         }
       />
@@ -109,10 +113,13 @@ export default function DealsPage() {
             const isActive = filter.value === activeFilter;
 
             return (
-              <button
-                key={filter.value}
-                type="button"
-                onClick={() => setActiveFilter(filter.value)}
+                <button
+                  key={filter.value}
+                  type="button"
+                  onClick={() => {
+                    setActiveFilter(filter.value);
+                    setPage(1);
+                  }}
                 className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
                   isActive
                     ? "border-brand bg-brand text-white"
@@ -182,6 +189,28 @@ export default function DealsPage() {
               </tbody>
             </table>
           )}
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
+          <span>Page {page}</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page <= 1}
+              className="rounded-full border border-line bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage((current) => current + 1)}
+              disabled={!hasNextPage}
+              className="rounded-full border border-line bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>

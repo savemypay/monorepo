@@ -87,7 +87,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 export function AdminSidebar({ mobileOpen = false, onMobileOpenChange }: AdminSidebarProps) {
   return (
     <>
-      <aside className="hidden xl:block xl:w-[290px] xl:shrink-0">
+      <aside className="hidden lg:block lg:w-[290px] lg:shrink-0">
         <div className="admin-panel sticky top-6 flex h-[calc(100vh-3rem)] flex-col overflow-hidden">
           <SidebarContent />
         </div>

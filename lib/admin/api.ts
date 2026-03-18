@@ -12,11 +12,15 @@ import type {
   AdsByCategoryResponse,
   AdsListRequest,
   AdsListResponse,
+  CustomerTransactionItem,
+  CustomerTransactionsResponse,
   DashboardOverviewItem,
   DashboardOverviewResponse,
   PaidUserItem,
   PaidUsersResponse,
+  PaidUsersStatus,
   PublishAdResponse,
+  RejectAdResponse,
   TransactionTrendItem,
   TransactionTrendRequest,
   TransactionTrendResponse,
@@ -186,6 +190,14 @@ export async function getAds(payload: AdsListRequest): Promise<AdListItem[]> {
     searchParams.set("vendor_id", payload.vendorId);
   }
 
+  if (payload.page) {
+    searchParams.set("page", String(payload.page));
+  }
+
+  if (payload.limit) {
+    searchParams.set("limit", String(payload.limit));
+  }
+
   const query = searchParams.toString();
   const endpoint = `${resolveBaseUrl()}/api/v1/ads${query ? `?${query}` : ""}`;
   const response = await fetch(endpoint, {
@@ -247,9 +259,49 @@ export async function publishAd(accessToken: string, adId: number): Promise<AdLi
   return parsed.data[0];
 }
 
+// Reject a draft ad and return the updated deal payload.
+export async function rejectAd(accessToken: string, adId: number): Promise<AdListItem> {
+  const response = await fetch(`${resolveBaseUrl()}/api/v1/ads/${adId}/reject`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to reject ad");
+
+  const parsed = data as RejectAdResponse;
+  if (!parsed.success || !parsed.data?.length) {
+    throw new Error(parsed.message || parsed.error?.details || "Failed to reject ad");
+  }
+
+  return parsed.data[0];
+}
+
 // Fetch recent successful paid-user transactions for payments and overview cards.
-export async function getPaidUsers(accessToken: string): Promise<PaidUserItem[]> {
-  const response = await fetch(`${resolveBaseUrl()}/api/v1/payments/paid-users`, {
+export async function getPaidUsers(
+  accessToken: string,
+  params?: { status?: PaidUsersStatus; customerSearch?: string; customerId?: string }
+): Promise<PaidUserItem[]> {
+  const searchParams = new URLSearchParams();
+
+  if (params?.status) {
+    searchParams.set("status", params.status);
+  }
+
+  if (params?.customerSearch?.trim()) {
+    searchParams.set("customer_search", params.customerSearch.trim());
+  }
+
+  if (params?.customerId) {
+    searchParams.set("customer_id", params.customerId);
+  }
+
+  const query = searchParams.toString();
+  const endpoint = `${resolveBaseUrl()}/api/v1/payments/paid-users${query ? `?${query}` : ""}`;
+  const response = await fetch(endpoint, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -267,6 +319,33 @@ export async function getPaidUsers(accessToken: string): Promise<PaidUserItem[]>
   return parsed.data ?? [];
 }
 
+// Fetch all transactions for a single customer.
+export async function getCustomerTransactions(
+  accessToken: string,
+  customerId: string
+): Promise<CustomerTransactionItem[]> {
+  const searchParams = new URLSearchParams({ customer_id: customerId });
+  const response = await fetch(
+    `${resolveBaseUrl()}/api/v1/payments/customer-transactions?${searchParams.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      cache: "no-store",
+    }
+  );
+
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch customer transactions");
+
+  const parsed = data as CustomerTransactionsResponse;
+  if (!parsed.success) {
+    throw new Error(parsed.message || parsed.error?.details || "Failed to fetch customer transactions");
+  }
+
+  return parsed.data ?? [];
+}
+
 // Fetch admin-visible customer or vendor user records with optional search.
 export async function getAdminUsers(payload: AdminUsersRequest): Promise<AdminUsersSummaryItem> {
   const searchParams = new URLSearchParams({
@@ -275,6 +354,14 @@ export async function getAdminUsers(payload: AdminUsersRequest): Promise<AdminUs
 
   if (payload.search?.trim()) {
     searchParams.set("search", payload.search.trim());
+  }
+
+  if (payload.page) {
+    searchParams.set("page", String(payload.page));
+  }
+
+  if (payload.limit) {
+    searchParams.set("limit", String(payload.limit));
   }
 
   const response = await fetch(`${resolveBaseUrl()}/api/v1/auth/admin/users?${searchParams.toString()}`, {

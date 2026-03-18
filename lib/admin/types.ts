@@ -215,6 +215,8 @@ export type AdsListRequest = {
   accessToken: string;
   status?: string;
   vendorId?: string;
+  page?: number;
+  limit?: number;
 };
 
 export type ApiErrorDetails = {
@@ -265,6 +267,13 @@ export type PublishAdResponse = {
   error: ApiErrorDetails;
 };
 
+export type RejectAdResponse = {
+  success: boolean;
+  message: string;
+  data: AdListItem[];
+  error: ApiErrorDetails;
+};
+
 export type AdDetailResponse = {
   success: boolean;
   message: string;
@@ -294,12 +303,53 @@ export type PaidUsersResponse = {
   error: ApiErrorDetails;
 };
 
+export type PaidUsersStatus =
+  | "pending"
+  | "requires_action"
+  | "succeeded"
+  | "failed"
+  | "canceled";
+
+export type CustomerTransactionAd = {
+  id: number;
+  title: string;
+  product_name: string;
+  status: string;
+  valid_from: string;
+  valid_to: string;
+  images: string[];
+} | null;
+
+export type CustomerTransactionItem = {
+  payment_id: number;
+  order_id: string;
+  deal_ref: string;
+  customer_ref: string;
+  amount: number;
+  currency: string;
+  status: string;
+  created_at: string;
+  ad: CustomerTransactionAd;
+  user_email: string;
+  user_phone_number: string;
+  user_name: string;
+};
+
+export type CustomerTransactionsResponse = {
+  success: boolean;
+  message: string;
+  data: CustomerTransactionItem[];
+  error: ApiErrorDetails;
+};
+
 export type AdminUsersRole = "all" | "customer" | "vendor";
 
 export type AdminUsersRequest = {
   accessToken: string;
   role?: AdminUsersRole;
   search?: string;
+  page?: number;
+  limit?: number;
 };
 
 export type AdminUserItem = {

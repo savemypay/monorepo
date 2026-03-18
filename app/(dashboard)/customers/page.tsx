@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { getAdminUsers } from "@/lib/admin/api";
 import { useAdminAuthStore } from "@/lib/admin/auth-store";
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import type { AdminUserItem } from "@/lib/admin/types";
 
 function formatDate(dateTime: string) {
@@ -25,11 +27,15 @@ export default function CustomersPage() {
   const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
   const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const [page, setPage] = useState(1);
+  const limit = 10;
   const [customers, setCustomers] = useState<AdminUserItem[]>([]);
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const resolvedError = hydrated && !accessToken ? "Admin session not found" : error;
+  const totalPages = Math.max(1, Math.ceil(totalCustomers / limit));
 
   useEffect(() => {
     if (!hydrated || !accessToken) {
@@ -38,48 +44,47 @@ export default function CustomersPage() {
 
     let isCancelled = false;
 
-    const timeoutId = window.setTimeout(() => {
-      void Promise.resolve()
-        .then(() => {
-          if (isCancelled) {
-            throw new Error("cancelled");
-          }
+    void Promise.resolve()
+      .then(() => {
+        if (isCancelled) {
+          throw new Error("cancelled");
+        }
 
-          setLoading(true);
-          setError(null);
-          return getAdminUsers({
-            accessToken,
-            role: "customer",
-            search,
-          });
-        })
-        .then((data) => {
-          if (!data || isCancelled) {
-            return;
-          }
-
-          setCustomers(data.customers ?? []);
-          setTotalCustomers(data.total_customers);
-        })
-        .catch((fetchError: unknown) => {
-          if (isCancelled || (fetchError instanceof Error && fetchError.message === "cancelled")) {
-            return;
-          }
-
-          setError(fetchError instanceof Error ? fetchError.message : "Failed to load customers");
-        })
-        .finally(() => {
-          if (!isCancelled) {
-            setLoading(false);
-          }
+        setLoading(true);
+        setError(null);
+        return getAdminUsers({
+          accessToken,
+          role: "customer",
+          search: debouncedSearch,
+          page,
+          limit,
         });
-    }, 250);
+      })
+      .then((data) => {
+        if (!data || isCancelled) {
+          return;
+        }
+
+        setCustomers(data.customers ?? []);
+        setTotalCustomers(data.total_customers);
+      })
+      .catch((fetchError: unknown) => {
+        if (isCancelled || (fetchError instanceof Error && fetchError.message === "cancelled")) {
+          return;
+        }
+
+        setError(fetchError instanceof Error ? fetchError.message : "Failed to load customers");
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      });
 
     return () => {
       isCancelled = true;
-      window.clearTimeout(timeoutId);
     };
-  }, [accessToken, hydrated, search]);
+  }, [accessToken, hydrated, debouncedSearch, page, limit]);
 
   return (
     <div className="space-y-6">
@@ -101,7 +106,10 @@ export default function CustomersPage() {
           <div className="w-full max-w-sm">
             <input
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(1);
+              }}
               placeholder="Search customer name, email, or phone"
               className="h-11 w-full rounded-2xl border border-line bg-white px-4 text-sm outline-none focus:border-brand"
             />
@@ -145,17 +153,40 @@ export default function CustomersPage() {
                       <StatusBadge status={customer.is_active ? "Active" : "Inactive"} />
                     </td>
                     <td>{formatDate(customer.created_at)}</td>
-                    <td>
-                      {/* <Link href={`/customers/${customer.id}`} className="text-sm font-bold text-brand">
-                        Open
-                      </Link> */}
-                      <p className="text-gray-200">open</p>
-                    </td>
+                  <td>
+                    <Link href={`/customers/${customer.id}/transactions`} className="text-sm font-bold text-brand">
+                      Transactions
+                    </Link>
+                  </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
+          <span>
+            Page {page} of {totalPages}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page <= 1}
+              className="rounded-full border border-line bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={page >= totalPages}
+              className="rounded-full border border-line bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
