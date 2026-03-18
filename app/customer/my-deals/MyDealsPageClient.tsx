@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { AlertCircle, Loader2, ShoppingBag } from 'lucide-react';
 import { getMyDeals, PurchasedDealOrder } from "@/lib/api/myDeals";
 import { useAuthStore } from '@/lib/store/authStore';
+import Image from "next/image";
 
 const FALLBACK_IMAGE = "/assets/Tesla-Model-Y-1-1160x652.webp";
 
@@ -209,63 +210,87 @@ export default function MyDealsPage() {
       )}
 
       {!isLoading && !errorMessage && sortedOrders.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {sortedOrders.map((order) => {
-            const ad = mapAd(order);
-            const orderStatus = statusStyles(order.status || "");
-            const amountLabel = formatAmount(Number(order.amount) || 0, order.currency || "INR");
-            const orderDate = formatDate(order.created_at);
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+          <div className="overflow-x-auto">
+            <table className="min-w-[920px] w-full border-collapse">
+              <thead className="bg-slate-50">
+                <tr className="border-b border-gray-200 text-left">
+                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Deal</th>
+                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Order ID</th>
+                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Deal Ref</th>
+                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Amount</th>
+                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Purchased On</th>
+                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedOrders.map((order) => {
+                  const ad = mapAd(order);
+                  const orderStatus = statusStyles(order.status || "");
+                  const amountLabel = formatAmount(Number(order.amount) || 0, order.currency || "INR");
+                  const orderDate = formatDate(order.created_at);
 
-            return (
-              <article
-                key={`${order.payment_id}-${order.order_id}`}
-                className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">{ad.title}</h3>
-                    <p className="text-xs text-gray-500 mt-1">{ad.category}</p>
-                  </div>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${orderStatus}`}>
-                    {order.status || "unknown"}
-                  </span>
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-gray-500 text-xs">Amount</p>
-                    <p className="font-semibold text-gray-900">{amountLabel}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs">Purchased On</p>
-                    <p className="font-semibold text-gray-900">{orderDate}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="text-gray-500 text-xs">Order ID</p>
-                    <p className="font-medium text-gray-900 truncate">{order.order_id || "-"}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="text-gray-500 text-xs">Deal Ref</p>
-                    <p className="font-medium text-gray-900 truncate">{order.deal_ref || "-"}</p>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Payment ID: {order.payment_id}</span>
-                  {ad.dealId ? (
-                    <Link
-                      href={`/customer/deals/${ad.dealId}`}
-                      className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                  return (
+                    <tr
+                      key={`${order.payment_id}-${order.order_id}`}
+                      className="border-b border-gray-100 last:border-b-0 hover:bg-slate-50/70"
                     >
-                      View Deal
-                    </Link>
-                  ) : (
-                    <span className="text-xs text-gray-400">No deal link</span>
-                  )}
-                </div>
-              </article>
-            );
-          })}
+                      <td className="px-5 py-4 align-top">
+                        <div className="flex items-center gap-3">
+                          {/* <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-slate-100">
+                            <Image
+                              src={ad.image}
+                              alt={ad.title}
+                              fill
+                              className="object-cover"
+                              sizes="56px"
+                            />
+                          </div> */}
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-slate-900">{ad.title}</p>
+                            <p className="mt-1 text-xs text-slate-500">{ad.category}</p>
+                            <p className="mt-1 text-[11px] text-slate-400">Payment ID: {order.payment_id}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 align-top">
+                        <p className="max-w-[170px] truncate text-sm font-medium text-slate-900">
+                          {order.order_id || "-"}
+                        </p>
+                      </td>
+                      <td className="px-5 py-4 align-top">
+                        <p className="max-w-[140px] truncate text-sm text-slate-700">{order.deal_ref || "-"}</p>
+                      </td>
+                      <td className="px-5 py-4 align-top">
+                        <p className="text-sm font-semibold text-slate-900">{amountLabel}</p>
+                      </td>
+                      <td className="px-5 py-4 align-top">
+                        <p className="text-sm text-slate-700">{orderDate}</p>
+                      </td>
+                      <td className="px-5 py-4 align-top">
+                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${orderStatus}`}>
+                          {order.status || "unknown"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 align-top">
+                        {ad.dealId ? (
+                          <Link
+                            href={`/customer/deals/${ad.dealId}`}
+                            className="inline-flex rounded-lg bg-[#163B63]/8 px-3 py-2 text-sm font-semibold text-[#163B63] transition-colors hover:bg-[#163B63]/12"
+                          >
+                            View Deal
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-gray-400">No deal link</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
