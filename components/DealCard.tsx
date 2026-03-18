@@ -3,9 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { Clock, Users, Heart, ArrowRight, Flame } from "lucide-react";
+import { Clock, Users, Heart, ArrowRight, Flame, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { isApiAuthError } from "@/lib/api/authenticatedRequest";
+import { setAdFavorite } from "@/lib/api/ads";
 
 interface DealCardProps {
   id: number | string;
@@ -17,6 +19,7 @@ interface DealCardProps {
   joined: number;
   target: number;
   endsIn: string;
+  isFavorite?: boolean;
 }
 
 export default function DealCard({
@@ -29,23 +32,43 @@ export default function DealCard({
   joined,
   target,
   endsIn,
+  isFavorite = false,
 }: DealCardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuthStore();
-  const [favorited, setFavorited] = useState(false);
+  const { user, accessToken } = useAuthStore();
+  const [favorited, setFavorited] = useState(isFavorite);
+  const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
+
+  useEffect(() => {
+    setFavorited(isFavorite);
+  }, [isFavorite]);
 
   const progress = Math.min((joined / target) * 100, 100);
+  const isFulfilled = target > 0 && joined >= target;
   const isFillingFast = progress >= 70;
-  const spotsLeft = target - joined;
+  const spotsLeft = Math.max(target - joined, 0);
 
-  const handleFavorite = (e: React.MouseEvent) => {
+  const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!user) {
+    if (!user || !accessToken) {
       router.push(`/login?redirect=${pathname}`);
-    } else {
-      setFavorited((prev) => !prev);
+      return;
+    }
+
+    const nextValue = !favorited;
+    setIsUpdatingFavorite(true);
+
+    try {
+      const updatedFavorite = await setAdFavorite(id, nextValue, accessToken);
+      setFavorited(updatedFavorite);
+    } catch (error: unknown) {
+      if (isApiAuthError(error)) {
+        router.push(`/login?redirect=${pathname}`);
+      }
+    } finally {
+      setIsUpdatingFavorite(false);
     }
   };
 
@@ -75,13 +98,18 @@ export default function DealCard({
           <button
             onClick={handleFavorite}
             aria-label="Add to favourites"
+            disabled={isUpdatingFavorite}
             className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm backdrop-blur-sm transition-all duration-200 ${
               favorited
                 ? "bg-red-50 text-red-500"
                 : "bg-white/90 text-slate-400 hover:text-red-500 hover:bg-white"
-            }`}
+            } ${isUpdatingFavorite ? "cursor-wait opacity-80" : ""}`}
           >
-            <Heart size={16} strokeWidth={2} fill={favorited ? "currentColor" : "none"} />
+            {isUpdatingFavorite ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Heart size={16} strokeWidth={2} fill={favorited ? "currentColor" : "none"} />
+            )}
           </button>
         </div>
 
@@ -113,18 +141,24 @@ export default function DealCard({
               </span>
             </span>
 
-            {isFillingFast && (
+            {isFulfilled ? (
+              <span className="text-[10px] font-extrabold uppercase tracking-wide text-emerald-600">
+                Fulfilled
+              </span>
+            ) : isFillingFast ? (
               <span className="flex items-center gap-1 text-[10px] font-extrabold text-orange-600 uppercase tracking-wide animate-pulse">
                 <Flame size={11} />
                 {spotsLeft} spots left
               </span>
-            )}
+            ) : null}
           </div>
 
           <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                isFillingFast
+                isFulfilled
+                  ? "bg-emerald-500"
+                  : isFillingFast
                   ? "bg-gradient-to-r from-orange-500 to-red-500"
                   : "bg-[#163B63]"
               }`}

@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+import { authenticatedJsonRequest } from "@/lib/api/authenticatedRequest";
+
 const TOKEN_PAYMENT_ENDPOINT_TEMPLATE =
   process.env.NEXT_PUBLIC_TOKEN_PAYMENT_ENDPOINT?.trim() || "/api/v1/payments/token-pay/:ad_id";
 
@@ -19,20 +20,6 @@ export interface PaymentInitiationData {
   error_message: string | null;
 }
 
-interface InitiateTokenPaymentResponse {
-  success: boolean;
-  message: string;
-  data: PaymentInitiationData[];
-  error: string | null;
-}
-
-function resolveBaseUrl() {
-  if (!API_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured");
-  }
-  return API_BASE_URL.replace(/\/+$/, "");
-}
-
 function resolveTokenPaymentEndpoint(adId: number) {
   const normalizedTemplate = TOKEN_PAYMENT_ENDPOINT_TEMPLATE.replace(/\/+$/, "");
   const encodedAdId = encodeURIComponent(String(adId));
@@ -46,18 +33,6 @@ function resolveTokenPaymentEndpoint(adId: number) {
   }
 
   return `${normalizedTemplate}/${encodedAdId}`;
-}
-
-function extractErrorMessage(data: unknown, fallback: string) {
-  if (
-    typeof data === "object" &&
-    data !== null &&
-    "message" in data &&
-    typeof (data as { message?: unknown }).message === "string"
-  ) {
-    return (data as { message: string }).message;
-  }
-  return fallback;
 }
 
 export async function initiateTokenPayment(
@@ -75,32 +50,16 @@ export async function initiateTokenPayment(
     throw new Error("Access token is required");
   }
 
-  const response = await fetch(`${resolveBaseUrl()}${resolveTokenPaymentEndpoint(adId)}`, {
+  const data = await authenticatedJsonRequest<PaymentInitiationData[]>(resolveTokenPaymentEndpoint(adId), {
+    accessToken,
     method: "POST",
     headers: {
-      Authorization: `Bearer ${accessToken}`,
       "Idempotency-Key": payload.idempotencyKey,
-      "ngrok-skip-browser-warning": "true",
     },
+    fallbackError: "Failed to initiate payment",
   });
 
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    throw new Error(extractErrorMessage(data, "Failed to initiate payment"));
-  }
-
-  const parsed = data as InitiateTokenPaymentResponse;
-  if (!parsed?.success) {
-    throw new Error(parsed?.error || parsed?.message || "Payment initiation failed");
-  }
-
-  const paymentRecord = Array.isArray(parsed.data) ? parsed.data[0] : null;
+  const paymentRecord = Array.isArray(data) ? data[0] : null;
   if (!paymentRecord) {
     throw new Error("Payment initiation returned empty data");
   }

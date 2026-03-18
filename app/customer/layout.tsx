@@ -5,14 +5,10 @@ import { buildMetadata } from "@/lib/seo";
 import CustomerRouteGuard from "./CustomerRouteGuard";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Customer Dashboard | SaveMyPay",
+  title: "Customer Marketplace | SaveMyPay",
   description:
-    "Manage your group deals, favorites, and purchase journey from the SaveMyPay customer dashboard.",
+    "Browse active group deals, compare pool progress, and explore verified buying opportunities on SaveMyPay.",
   path: "/customer",
-  robots: {
-    index: false,
-    follow: false,
-  },
 });
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
