@@ -25,3 +25,7 @@ from app.entities import admin_account  # noqa: E402,F401
 from app.entities import game_user  # noqa: E402,F401
 from app.entities import game_score  # noqa: E402,F401
 from app.entities import referral_reward  # noqa: E402,F401
+from app.entities import notification_installation  # noqa: E402,F401
+from app.entities import notification_token  # noqa: E402,F401
+from app.entities import notification_preference  # noqa: E402,F401
+from app.entities import notification_delivery  # noqa: E402,F401

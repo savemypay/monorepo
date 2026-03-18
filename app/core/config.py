@@ -27,6 +27,13 @@ ALLOWED_HOSTS = os.getenv(
 # Notification settings
 SMS_PROVIDER = os.getenv("SMS_PROVIDER", "console")  # options: sns, smscountry, console
 EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "console")  # options: ses, console
+PUSH_PROVIDER = os.getenv("PUSH_PROVIDER", "console")  # options: firebase, console
+REALTIME_PROVIDER = os.getenv("REALTIME_PROVIDER", "noop")  # options: websocket, noop
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", "")
+FIREBASE_CREDENTIALS_FILE = os.getenv("FIREBASE_CREDENTIALS_FILE", "")
+FIREBASE_CREDENTIALS_JSON = os.getenv("FIREBASE_CREDENTIALS_JSON", "")
+NOTIFICATION_BATCH_SIZE = int(os.getenv("NOTIFICATION_BATCH_SIZE", "100"))
+NOTIFICATION_MAX_DELIVERY_ATTEMPTS = int(os.getenv("NOTIFICATION_MAX_DELIVERY_ATTEMPTS", "3"))
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 FROM_EMAIL = os.getenv("FROM_EMAIL", "")
