@@ -12,11 +12,13 @@ import {
   ShieldCheck,
   Loader2,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Heart,
 } from "lucide-react";
 import { useAuthStore } from '@/lib/store/authStore';
-import { Ad, getAds } from '@/lib/api/ads';
+import { Ad, getAdById, setAdFavorite } from '@/lib/api/ads';
 import { initiateTokenPayment } from '@/lib/api/payments';
+import { isApiAuthError } from '@/lib/api/authenticatedRequest';
 import { buildIdempotencyKey, openRazorpayCheckout } from '@/lib/payments/razorpay';
 
 // Brand palette (for reference):
@@ -36,6 +38,16 @@ type PaymentNotice = {
   message: string;
 };
 
+type PaymentResultModal =
+  | {
+      status: "success" | "failure";
+      message: string;
+      referenceId?: string | null;
+    }
+  | null;
+
+const SUCCESS_REDIRECT_SECONDS = 10;
+
 export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps) {
   const router = useRouter();
 
@@ -46,6 +58,10 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentNotice, setPaymentNotice] = useState<PaymentNotice | null>(null);
   const [paymentReferenceId, setPaymentReferenceId] = useState<string | null>(null);
+  const [paymentResultModal, setPaymentResultModal] = useState<PaymentResultModal>(null);
+  const [redirectCountdown, setRedirectCountdown] = useState(SUCCESS_REDIRECT_SECONDS);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
 
   useEffect(() => {
     let isCancelled = false;
@@ -55,8 +71,7 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
       setErrorMessage(null);
 
       try {
-        const ads = await getAds();
-        const selected = ads.find((ad) => String(ad.id) === id);
+        const selected = await getAdById(id);
 
         if (!isCancelled) {
           if (!selected) {
@@ -64,6 +79,7 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
             setErrorMessage("Deal not found.");
           } else {
             setDeal(selected);
+            setIsFavorite(Boolean(selected.is_favorite));
           }
         }
       } catch (error: unknown) {
@@ -80,6 +96,33 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
     loadDeal();
     return () => { isCancelled = true; };
   }, [id]);
+
+  useEffect(() => {
+    if (paymentResultModal?.status !== "success") return;
+
+    setRedirectCountdown(SUCCESS_REDIRECT_SECONDS);
+
+    const intervalId = window.setInterval(() => {
+      setRedirectCountdown((current) => {
+        if (current <= 1) {
+          window.clearInterval(intervalId);
+          return 0;
+        }
+
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [paymentResultModal]);
+
+  useEffect(() => {
+    if (paymentResultModal?.status !== "success" || redirectCountdown !== 0) return;
+
+    router.push("/customer");
+  }, [paymentResultModal, redirectCountdown, router]);
 
   const formatCurrency = (value: number) =>
     `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(value || 0)}`;
@@ -117,28 +160,41 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
     return Math.min((deal.slots_sold / deal.total_qty) * 100, 100);
   }, [deal]);
 
-  const sortedTiers = useMemo(
-    () => [...(deal?.tiers ?? [])].sort((a, b) => a.seq - b.seq),
-    [deal]
-  );
+  const isDealFulfilled = useMemo(() => {
+    if (!deal) return false;
+    if (typeof deal.slots_remaining === "number") {
+      return deal.slots_remaining <= 0;
+    }
+    return deal.total_qty > 0 && deal.slots_sold >= deal.total_qty;
+  }, [deal]);
 
-  const tierGoalQty = useMemo(() => {
-    if (!sortedTiers.length) return 0;
-    return Math.max(...sortedTiers.map((tier) => Number(tier.qty) || 0));
-  }, [sortedTiers]);
+  const successRedirectProgress = useMemo(() => {
+    if (paymentResultModal?.status !== "success") return 0;
+    return ((SUCCESS_REDIRECT_SECONDS - redirectCountdown) / SUCCESS_REDIRECT_SECONDS) * 100;
+  }, [paymentResultModal, redirectCountdown]);
 
-  const tierOverallProgress = useMemo(() => {
-    if (!deal || tierGoalQty <= 0) return 0;
-    return Math.min((deal.slots_sold / tierGoalQty) * 100, 100);
-  }, [deal, tierGoalQty]);
+  const handleFavorite = async () => {
+    if (!user || !accessToken) {
+      router.push(`/login?redirect=${encodeURIComponent(`/customer/deals/${id}`)}`);
+      return;
+    }
+    if (!deal) return;
 
-  const activeTier = useMemo(() => {
-    if (!deal || !sortedTiers.length) return null;
-    return sortedTiers.reduce<(typeof sortedTiers)[number] | null>(
-      (current, tier) => (deal.slots_sold >= tier.qty ? tier : current),
-      null
-    );
-  }, [deal, sortedTiers]);
+    const nextValue = !isFavorite;
+    setIsUpdatingFavorite(true);
+
+    try {
+      const updatedFavorite = await setAdFavorite(deal.id, nextValue, accessToken);
+      setIsFavorite(updatedFavorite);
+      setDeal((current) => (current ? { ...current, is_favorite: updatedFavorite } : current));
+    } catch (error: unknown) {
+      if (isApiAuthError(error)) {
+        router.push(`/login?redirect=${encodeURIComponent(`/customer/deals/${id}`)}`);
+      }
+    } finally {
+      setIsUpdatingFavorite(false);
+    }
+  };
 
   const handleAction = async () => {
     if (!user || !accessToken) {
@@ -149,6 +205,7 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
 
     setIsProcessingPayment(true);
     setPaymentReferenceId(null);
+    setPaymentResultModal(null);
     setPaymentNotice({ type: "info", message: "Initializing secure checkout..." });
 
     try {
@@ -201,7 +258,12 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
 
       if (checkoutResult.status === "success") {
         setPaymentReferenceId(checkoutResult.paymentId);
-        setPaymentNotice({ type: "success", message: "Payment successful. Your token advance is confirmed." });
+        setPaymentNotice(null);
+        setPaymentResultModal({
+          status: "success",
+          message: "Your token advance is confirmed.",
+          referenceId: checkoutResult.paymentId,
+        });
         return;
       }
       if (checkoutResult.status === "dismissed") {
@@ -210,14 +272,39 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
       }
 
       setPaymentReferenceId(checkoutResult.paymentId || initiatedPayment.provider_payment_id);
-      setPaymentNotice({ type: "error", message: checkoutResult.message });
+      setPaymentNotice(null);
+      setPaymentResultModal({
+        status: "failure",
+        message: checkoutResult.message || "Payment failed",
+        referenceId: checkoutResult.paymentId || initiatedPayment.provider_payment_id,
+      });
     } catch (error: unknown) {
-      setPaymentNotice({
-        type: "error",
+      if (isApiAuthError(error)) {
+        router.push(`/login?redirect=${encodeURIComponent(`/customer/deals/${id}`)}`);
+        return;
+      }
+
+      setPaymentNotice(null);
+      setPaymentResultModal({
+        status: "failure",
         message: error instanceof Error ? error.message : "Unable to process payment. Please try again.",
+        referenceId: paymentReferenceId,
       });
     } finally {
       setIsProcessingPayment(false);
+    }
+  };
+
+  const handleGoToDeals = () => {
+    setPaymentResultModal(null);
+    router.push("/customer");
+  };
+
+  const handleRetryPayment = () => {
+    setPaymentResultModal(null);
+    setPaymentNotice(null);
+    if (typeof window !== "undefined") {
+      window.location.reload();
     }
   };
 
@@ -250,9 +337,9 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
     );
   }
 
-  // ── Main render ───────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto">
+    <>
+      <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto">
 
       {/* Back Navigation */}
       <Link
@@ -281,6 +368,28 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
               <span className="flex items-center gap-1 text-slate-500 text-xs font-medium">
                 <ShieldCheck size={14} className="text-[#1CA7A6]" /> Verified Vendor
               </span>
+              {isDealFulfilled && (
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
+                  All spots filled
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleFavorite}
+                disabled={isUpdatingFavorite}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                  isFavorite
+                    ? "border-red-200 bg-red-50 text-red-600"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-red-200 hover:text-red-600"
+                } ${isUpdatingFavorite ? "cursor-wait opacity-80" : ""}`}
+              >
+                {isUpdatingFavorite ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Heart size={14} fill={isFavorite ? "currentColor" : "none"} />
+                )}
+                {isFavorite ? "Saved" : "Save"}
+              </button>
             </div>
 
             <h1 className="text-3xl md:text-4xl font-bold text-[#122E4E]">
@@ -302,7 +411,7 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
         </div>
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6 mt-8 pt-8 border-t border-slate-100">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mt-8 pt-8 border-t border-slate-100">
 
           {/* Target Goal */}
           <div className="rounded-xl border border-[#1CA7A6]/30 bg-[#1CA7A6]/5 p-4">
@@ -341,16 +450,23 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
 
         {/* CTA Button */}
         <div className="mt-5">
+          {isDealFulfilled && (
+            <p className="mb-3 text-sm font-medium text-emerald-700">
+              This deal is fulfilled. All available spots have already been taken.
+            </p>
+          )}
           <button
             onClick={handleAction}
-            disabled={isProcessingPayment}
-            className="w-full sm:w-auto sm:min-w-[260px] sm:ml-auto bg-[#163B63] hover:bg-[#122E4E] disabled:bg-[#163B63]/40 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+            disabled={isProcessingPayment || isDealFulfilled}
+            className="w-full sm:w-auto sm:min-w-[260px] sm:ml-auto bg-[#163B63] hover:bg-[#122E4E] disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
           >
             {isProcessingPayment ? (
               <>
                 <Loader2 size={18} className="animate-spin" />
                 Processing...
               </>
+            ) : isDealFulfilled ? (
+              "All Spots Filled"
             ) : user ? (
               "Pay Token Now"
             ) : (
@@ -509,6 +625,92 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
         </div>
       </div> */}
 
-    </div>
+      </div>
+
+      {paymentResultModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-md overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)]">
+            <div className="px-6 pb-6 pt-8 sm:px-8">
+              <div className="mx-auto flex w-full max-w-xs flex-col items-center text-center">
+                <div className="relative flex h-24 w-24 items-center justify-center">
+                  <span
+                    className={`absolute inset-0 rounded-full ${
+                      paymentResultModal.status === "success" ? "bg-emerald-100" : "bg-red-100"
+                    } animate-ping [animation-duration:1.8s]`}
+                  />
+                  <span
+                    className={`absolute inset-[10px] rounded-full ${
+                      paymentResultModal.status === "success" ? "bg-emerald-200" : "bg-red-200"
+                    } animate-pulse`}
+                  />
+                  <div
+                    className={`relative flex h-24 w-24 items-center justify-center rounded-full shadow-lg ${
+                      paymentResultModal.status === "success"
+                        ? "bg-emerald-500 shadow-emerald-500/30"
+                        : "bg-red-500 shadow-red-500/30"
+                    }`}
+                  >
+                    {paymentResultModal.status === "success" ? (
+                      <CheckCircle2 className="h-12 w-12 animate-[bounce_1.2s_ease-in-out_1] text-white" />
+                    ) : (
+                      <XCircle className="h-12 w-12 animate-[bounce_1.2s_ease-in-out_1] text-white" />
+                    )}
+                  </div>
+                </div>
+
+                <h2 className="mt-6 text-2xl font-bold text-[#122E4E]">
+                  {paymentResultModal.status === "success" ? "Payment successful" : "Payment failed"}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">{paymentResultModal.message}</p>
+
+                {paymentResultModal.referenceId && (
+                  <p className="mt-3 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+                    Reference: {paymentResultModal.referenceId}
+                  </p>
+                )}
+
+                {paymentResultModal.status === "success" ? (
+                  <div className="mt-6 w-full space-y-3">
+                    <div className="overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-2 rounded-full bg-[#1CA7A6] transition-[width] duration-1000 ease-linear"
+                        style={{ width: `${successRedirectProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-sm font-medium text-slate-500">
+                      Redirecting to deals page in {redirectCountdown} seconds
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleGoToDeals}
+                      className="inline-flex w-full items-center justify-center rounded-xl bg-[#163B63] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#122E4E]"
+                    >
+                      Home
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-6 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={handleGoToDeals}
+                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                    >
+                      Home
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRetryPayment}
+                      className="inline-flex items-center justify-center rounded-xl bg-[#163B63] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#122E4E]"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

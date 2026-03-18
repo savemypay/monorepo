@@ -357,40 +357,40 @@ function MyEarningsSection() {
     pending_rewards: 0,
   });
 
-  useEffect(() => {
-    let mounted = true;
+  // useEffect(() => {
+  //   let mounted = true;
 
-    if (!accessToken) {
-      return;
-    }
+  //   if (!accessToken) {
+  //     return;
+  //   }
 
-    const load = async () => {
-      setLoading(true);
-      setError(null);
+  //   const load = async () => {
+  //     setLoading(true);
+  //     setError(null);
 
-      try {
-        const data = await getCustomerEarnings(accessToken);
-        if (!mounted) return;
-        setSummary(data);
-      } catch (err) {
-        if (!mounted) return;
-        setError(err instanceof Error ? err.message : "Failed to fetch earnings");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
+  //     try {
+  //       const data = await getCustomerEarnings(accessToken);
+  //       if (!mounted) return;
+  //       setSummary(data);
+  //     } catch (err) {
+  //       if (!mounted) return;
+  //       setError(err instanceof Error ? err.message : "Failed to fetch earnings");
+  //     } finally {
+  //       if (mounted) setLoading(false);
+  //     }
+  //   };
 
-    void load();
-    return () => {
-      mounted = false;
-    };
-  }, [accessToken]);
+  //   void load();
+  //   return () => {
+  //     mounted = false;
+  //   };
+  // }, [accessToken]);
 
   if (loading) return <LoadingState label="Loading earnings summary..." />;
   if (error) return <ErrorState label={error} />;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 ">
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
         <p className="text-sm text-slate-600">Total Cashback</p>
         <p className="mt-2 text-2xl font-bold text-slate-900">{formatCurrency(summary.total_cashback)}</p>
@@ -412,27 +412,27 @@ function ReferEarnSection() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ReferralProgramData | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
+  // useEffect(() => {
+  //   let mounted = true;
 
-    if (!accessToken) {
-      return;
-    }
+  //   if (!accessToken) {
+  //     return;
+  //   }
 
-    const load = async () => {
-      setLoading(true);
-      const response = await getReferProgram(accessToken);
-      if (mounted) {
-        setData(response);
-        setLoading(false);
-      }
-    };
+  //   const load = async () => {
+  //     setLoading(true);
+  //     const response = await getReferProgram(accessToken);
+  //     if (mounted) {
+  //       setData(response);
+  //       setLoading(false);
+  //     }
+  //   };
 
-    void load();
-    return () => {
-      mounted = false;
-    };
-  }, [accessToken]);
+  //   void load();
+  //   return () => {
+  //     mounted = false;
+  //   };
+  // }, [accessToken]);
 
   const referralCode = String(data?.referral_code || "NA");
   const referralLink = String(data?.referral_link || "");
@@ -491,27 +491,27 @@ function MyReferralsSection() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ReferralUser[]>([]);
 
-  useEffect(() => {
-    let mounted = true;
+  // useEffect(() => {
+  //   let mounted = true;
 
-    if (!accessToken) {
-      return;
-    }
+  //   if (!accessToken) {
+  //     return;
+  //   }
 
-    const load = async () => {
-      setLoading(true);
-      const response = await getMyReferrals(accessToken);
-      if (mounted) {
-        setRows(response);
-        setLoading(false);
-      }
-    };
+  //   const load = async () => {
+  //     setLoading(true);
+  //     const response = await getMyReferrals(accessToken);
+  //     if (mounted) {
+  //       setRows(response);
+  //       setLoading(false);
+  //     }
+  //   };
 
-    void load();
-    return () => {
-      mounted = false;
-    };
-  }, [accessToken]);
+  //   void load();
+  //   return () => {
+  //     mounted = false;
+  //   };
+  // }, [accessToken]);
 
   if (loading) return <LoadingState label="Loading referrals..." />;
   if (!rows.length) return <EmptyState label="No referrals found yet." />;

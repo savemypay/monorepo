@@ -134,21 +134,21 @@ export default function CustomerNavbar() {
       }
     };
 
-    const loadEarnings = async () => {
-      try {
-        const summary = await getCustomerEarnings(accessToken);
-        if (isMounted) {
-          setEarnings(summary);
-        }
-      } catch {
-        if (isMounted) {
-          setEarnings({ total_cashback: 0, total_rewards: 0 });
-        }
-      }
-    };
+    // const loadEarnings = async () => {
+    //   try {
+    //     const summary = await getCustomerEarnings(accessToken);
+    //     if (isMounted) {
+    //       setEarnings(summary);
+    //     }
+    //   } catch {
+    //     if (isMounted) {
+    //       setEarnings({ total_cashback: 0, total_rewards: 0 });
+    //     }
+    //   }
+    // };
 
     void loadProfile();
-    void loadEarnings();
+    // void loadEarnings();
 
     return () => {
       isMounted = false;
@@ -242,18 +242,17 @@ export default function CustomerNavbar() {
                         <p className="text-[20px] leading-tight font-bold text-gray-900 truncate">{profileName}</p>
                         <p className="mt-1 text-xs text-gray-500 truncate">{profileContact}</p>
 
-                        <div className="mt-4 grid grid-cols-2 gap-3">
-                          {/* <div className="rounded-xl bg-gray-100 px-3 py-3">
+                        {/* <div className="mt-4 grid grid-cols-2 gap-3">
+                          <div className="rounded-xl bg-gray-100 px-3 py-3">
                             <p className="text-sm text-gray-700">Total Cashback</p>
                             <p className="text-xl font-bold text-gray-900">{formatInr(earnings.total_cashback)}</p>
-                          </div> */}
+                          </div>
                           <div className="rounded-xl bg-gray-100 px-3 py-3">
                             <p className="text-sm text-gray-700">Total Rewards</p>
                             <p className="text-xl font-bold text-gray-900">{formatInr(earnings.total_rewards)}</p>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
-
                       {CUSTOMER_ACCOUNT_SECTIONS.map((section) => (
                         <div key={section.title} className="border-t border-gray-100 pt-2 pb-1">
                           <p className="px-5 pb-1 text-sm font-semibold text-gray-600">{section.title}</p>

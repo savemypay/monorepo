@@ -264,7 +264,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-2xl overflow-hidden">
+    <div className="w-full max-w-lg overflow-hidden">
       <div className="flex justify-center items-center">
         <section className="w-full p-5 sm:p-7 md:p-8 min-h-[500px] md:min-h-[580px] bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between">

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles } from "lucide-react";
 import DealCard from "@/components/DealCard";
 import { Ad, getAds } from "@/lib/api/ads";
 
@@ -16,6 +15,7 @@ type DealViewModel = {
   target: number;
   endsIn: string;
   category: string;
+  isFavorite: boolean;
 };
 
 const FALLBACK_IMAGE = "/assets/Tesla-Model-Y-1-1160x652.webp";
@@ -62,14 +62,14 @@ function mapAdToCard(ad: Ad): DealViewModel {
   return {
     id: ad.id,
     title: ad.product_name || ad.title,
-    // image: formatImage(ad.images),
-    image: FALLBACK_IMAGE,
+    image: formatImage(ad.images),
     discount: formatDiscount(ad),
     price: formatPrice(Number(ad.original_price) || 0),
     joined: Number(ad.slots_sold) || 0,
     target: Number(ad.total_qty) || 0,
     endsIn: formatTimeLeft(ad.valid_to),
     category: ad.category || "Other",
+    isFavorite: Boolean(ad.is_favorite),
   };
 }
 
