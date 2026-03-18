@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.orm import Session
@@ -20,8 +20,8 @@ def track_ad_interaction(
     ad_id: int,
     payload: AdInteractionCaptureRequest,
     request: Request,
-    db: Session = Depends(get_db),
-    actor: dict | None = Depends(get_current_user_optional),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict | None, Depends(get_current_user_optional)] = None,
 ):
     item = capture_ad_interaction(db, ad_id=ad_id, payload=payload, actor=actor, request=request)
     return success_response(message="Interaction captured", data=[item])
@@ -29,13 +29,13 @@ def track_ad_interaction(
 
 @router.get("/dashboard", status_code=status.HTTP_200_OK)
 def get_dashboard(
-    vendor_id: Optional[int] = Query(default=None),
-    ad_id: Optional[int] = Query(default=None),
-    event_type: Optional[str] = Query(default=None, pattern="^(view|click|cta_click)$"),
-    date_from: Optional[datetime] = Query(default=None),
-    date_to: Optional[datetime] = Query(default=None),
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
+    vendor_id: Annotated[Optional[int], Query()] = None,
+    ad_id: Annotated[Optional[int], Query()] = None,
+    event_type: Annotated[Optional[str], Query(pattern="^(view|click|cta_click)$")] = None,
+    date_from: Annotated[Optional[datetime], Query()] = None,
+    date_to: Annotated[Optional[datetime], Query()] = None,
 ):
     stats = get_engagement_dashboard(
         db,

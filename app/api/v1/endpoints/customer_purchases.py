@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 @router.get("/purchases", status_code=status.HTTP_200_OK, response_model=PaidUsersResponse)
 def get_purchases(
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_customer),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_customer)],
 ):
     customer_id = actor.get("user_id") or actor.get("sub")
     entries = list_customer_purchases(db, customer_id=str(customer_id))

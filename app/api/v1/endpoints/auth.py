@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -30,42 +31,42 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/customer/login", status_code=status.HTTP_200_OK, response_model=LoginResponse)
-async def customer_login(payload: LoginRequest, db: Session = Depends(get_db)):
+async def customer_login(payload: LoginRequest, db: Annotated[Session, Depends(get_db)]):
     ttl = await issue_otp(db, "customer", payload)
     logger.info("Customer login OTP sent identifier=%s", payload.identifier)
     return success_response(message="OTP sent", data=[{"expires_in_minutes": ttl}])
 
 
 @router.post("/vendor/login", status_code=status.HTTP_200_OK, response_model=LoginResponse)
-async def vendor_login(payload: LoginRequest, db: Session = Depends(get_db)):
+async def vendor_login(payload: LoginRequest, db: Annotated[Session, Depends(get_db)]):
     ttl = await issue_otp(db, "vendor", payload)
     logger.info("Vendor login OTP sent identifier=%s", payload.identifier)
     return success_response(message="OTP sent", data=[{"expires_in_minutes": ttl}])
 
 
 @router.post("/customer/verify", status_code=status.HTTP_200_OK, response_model=VerifyResponse)
-async def customer_verify(payload: OTPVerifyRequest, db: Session = Depends(get_db)):
+async def customer_verify(payload: OTPVerifyRequest, db: Annotated[Session, Depends(get_db)]):
     tokens = verify_otp(db, "customer", payload)
     logger.info("Customer OTP validated identifier=%s", payload.identifier)
     return success_response(message="OTP verified", data=[{"identifier": payload.identifier, **tokens}])
 
 
 @router.post("/vendor/verify", status_code=status.HTTP_200_OK, response_model=VerifyResponse)
-async def vendor_verify(payload: OTPVerifyRequest, db: Session = Depends(get_db)):
+async def vendor_verify(payload: OTPVerifyRequest, db: Annotated[Session, Depends(get_db)]):
     tokens = verify_otp(db, "vendor", payload)
     logger.info("Vendor OTP validated identifier=%s", payload.identifier)
     return success_response(message="OTP verified", data=[{"identifier": payload.identifier, **tokens}])
 
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
-async def logout_user(payload: LogoutRequest, db: Session = Depends(get_db)):
+async def logout_user(payload: LogoutRequest, db: Annotated[Session, Depends(get_db)]):
     logout(db, payload.refresh_token)
     logger.info("Logout succeeded for provided refresh token")
     return success_response(message="Logged out", data=[])
 
 
 @router.post("/admin/login", status_code=status.HTTP_200_OK, response_model=AdminLoginResponse)
-async def admin_login_endpoint(payload: AdminLoginRequest, db: Session = Depends(get_db)):
+async def admin_login_endpoint(payload: AdminLoginRequest, db: Annotated[Session, Depends(get_db)]):
     tokens = admin_login(db, password=payload.password, username=payload.username, email=payload.email)
     logger.info("Admin login success username=%s email=%s", payload.username, payload.email)
     return success_response(message="Admin login", data=[tokens])
@@ -73,12 +74,12 @@ async def admin_login_endpoint(payload: AdminLoginRequest, db: Session = Depends
 
 @router.get("/admin/users", status_code=status.HTTP_200_OK, response_model=AdminUsersListResponse)
 async def admin_users_list(
-    role: str = Query(default="all", pattern="^(all|customer|vendor)$"),
-    search: str | None = Query(default=None, max_length=255),
-    page: int = Query(default=1, ge=1),
-    limit: int = Query(default=10, ge=1, le=100),
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
+    role: Annotated[str, Query(pattern="^(all|customer|vendor)$")] = "all",
+    search: Annotated[str | None, Query(max_length=255)] = None,
+    page: Annotated[int, Query(ge=1)] = 1,
+    limit: Annotated[int, Query(ge=1, le=100)] = 10,
 ):
     if actor.get("role") != "admin":
         raise HTTPException(
@@ -97,8 +98,8 @@ async def admin_users_list(
 )
 async def admin_vendor_ads_revenue(
     vendor_id: int,
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
 ):
     if actor.get("role") != "admin":
         raise HTTPException(
@@ -113,8 +114,8 @@ async def admin_vendor_ads_revenue(
 @router.patch("/customer/profile", status_code=status.HTTP_200_OK)
 async def update_customer_profile(
     payload: ProfileUpdateRequest,
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_customer),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_customer)],
 ):
     user_id = int(actor.get("user_id") or actor.get("sub"))
     user = db.query(User).filter(User.id == user_id).first()
@@ -180,8 +181,8 @@ async def update_customer_profile(
 @router.patch("/vendor/profile", status_code=status.HTTP_200_OK)
 async def update_vendor_profile(
     payload: ProfileUpdateRequest,
-    db: Session = Depends(get_db),
-    vendor_id: int = Depends(get_current_vendor_id),
+    db: Annotated[Session, Depends(get_db)],
+    vendor_id: Annotated[int, Depends(get_current_vendor_id)],
 ):
     vendor = db.query(VendorAccount).filter(VendorAccount.id == vendor_id).first()
     if not vendor:

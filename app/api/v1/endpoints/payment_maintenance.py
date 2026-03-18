@@ -1,4 +1,6 @@
 import logging
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -13,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 @router.post("/expire-pending", status_code=status.HTTP_200_OK)
 def expire_pending(
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
 ):
     # allow admin or vendor to trigger; vendors only affect their ads via deal_ref matching in service
     role = actor["role"]

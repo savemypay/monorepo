@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 @router.post("/register", status_code=status.HTTP_200_OK, response_model=GameRegisterResponse)
 def register(
     payload: GameRegisterRequest,
-    db: Session = Depends(get_db),
+    db: Annotated[Session, Depends(get_db)],
 ):
     data = register_game_user(
         db,
@@ -36,8 +37,8 @@ def register(
 @router.post("/score", status_code=status.HTTP_200_OK, response_model=GameScoreSubmitResponse)
 def submit_score(
     payload: GameScoreSubmitRequest,
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_game_user),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_game_user)],
 ):
     user_id = int(actor.get("user_id") or actor.get("sub"))
     data = submit_game_score(db, user_id=user_id, score=payload.score)
@@ -46,8 +47,8 @@ def submit_score(
 
 @router.get("/leaderboard", status_code=status.HTTP_200_OK, response_model=GameLeaderboardResponse)
 def leaderboard(
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_game_user),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_game_user)],
 ):
     _ = actor  # enforce auth
     entries = get_leaderboard(db, limit=20)

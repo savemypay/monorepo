@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Header, Request, status
 from sqlalchemy.orm import Session
@@ -16,8 +16,11 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 @router.post("/initiate", status_code=status.HTTP_200_OK, response_model=PaymentInitResponse)
 def initiate_payment_endpoint(
     payload: PaymentInitRequest,
-    db: Session = Depends(get_db),
-    idempotency_key: Optional[str] = Header(default=None, convert_underscores=False, alias=PAYMENT_IDEMPOTENCY_HEADER),
+    db: Annotated[Session, Depends(get_db)],
+    idempotency_key: Annotated[
+        Optional[str],
+        Header(convert_underscores=False, alias=PAYMENT_IDEMPOTENCY_HEADER),
+    ] = None,
 ):
     payment = initiate_payment(
         db,
@@ -32,7 +35,7 @@ def initiate_payment_endpoint(
 
 
 @router.post("/webhook", status_code=status.HTTP_200_OK)
-async def payment_webhook(request: Request, db: Session = Depends(get_db)):
+async def payment_webhook(request: Request, db: Annotated[Session, Depends(get_db)]):
     raw_body = await request.body()
     headers = dict(request.headers)
     handle_webhook(db, raw_body=raw_body, headers=headers)
@@ -42,9 +45,12 @@ async def payment_webhook(request: Request, db: Session = Depends(get_db)):
 @router.post("/token-pay/{ad_id}", status_code=status.HTTP_200_OK, response_model=PaymentInitResponse)
 def token_payment(
     ad_id: int,
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_customer),
-    idempotency_key: Optional[str] = Header(default=None, convert_underscores=False, alias=PAYMENT_IDEMPOTENCY_HEADER),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_customer)],
+    idempotency_key: Annotated[
+        Optional[str],
+        Header(convert_underscores=False, alias=PAYMENT_IDEMPOTENCY_HEADER),
+    ] = None,
 ):
     payment = initiate_token_payment(
         db,

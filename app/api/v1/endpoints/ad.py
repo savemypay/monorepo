@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -31,8 +31,8 @@ def _require_admin(actor: dict) -> None:
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=AdResponse)
 def create_ad_endpoint(
     payload: AdCreate,
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
 ):
     role = actor["role"]
     if role == "vendor":
@@ -50,16 +50,15 @@ def create_ad_endpoint(
 
 @router.get("", status_code=status.HTTP_200_OK, response_model=AdListResponse)
 def list_ads_endpoint(
-    db: Session = Depends(get_db),
-    vendor_id: Optional[int] = Query(default=None),
-    page: int = Query(default=1, ge=1),
-    limit: int = Query(default=10, ge=1, le=100),
-    status_filter: Optional[str] = Query(
-        default=None,
+    db: Annotated[Session, Depends(get_db)],
+    vendor_id: Annotated[Optional[int], Query()] = None,
+    page: Annotated[int, Query(ge=1)] = 1,
+    limit: Annotated[int, Query(ge=1, le=100)] = 10,
+    status_filter: Annotated[Optional[str], Query(
         alias="status",
         pattern="^(draft|active|filled|expired|canceled)$",
-    ),
-    actor: Optional[dict] = Depends(get_current_user_optional),
+    )] = None,
+    actor: Annotated[Optional[dict], Depends(get_current_user_optional)] = None,
 ):
     effective_vendor_id = vendor_id
     active_only = False
@@ -111,8 +110,8 @@ def list_ads_endpoint(
 @router.get("/{ad_id}", status_code=status.HTTP_200_OK, response_model=AdResponse)
 def get_ad_by_id_endpoint(
     ad_id: int,
-    db: Session = Depends(get_db),
-    actor: Optional[dict] = Depends(get_current_user_optional),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[Optional[dict], Depends(get_current_user_optional)] = None,
 ):
     if actor is None:
         ad = get_ad(db, ad_id, vendor_id=None)
@@ -144,8 +143,8 @@ def get_ad_by_id_endpoint(
 @router.post("/{ad_id}/publish", status_code=status.HTTP_200_OK, response_model=AdResponse)
 def publish_ad_endpoint(
     ad_id: int,
-    db: Session = Depends(get_db),
-    _: dict = Depends(get_current_admin),
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[dict, Depends(get_current_admin)],
 ):
     ad = publish_ad(db, ad_id, vendor_id=None)
     return success_response(message="Ad published", data=[ad])
@@ -154,8 +153,8 @@ def publish_ad_endpoint(
 @router.post("/{ad_id}/reject", status_code=status.HTTP_200_OK, response_model=AdResponse)
 def reject_ad_endpoint(
     ad_id: int,
-    db: Session = Depends(get_db),
-    _: dict = Depends(get_current_admin)
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[dict, Depends(get_current_admin)],
 ):
     ad = reject_ad(db, ad_id, vendor_id=None)
     return success_response(message="Ad rejected", data=[ad])
@@ -164,10 +163,10 @@ def reject_ad_endpoint(
 @router.post("/{ad_id}/images/presign", status_code=status.HTTP_200_OK)
 def presign_ad_image(
     ad_id: int,
-    filename: str = Query(..., description="Original filename"),
-    content_type: str = Query(..., description="MIME type"),
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    filename: Annotated[str, Query(description="Original filename")],
+    content_type: Annotated[str, Query(description="MIME type")],
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
 ):
     role = actor["role"]
     vendor_id = int(actor.get("vendor_id") or actor.get("sub")) if role == "vendor" else None
@@ -183,8 +182,8 @@ def presign_ad_image(
 def attach_ad_image(
     ad_id: int,
     payload: ImageAttachRequest,
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
 ):
     role = actor["role"]
     vendor_id = int(actor.get("vendor_id") or actor.get("sub")) if role == "vendor" else None
@@ -216,8 +215,8 @@ def attach_ad_image(
 def favorite_ad(
     ad_id: int,
     payload: FavoriteUpdateRequest,
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_customer),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_customer)],
 ):
     user_id = int(actor.get("user_id") or actor.get("sub"))
     result = set_ad_favorite(db, ad_id=ad_id, user_id=user_id, is_favorite=payload.is_favorite)

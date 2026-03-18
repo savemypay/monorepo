@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/interest", status_code=status.HTTP_201_CREATED)
-def create_vendor(payload: VendorCreate, db: Session = Depends(get_db)):
+def create_vendor(payload: VendorCreate, db: Annotated[Session, Depends(get_db)]):
     logger.info("Onboarding vendor email=%s phone=%s", payload.email, payload.phone_number)
     try:
         vendor = onboard_vendor(db, payload)

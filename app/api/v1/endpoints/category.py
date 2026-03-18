@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -9,7 +11,7 @@ router = APIRouter(prefix="/categories", tags=["categories"])
 
 
 @router.get("", status_code=status.HTTP_200_OK)
-def list_categories(db: Session = Depends(get_db)):
+def list_categories(db: Annotated[Session, Depends(get_db)]):
     categories = CategoryRepository.list_all(db)
     data = [
         {

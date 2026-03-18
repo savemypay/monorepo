@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
@@ -15,7 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("", status_code=status.HTTP_200_OK)
-def get_profile(db: Session = Depends(get_db), actor: dict = Depends(get_current_user)):
+def get_profile(
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_user)],
+):
     role = actor.get("role")
     if role == "customer":
         user = db.query(User).filter(User.id == int(actor.get("user_id") or actor.get("sub"))).first()

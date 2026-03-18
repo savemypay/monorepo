@@ -1,5 +1,6 @@
 import logging
 from datetime import date, timedelta
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -26,12 +27,12 @@ logger = logging.getLogger(__name__)
 
 @router.get("/user-onboarding-trend", status_code=status.HTTP_200_OK, response_model=OnboardingTrendResponse)
 def user_onboarding_trend(
-    granularity: str = Query(default="day", pattern="^(day|week|month|year)$"),
-    date_from: date | None = Query(default=None),
-    date_to: date | None = Query(default=None),
-    role: str = Query(default="customer", pattern="^(customer|vendor)$"),
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
+    granularity: Annotated[str, Query(pattern="^(day|week|month|year)$")] = "day",
+    date_from: Annotated[date | None, Query()] = None,
+    date_to: Annotated[date | None, Query()] = None,
+    role: Annotated[str, Query(pattern="^(customer|vendor)$")] = "customer",
 ):
     if actor.get("role") != "admin":
         raise HTTPException(
@@ -55,10 +56,10 @@ def user_onboarding_trend(
 
 @router.get("/ads-by-category", status_code=status.HTTP_200_OK, response_model=AdCategoryAnalyticsResponse)
 def ads_by_category(
-    category: str | None = Query(default=None),
-    vendor_id: int | None = Query(default=None),
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
+    category: Annotated[str | None, Query()] = None,
+    vendor_id: Annotated[int | None, Query()] = None,
 ):
     role = actor.get("role")
     if role == "vendor":
@@ -76,12 +77,12 @@ def ads_by_category(
 
 @router.get("/transactions-trend", status_code=status.HTTP_200_OK, response_model=TransactionsAnalyticsResponse)
 def transactions_trend(
-    granularity: str = Query(default="day", pattern="^(day|week|month|year)$"),
-    date_from: date | None = Query(default=None),
-    date_to: date | None = Query(default=None),
-    vendor_id: int | None = Query(default=None),
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
+    granularity: Annotated[str, Query(pattern="^(day|week|month|year)$")] = "day",
+    date_from: Annotated[date | None, Query()] = None,
+    date_to: Annotated[date | None, Query()] = None,
+    vendor_id: Annotated[int | None, Query()] = None,
 ):
     role = actor.get("role")
     if role == "vendor":
@@ -105,8 +106,8 @@ def transactions_trend(
 
 @router.get("/dashboard-overview", status_code=status.HTTP_200_OK, response_model=DashboardOverviewResponse)
 def dashboard_overview(
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
 ):
     if actor.get("role") != "admin":
         raise HTTPException(

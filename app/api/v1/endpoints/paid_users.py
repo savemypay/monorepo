@@ -1,6 +1,6 @@
 import logging
 from datetime import date
-from typing import Optional
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
@@ -21,9 +21,9 @@ logger = logging.getLogger(__name__)
 
 @router.get("/paid-users", status_code=status.HTTP_200_OK, response_model=PaidUsersResponse)
 def get_paid_users(
-    ad_id: Optional[int] = Query(default=None),
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
+    ad_id: Annotated[Optional[int], Query()] = None,
 ):
     role = actor["role"]
     vendor_id = int(actor.get("vendor_id") or actor.get("sub")) if role == "vendor" else None
@@ -33,9 +33,9 @@ def get_paid_users(
 
 @router.get("/dashboard-summary", status_code=status.HTTP_200_OK, response_model=DashboardSummaryResponse)
 def get_dashboard_metrics(
-    vendor_id: Optional[int] = Query(default=None),
-    db: Session = Depends(get_db),
-    actor: dict = Depends(get_current_admin_or_vendor),
+    db: Annotated[Session, Depends(get_db)],
+    actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
+    vendor_id: Annotated[Optional[int], Query()] = None,
 ):
     role = actor["role"]
     if role == "vendor":
@@ -49,11 +49,11 @@ def get_dashboard_metrics(
 
 @router.get("/customer-transactions", status_code=status.HTTP_200_OK, response_model=PaidUsersResponse)
 def get_customer_successful_transactions(
-    customer_id: int = Query(..., ge=1),
-    date_from: date | None = Query(default=None),
-    date_to: date | None = Query(default=None),
-    db: Session = Depends(get_db),
-    _: dict = Depends(get_current_admin),
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[dict, Depends(get_current_admin)],
+    customer_id: Annotated[int, Query(ge=1)],
+    date_from: Annotated[date | None, Query()] = None,
+    date_to: Annotated[date | None, Query()] = None,
 ):
     entries = list_customer_successful_transactions(
         db,

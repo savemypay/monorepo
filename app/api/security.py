@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
@@ -20,7 +22,7 @@ def decode_token(token: str) -> dict:
 
 
 def get_current_vendor_id(
-    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
 ) -> int:
     payload = decode_token(creds.credentials)
     if payload.get("role") != "vendor":
@@ -44,7 +46,7 @@ def get_current_vendor_id(
 
 
 def get_current_admin_or_vendor(
-    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
 ) -> dict:
     payload = decode_token(creds.credentials)
     role = payload.get("role")
@@ -56,7 +58,7 @@ def get_current_admin_or_vendor(
     return payload
 
 def get_current_admin(
-    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
 ) -> dict:
     payload = decode_token(creds.credentials)
     role = payload.get("role")
@@ -69,7 +71,7 @@ def get_current_admin(
 
 
 def get_current_user(
-    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
 ) -> dict:
     """Allow any authenticated role (customer/vendor/admin)."""
     return decode_token(creds.credentials)
@@ -77,7 +79,7 @@ def get_current_user(
 
 def get_current_user_optional(
     request: Request,
-    creds: HTTPAuthorizationCredentials | None = Depends(optional_bearer_scheme),
+    creds: Annotated[HTTPAuthorizationCredentials | None, Depends(optional_bearer_scheme)],
 ) -> dict | None:
     """Allow anonymous access, but decode token when present."""
     token: str | None = None
@@ -99,7 +101,7 @@ def get_current_user_optional(
 
 
 def get_current_customer(
-    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
 ) -> dict:
     payload = decode_token(creds.credentials)
     if payload.get("role") != "customer":
@@ -111,7 +113,7 @@ def get_current_customer(
 
 
 def get_current_game_user(
-    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
 ) -> dict:
     payload = decode_token(creds.credentials)
     if payload.get("role") != "game_user":
