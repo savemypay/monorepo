@@ -19,6 +19,8 @@ from app.notifications.factory import get_push_provider, get_realtime_provider
 logger = logging.getLogger(__name__)
 VALID_ACTOR_TYPES = {"customer", "vendor", "admin"}
 VALID_PLATFORMS = {"android", "ios", "web"}
+VALID_PUSH_PROVIDERS = {"firebase"}
+VALID_PUSH_CHANNELS = {"push"}
 
 
 def _now() -> datetime:
@@ -131,6 +133,7 @@ class NotificationService:
         return installation
 
     def register_push_token(self, payload: PushTokenRegistration) -> NotificationToken:
+        self._validate_push_token_payload(payload)
         installation = self._get_installation(payload.installation_id)
         now = _now()
         hashed = _token_hash(payload.token)
@@ -194,12 +197,17 @@ class NotificationService:
         self.db.refresh(token_row)
         return token_row
 
-    def deactivate_push_token(self, *, token: str, reason: str) -> None:
+    def deactivate_push_token(self, *, installation_id: str, token: str, reason: str) -> bool:
+        installation = self._get_installation(installation_id)
         hashed = _token_hash(token)
         now = _now()
-        (
+        updated = (
             self.db.query(NotificationToken)
-            .filter(NotificationToken.token_hash == hashed)
+            .filter(
+                NotificationToken.installation_db_id == installation.id,
+                NotificationToken.token_hash == hashed,
+                NotificationToken.is_active.is_(True),
+            )
             .update(
                 {
                     NotificationToken.is_active: False,
@@ -211,6 +219,7 @@ class NotificationService:
             )
         )
         self.db.commit()
+        return bool(updated)
 
     def upsert_preferences(self, payload: PreferenceUpdate) -> NotificationPreference:
         self._validate_preference_payload(payload)
@@ -410,6 +419,9 @@ class NotificationService:
         return actor_type
 
     def _validate_preference_payload(self, payload: PreferenceUpdate) -> None:
+        payload.installation_id = payload.installation_id.strip()
+        if not payload.installation_id:
+            raise ValueError("installation_id is required")
         for field_name in ("quiet_hours_start", "quiet_hours_end"):
             value = getattr(payload, field_name)
             if value is None:
@@ -421,6 +433,23 @@ class NotificationService:
                 raise ValueError(f"Invalid {field_name}; expected HH:MM")
             if not (0 <= int(hours) <= 23 and 0 <= int(minutes) <= 59):
                 raise ValueError(f"Invalid {field_name}; expected HH:MM")
+
+    def _validate_push_token_payload(self, payload: PushTokenRegistration) -> None:
+        payload.installation_id = payload.installation_id.strip()
+        if not payload.installation_id:
+            raise ValueError("installation_id is required")
+
+        payload.token = payload.token.strip()
+        if not payload.token:
+            raise ValueError("token is required")
+
+        payload.provider = payload.provider.strip().lower()
+        if payload.provider not in VALID_PUSH_PROVIDERS:
+            raise ValueError(f"Unsupported push provider: {payload.provider}")
+
+        payload.channel = payload.channel.strip().lower()
+        if payload.channel not in VALID_PUSH_CHANNELS:
+            raise ValueError(f"Unsupported push channel: {payload.channel}")
 
     def _create_delivery(
         self,

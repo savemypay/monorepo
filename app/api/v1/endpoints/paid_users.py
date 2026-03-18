@@ -24,10 +24,24 @@ def get_paid_users(
     db: Annotated[Session, Depends(get_db)],
     actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
     ad_id: Annotated[Optional[int], Query()] = None,
+    status_filter: Annotated[
+        Optional[str],
+        Query(alias="status", pattern="^(pending|requires_action|succeeded|failed|canceled)$"),
+    ] = None,
+    customer_id: Annotated[Optional[int], Query(ge=1)] = None,
+    customer_search: Annotated[Optional[str], Query(max_length=255)] = None,
 ):
     role = actor["role"]
     vendor_id = int(actor.get("vendor_id") or actor.get("sub")) if role == "vendor" else None
-    entries = list_paid_users(db, role=role, vendor_id=vendor_id, ad_id=ad_id)
+    entries = list_paid_users(
+        db,
+        role=role,
+        vendor_id=vendor_id,
+        ad_id=ad_id,
+        status_filter=status_filter,
+        customer_id=customer_id,
+        customer_search=customer_search,
+    )
     return success_response(message="Paid users fetched", data=entries)
 
 

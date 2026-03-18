@@ -3,7 +3,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from typing import List, Optional
 from decimal import Decimal
 
-from sqlalchemy import Integer, String, cast, func
+from sqlalchemy import Integer, String, cast, func, or_
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -32,8 +32,18 @@ def _months_ago(d: date, months: int) -> date:
     return date(year, month, day)
 
 
-def list_paid_users(db: Session, *, role: str, vendor_id: Optional[int], ad_id: Optional[int]) -> List[dict]:
-    q = db.query(Payment).filter(Payment.status == PaymentStatus.SUCCEEDED)
+def list_paid_users(
+    db: Session,
+    *,
+    role: str,
+    vendor_id: Optional[int],
+    ad_id: Optional[int],
+    status_filter: Optional[str] = None,
+    customer_id: Optional[int] = None,
+    customer_search: Optional[str] = None,
+) -> List[dict]:
+    effective_status = status_filter or PaymentStatus.SUCCEEDED
+    q = db.query(Payment).filter(Payment.status == effective_status)
 
     if ad_id is not None:
         q = q.filter(Payment.deal_ref == str(ad_id))
@@ -43,6 +53,24 @@ def list_paid_users(db: Session, *, role: str, vendor_id: Optional[int], ad_id: 
         q = (
             q.join(Ad, cast(Payment.deal_ref, Integer) == Ad.id)
             .filter(Ad.vendor_id == vendor_id)
+        )
+
+    if customer_id is not None:
+        q = q.filter(Payment.customer_ref == str(customer_id))
+
+    search_term = customer_search.strip() if customer_search else None
+    if search_term:
+        like_term = f"%{search_term}%"
+        q = (
+            q.outerjoin(User, cast(User.id, String) == Payment.customer_ref)
+            .filter(
+                or_(
+                    Payment.customer_ref.ilike(like_term),
+                    User.name.ilike(like_term),
+                    User.email.ilike(like_term),
+                    User.phone_number.ilike(like_term),
+                )
+            )
         )
 
     payments = q.order_by(Payment.created_at.desc()).all()
