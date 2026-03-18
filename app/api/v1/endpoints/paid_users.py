@@ -1,13 +1,18 @@
 import logging
+from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
-from app.api.security import get_current_admin_or_vendor
+from app.api.security import get_current_admin, get_current_admin_or_vendor
 from app.models.payment import DashboardSummaryResponse, PaidUsersResponse
-from app.services.paid_users import get_dashboard_summary, list_paid_users
+from app.services.paid_users import (
+    get_dashboard_summary,
+    list_customer_successful_transactions,
+    list_paid_users,
+)
 from app.utils.response import success_response
 
 router = APIRouter(prefix="/payments", tags=["payments"])
@@ -40,3 +45,20 @@ def get_dashboard_metrics(
 
     stats = get_dashboard_summary(db, vendor_id=effective_vendor_id)
     return success_response(message="Dashboard summary fetched", data=[stats])
+
+
+@router.get("/customer-transactions", status_code=status.HTTP_200_OK, response_model=PaidUsersResponse)
+def get_customer_successful_transactions(
+    customer_id: int = Query(..., ge=1),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
+    db: Session = Depends(get_db),
+    _: dict = Depends(get_current_admin),
+):
+    entries = list_customer_successful_transactions(
+        db,
+        customer_id=str(customer_id),
+        date_from=date_from,
+        date_to=date_to,
+    )
+    return success_response(message="Customer transactions fetched", data=entries)

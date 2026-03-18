@@ -28,6 +28,14 @@ def _validate_publishable(ad: Ad):
         )
 
 
+def _validate_rejectable(ad: Ad):
+    if ad.status != "draft":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="Ad is not in draft state", code="invalid_state"),
+        )
+
+
 def create_ad(db: Session, vendor_id: int, payload: AdCreate) -> Ad:
     tiers_payload = [
         {
@@ -64,6 +72,8 @@ def list_ads(
     active_only: bool = False,
     customer_user_id: int | None = None,
     status: str | None = None,
+    page: int = 1,
+    limit: int = 10,
 ) -> List[Ad]:
     q = db.query(Ad)
     if vendor_id is not None:
@@ -72,7 +82,8 @@ def list_ads(
         q = q.filter(Ad.status == status)
     if active_only:
         q = q.filter(Ad.status == "active")
-    ads = q.order_by(Ad.created_at.desc()).all()
+    offset = (page - 1) * limit
+    ads = q.order_by(Ad.created_at.desc()).offset(offset).limit(limit).all()
 
     favorite_ids: set[int] = set()
     if customer_user_id is not None and ads:
@@ -112,6 +123,23 @@ def publish_ad(db: Session, ad_id: int, vendor_id: int | None) -> Ad:
         )
     _validate_publishable(ad)
     ad.status = "active"
+    db.add(ad)
+    db.commit()
+    db.refresh(ad)
+    _annotate_slots(ad)
+    return ad
+
+
+def reject_ad(db: Session, ad_id: int, vendor_id: int | None) -> Ad:
+    ad = get_ad(db, ad_id, vendor_id)
+    if not ad:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error_response(message="Ad not found", code="ad_not_found"),
+        )
+    _validate_rejectable(ad)
+    # The domain does not currently define a separate "rejected" status.
+    ad.status = "canceled"
     db.add(ad)
     db.commit()
     db.refresh(ad)

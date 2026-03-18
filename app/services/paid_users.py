@@ -1,13 +1,35 @@
+from calendar import monthrange
+from datetime import date, datetime, time, timedelta, timezone
 from typing import List, Optional
 from decimal import Decimal
 
 from sqlalchemy import Integer, String, cast, func
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.entities.ad import Ad
 from app.entities.payment import Payment
 from app.entities.user import User
 from app.payments.base import PaymentStatus
+from app.utils.response import error_response
+
+
+def _to_utc_start(d: date) -> datetime:
+    return datetime.combine(d, time.min).replace(tzinfo=timezone.utc)
+
+
+def _to_utc_end_exclusive(d: date) -> datetime:
+    return datetime.combine(d + timedelta(days=1), time.min).replace(tzinfo=timezone.utc)
+
+
+def _months_ago(d: date, months: int) -> date:
+    month = d.month - months
+    year = d.year
+    while month <= 0:
+        month += 12
+        year -= 1
+    day = min(d.day, monthrange(year, month)[1])
+    return date(year, month, day)
 
 
 def list_paid_users(db: Session, *, role: str, vendor_id: Optional[int], ad_id: Optional[int]) -> List[dict]:
@@ -52,6 +74,82 @@ def list_paid_users(db: Session, *, role: str, vendor_id: Optional[int], ad_id: 
         }
         for p in payments
     ]
+
+
+def list_customer_successful_transactions(
+    db: Session,
+    *,
+    customer_id: str,
+    date_from: date | None = None,
+    date_to: date | None = None,
+) -> List[dict]:
+    today_utc = datetime.now(timezone.utc).date()
+    effective_to = date_to or today_utc
+    effective_from = date_from or _months_ago(effective_to, 6)
+
+    if effective_from > effective_to:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(message="date_from must be <= date_to", code="validation_error"),
+        )
+
+    payments = (
+        db.query(Payment)
+        .join(Ad, cast(Ad.id, String) == Payment.deal_ref)
+        .filter(
+            Payment.status == PaymentStatus.SUCCEEDED,
+            Payment.customer_ref == customer_id,
+            Payment.created_at >= _to_utc_start(effective_from),
+            Payment.created_at < _to_utc_end_exclusive(effective_to),
+        )
+        .order_by(Payment.created_at.desc())
+        .all()
+    )
+
+    ad_ids = [int(p.deal_ref) for p in payments if p.deal_ref and p.deal_ref.isdigit()]
+    ads = (
+        db.query(Ad)
+        .filter(Ad.id.in_(ad_ids))
+        .all()
+        if ad_ids
+        else []
+    )
+    ad_map = {a.id: a for a in ads}
+
+    user = None
+    if customer_id.isdigit():
+        user = db.query(User).filter(User.id == int(customer_id)).first()
+
+    entries: list[dict] = []
+    for p in payments:
+        ad = ad_map.get(int(p.deal_ref)) if p.deal_ref and p.deal_ref.isdigit() else None
+        entries.append(
+            {
+                "payment_id": p.id,
+                "order_id": p.provider_order_id,
+                "deal_ref": p.deal_ref,
+                "customer_ref": p.customer_ref,
+                "amount": p.amount,
+                "currency": p.currency,
+                "status": p.status,
+                "created_at": p.created_at,
+                "ad": {
+                    "id": ad.id,
+                    "title": ad.title,
+                    "product_name": ad.product_name,
+                    "status": ad.status,
+                    "valid_from": ad.valid_from,
+                    "valid_to": ad.valid_to,
+                    "images": ad.images,
+                }
+                if ad
+                else None,
+                "user_email": user.email if user else None,
+                "user_phone_number": user.phone_number if user else None,
+                "user_name": getattr(user, "name", None) if user else None,
+            }
+        )
+    return entries
 
 
 def get_dashboard_summary(db: Session, vendor_id: Optional[int]) -> dict:

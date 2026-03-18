@@ -72,11 +72,16 @@ def list_admin_users(
     *,
     role: Literal["all", "customer", "vendor"] = "all",
     search: str | None = None,
+    page: int = 1,
+    limit: int = 10,
 ) -> dict:
     customers: list[dict] = []
     vendors: list[dict] = []
     search_term = search.strip() if search else None
     pattern = f"%{search_term}%" if search_term else None
+    offset = (page - 1) * limit
+    total_customers = 0
+    total_vendors = 0
 
     if role in ("all", "customer"):
         q = db.query(User).filter(User.role == "customer")
@@ -88,7 +93,8 @@ def list_admin_users(
                     User.phone_number.ilike(pattern),
                 )
             )
-        rows = q.order_by(User.created_at.desc()).all()
+        total_customers = q.count()
+        rows = q.order_by(User.created_at.desc()).offset(offset).limit(limit).all()
         customers = [
             {
                 "id": row.id,
@@ -113,7 +119,8 @@ def list_admin_users(
                     VendorAccount.category.ilike(pattern),
                 )
             )
-        rows = q.order_by(VendorAccount.created_at.desc()).all()
+        total_vendors = q.count()
+        rows = q.order_by(VendorAccount.created_at.desc()).offset(offset).limit(limit).all()
         vendors = [
             {
                 "id": row.id,
@@ -127,11 +134,10 @@ def list_admin_users(
             for row in rows
         ]
 
-    total_customers = len(customers) if role in ("all", "customer") else 0
-    total_vendors = len(vendors) if role in ("all", "vendor") else 0
-
     return {
         "role_filter": role,
+        "page": page,
+        "limit": limit,
         "total_customers": total_customers,
         "total_vendors": total_vendors,
         "total_count": total_customers + total_vendors,

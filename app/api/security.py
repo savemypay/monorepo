@@ -55,6 +55,18 @@ def get_current_admin_or_vendor(
         )
     return payload
 
+def get_current_admin(
+    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> dict:
+    payload = decode_token(creds.credentials)
+    role = payload.get("role")
+    if role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=error_response(message="Admin token required", code="invalid_token"),
+        )
+    return payload
+
 
 def get_current_user(
     creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),

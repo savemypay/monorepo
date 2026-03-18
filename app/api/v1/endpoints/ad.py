@@ -9,14 +9,23 @@ from app.api.security import (
     get_current_admin_or_vendor,
     get_current_customer,
     get_current_user_optional,
+    get_current_admin
 )
 from app.models.ad import AdCreate, AdListResponse, AdResponse, ImageAttachRequest, FavoriteUpdateRequest
-from app.services.ad import create_ad, list_ads, get_ad, publish_ad, set_ad_favorite
+from app.services.ad import create_ad, list_ads, get_ad, publish_ad, reject_ad, set_ad_favorite
 from app.services.s3 import generate_presigned_upload
 from app.utils.response import error_response, success_response
 
 router = APIRouter(prefix="/ads", tags=["ads"])
 logger = logging.getLogger(__name__)
+
+
+def _require_admin(actor: dict) -> None:
+    if actor.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=error_response(message="Only admin can perform this action", code="forbidden"),
+        )
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=AdResponse)
@@ -43,6 +52,8 @@ def create_ad_endpoint(
 def list_ads_endpoint(
     db: Session = Depends(get_db),
     vendor_id: Optional[int] = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=10, ge=1, le=100),
     status_filter: Optional[str] = Query(
         default=None,
         alias="status",
@@ -91,6 +102,8 @@ def list_ads_endpoint(
         active_only=active_only,
         customer_user_id=customer_user_id,
         status=effective_status,
+        page=page,
+        limit=limit,
     )
     return success_response(message="Ads fetched", data=ads)
 
@@ -132,16 +145,20 @@ def get_ad_by_id_endpoint(
 def publish_ad_endpoint(
     ad_id: int,
     db: Session = Depends(get_db),
-    # actor: dict = Depends(get_current_admin_or_vendor),
+    _: dict = Depends(get_current_admin),
 ):
-    # role = actor["role"]
-    # if role != "admin":
-    #     raise HTTPException(
-    #         status_code=status.HTTP_403_FORBIDDEN,
-    #         detail="Only admin can publish ads",
-    #     )
     ad = publish_ad(db, ad_id, vendor_id=None)
     return success_response(message="Ad published", data=[ad])
+
+
+@router.post("/{ad_id}/reject", status_code=status.HTTP_200_OK, response_model=AdResponse)
+def reject_ad_endpoint(
+    ad_id: int,
+    db: Session = Depends(get_db),
+    _: dict = Depends(get_current_admin)
+):
+    ad = reject_ad(db, ad_id, vendor_id=None)
+    return success_response(message="Ad rejected", data=[ad])
 
 
 @router.post("/{ad_id}/images/presign", status_code=status.HTTP_200_OK)

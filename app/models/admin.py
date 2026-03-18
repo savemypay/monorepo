@@ -43,6 +43,8 @@ class AdminUserEntry(BaseModel):
 
 class AdminUsersListData(BaseModel):
     role_filter: Literal["all", "customer", "vendor"]
+    page: int
+    limit: int
     total_customers: int
     total_vendors: int
     total_count: int
