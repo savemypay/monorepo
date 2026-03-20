@@ -6,13 +6,26 @@ from typing import BinaryIO
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
-from app.core.config import AWS_REGION, S3_BUCKET, S3_PUBLIC_BASE_URL
+from app.core.config import (
+    AWS_S3_ACCESS_KEY_ID,
+    AWS_REGION,
+    AWS_S3_SECRET_ACCESS_KEY,
+    AWS_SESSION_TOKEN,
+    S3_BUCKET,
+    S3_PUBLIC_BASE_URL,
+)
 
 logger = logging.getLogger(__name__)
 
 
 def _get_s3_client():
-    return boto3.client("s3", region_name=AWS_REGION)
+    client_kwargs = {"region_name": AWS_REGION}
+    if AWS_S3_ACCESS_KEY_ID and AWS_S3_SECRET_ACCESS_KEY:
+        client_kwargs["aws_access_key_id"] = AWS_S3_ACCESS_KEY_ID
+        client_kwargs["aws_secret_access_key"] = AWS_S3_SECRET_ACCESS_KEY
+        if AWS_SESSION_TOKEN:
+            client_kwargs["aws_session_token"] = AWS_SESSION_TOKEN
+    return boto3.client("s3", **client_kwargs)
 
 
 def _build_object_key(prefix: str, filename: str) -> str:

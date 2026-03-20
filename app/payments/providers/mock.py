@@ -35,7 +35,7 @@ class MockPaymentProvider(PaymentProvider):
             provider_order_id=provider_order_id,
             status=PaymentStatus.SUCCEEDED,
             amount=amount or 0,
-            currency="USD",
+            currency="INR",
             raw={"captured": True},
         )
 
@@ -44,7 +44,7 @@ class MockPaymentProvider(PaymentProvider):
             provider_order_id=provider_order_id,
             status=PaymentStatus.CANCELED,
             amount=0,
-            currency="USD",
+            currency="INR",
             raw={"canceled": True},
         )
 
@@ -53,7 +53,7 @@ class MockPaymentProvider(PaymentProvider):
             provider_order_id=provider_order_id,
             status=PaymentStatus.SUCCEEDED,
             amount=amount or 0,
-            currency="USD",
+            currency="INR",
             raw={"refunded": True, "reason": reason},
         )
 
@@ -64,7 +64,7 @@ class MockPaymentProvider(PaymentProvider):
             provider_order_id="mock_webhook",
             status=PaymentStatus.SUCCEEDED,
             amount=0,
-            currency="USD",
+            currency="INR",
             type="mock.event",
             raw=payload,
         )
