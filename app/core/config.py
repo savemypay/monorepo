@@ -61,7 +61,7 @@ GAME_LEADERBOARD_CACHE_TTL_SECONDS = int(os.getenv("GAME_LEADERBOARD_CACHE_TTL_S
 # Payment providers
 PAYMENT_PROVIDER = os.getenv("PAYMENT_PROVIDER", "mock")  # options: stripe, razorpay, adyen, mock
 PAYMENT_IDEMPOTENCY_HEADER = os.getenv("PAYMENT_IDEMPOTENCY_HEADER", "Idempotency-Key")
-PAYMENT_CURRENCY = os.getenv("PAYMENT_CURRENCY", "USD")
+PAYMENT_CURRENCY = os.getenv("PAYMENT_CURRENCY", "INR")
 
 # Stripe settings
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY", "")

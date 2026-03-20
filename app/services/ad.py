@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.entities.ad import Ad
 from app.entities.ad_favorite import AdFavorite
 from app.entities.ad_tier import AdTier
+from app.entities.vendor_account import VendorAccount
 from app.models.ad import AdCreate
 from app.repositories.ad import AdRepository
 from app.utils.response import error_response
@@ -36,7 +37,21 @@ def _validate_rejectable(ad: Ad):
         )
 
 
+def _validate_vendor_exists(db: Session, vendor_id: int) -> None:
+    vendor_exists = (
+        db.query(VendorAccount.id)
+        .filter(VendorAccount.id == vendor_id)
+        .first()
+    )
+    if not vendor_exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error_response(message="Vendor not found", code="vendor_not_found"),
+        )
+
+
 def create_ad(db: Session, vendor_id: int, payload: AdCreate) -> Ad:
+    _validate_vendor_exists(db, vendor_id)
     tiers_payload = [
         {
             "seq": t.seq,
