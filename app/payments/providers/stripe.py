@@ -147,7 +147,7 @@ class StripePaymentProvider(PaymentProvider):
         obj = event["data"]["object"]
         provider_order_id = obj.get("payment_intent") or obj.get("id")
         amount = obj.get("amount_received") or obj.get("amount") or 0
-        currency = obj.get("currency") or "usd"
+        currency = obj.get("currency") or "INR"
         status = _map_status(obj) if hasattr(obj, "status") else PaymentStatus.PENDING
         return WebhookEvent(
             provider_order_id=provider_order_id,
