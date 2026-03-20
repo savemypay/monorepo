@@ -6,6 +6,7 @@ import {
   CreditCard,
   Gift,
   HelpCircle,
+  Heart,
   History,
   Settings,
   Shield,
@@ -26,6 +27,7 @@ import {
 const ICON_MAP: Record<CustomerAccountIconKey, LucideIcon> = {
   settings: Settings,
   orders: ShoppingBag,
+  heart: Heart,
   earnings: Wallet,
   payments: CreditCard,
   history: History,

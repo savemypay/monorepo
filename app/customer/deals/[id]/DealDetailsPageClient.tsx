@@ -71,7 +71,7 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
       setErrorMessage(null);
 
       try {
-        const selected = await getAdById(id);
+        const selected = await getAdById(id, accessToken);
 
         if (!isCancelled) {
           if (!selected) {
@@ -95,7 +95,7 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
 
     loadDeal();
     return () => { isCancelled = true; };
-  }, [id]);
+  }, [id, accessToken]);
 
   useEffect(() => {
     if (paymentResultModal?.status !== "success") return;

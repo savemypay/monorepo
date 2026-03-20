@@ -1,6 +1,7 @@
 export type CustomerAccountSectionSlug =
   | "profile-settings"
   | "my-orders"
+  | "wishlist"
   | "my-earnings"
   | "payments"
   | "payment-history"
@@ -14,6 +15,7 @@ export type CustomerAccountSectionSlug =
 export type CustomerAccountIconKey =
   | "settings"
   | "orders"
+  | "heart"
   | "earnings"
   | "payments"
   | "history"
@@ -41,6 +43,7 @@ export const CUSTOMER_ACCOUNT_SECTIONS: CustomerAccountSection[] = [
     items: [
       { slug: "profile-settings", label: "Profile Settings", icon: "settings" },
       { slug: "my-orders", label: "My Orders", icon: "orders" },
+      { slug: "wishlist", label: "Wishlist", icon: "heart" },
     ],
   },
   {
@@ -89,6 +92,10 @@ export const CUSTOMER_ACCOUNT_META: Record<CustomerAccountSectionSlug, { title: 
   "my-orders": {
     title: "My Orders | SaveMyPay",
     description: "Track all your purchased deals, payment status, and order references in one place.",
+  },
+  wishlist: {
+    title: "Wishlist | SaveMyPay",
+    description: "See all deals you marked as favorites and revisit them quickly from your account.",
   },
   "my-earnings": {
     title: "My Earnings | SaveMyPay",

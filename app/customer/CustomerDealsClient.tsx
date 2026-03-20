@@ -4,6 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DealCard from "@/components/DealCard";
 import { Ad, getAds } from "@/lib/api/ads";
+import { useAuthStore } from "@/lib/store/authStore";
+import {
+  getBrowserNotificationPermission,
+  registerBrowserPushToken,
+  requestBrowserNotificationPermission,
+} from "@/lib/notifications/firebase";
 
 type DealViewModel = {
   id: number;
@@ -19,6 +25,7 @@ type DealViewModel = {
 };
 
 const FALLBACK_IMAGE = "/assets/Tesla-Model-Y-1-1160x652.webp";
+const CUSTOMER_NOTIFICATION_PROMPT_KEY = "customer-notification-prompted";
 
 function formatPrice(value: number) {
   return `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(value)}`;
@@ -46,10 +53,15 @@ function formatTimeLeft(validTo: string) {
   return `${totalDays} days`;
 }
 
-function formatImage(images: string[]) {
-  if (!images?.length) return FALLBACK_IMAGE;
-  const image = images[0];
+function formatImage(images: string[] | null | undefined) {
+  if (!Array.isArray(images) || images.length === 0) return FALLBACK_IMAGE;
+
+  const image = images[0]?.trim();
   if (!image) return FALLBACK_IMAGE;
+
+  if (image.startsWith("data:image/")) {
+    return FALLBACK_IMAGE;
+  }
 
   if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/")) {
     return image;
@@ -77,27 +89,27 @@ function CustomerDealsLoading() {
   return (
     <div className="space-y-8">
       <div>
-        <div className="h-6 w-40 bg-slate-200 rounded mb-4 animate-pulse" />
+        <div className="mb-4 h-6 w-40 animate-pulse rounded bg-slate-200" />
         <div className="flex items-center gap-3 overflow-x-auto pb-4">
           {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="h-9 w-24 bg-slate-200 rounded-full animate-pulse" />
+            <div key={index} className="h-9 w-24 animate-pulse rounded-full bg-slate-200" />
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6 md:gap-8 bg-[#f5f5f5]">
+      <div className="grid grid-cols-1 gap-6 bg-[#f5f5f5] md:grid-cols-2 md:gap-8 lg:grid-cols-4 xl:grid-cols-4">
         {Array.from({ length: 8 }).map((_, index) => (
-          <div key={index} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
+          <div key={index} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm animate-pulse">
             <div className="h-40 w-full bg-slate-200" />
-            <div className="p-5 space-y-4">
-              <div className="h-5 w-3/4 bg-slate-200 rounded" />
+            <div className="space-y-4 p-5">
+              <div className="h-5 w-3/4 rounded bg-slate-200" />
               <div className="space-y-2">
-                <div className="h-2 w-full bg-slate-200 rounded" />
-                <div className="h-2 w-2/3 bg-slate-200 rounded" />
+                <div className="h-2 w-full rounded bg-slate-200" />
+                <div className="h-2 w-2/3 rounded bg-slate-200" />
               </div>
               <div className="flex items-end justify-between pt-2">
-                <div className="h-6 w-24 bg-slate-200 rounded" />
-                <div className="h-8 w-8 bg-slate-200 rounded-full" />
+                <div className="h-6 w-24 rounded bg-slate-200" />
+                <div className="h-8 w-8 rounded-full bg-slate-200" />
               </div>
             </div>
           </div>
@@ -110,6 +122,7 @@ function CustomerDealsLoading() {
 export default function CustomerDealsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { accessToken, hasHydrated } = useAuthStore();
 
   const [allDeals, setAllDeals] = useState<DealViewModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -123,7 +136,7 @@ export default function CustomerDealsClient() {
       setErrorMessage(null);
 
       try {
-        const ads = await getAds();
+        const ads = await getAds(accessToken);
         const mappedDeals = ads
           .filter((ad) => String(ad.status).toLowerCase() === "active")
           .map(mapAdToCard);
@@ -144,12 +157,42 @@ export default function CustomerDealsClient() {
       }
     }
 
-    loadDeals();
+    void loadDeals();
 
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!hasHydrated || typeof window === "undefined") return;
+
+    const permission = getBrowserNotificationPermission();
+    if (permission === "unsupported" || permission === "unavailable" || permission === "denied") {
+      return;
+    }
+
+    const hasPrompted = window.sessionStorage.getItem(CUSTOMER_NOTIFICATION_PROMPT_KEY) === "true";
+
+    void (async () => {
+      try {
+        if (permission === "default" && !hasPrompted) {
+          window.sessionStorage.setItem(CUSTOMER_NOTIFICATION_PROMPT_KEY, "true");
+          const nextPermission = await requestBrowserNotificationPermission();
+          if (nextPermission === "granted" && accessToken) {
+            await registerBrowserPushToken(accessToken);
+          }
+          return;
+        }
+
+        if (permission === "granted" && accessToken) {
+          await registerBrowserPushToken(accessToken).catch(() => null);
+        }
+      } catch {
+        // Permission prompt should not block customer deals browsing.
+      }
+    })();
+  }, [accessToken, hasHydrated]);
 
   const query = (searchParams.get("q") || "").trim().toLowerCase();
   const selectedCategoryParam = searchParams.get("category") || "All Deals";
@@ -191,16 +234,16 @@ export default function CustomerDealsClient() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-medium mb-2 md:mb-4 text-xl text-[#163B63]">Top Categories</h1>
-        <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide mask-fade-right">
+        <h1 className="mb-2 text-xl font-medium text-[#163B63] md:mb-4">Top Categories</h1>
+        <div className="mask-fade-right flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => updateCategoryFilter(cat)}
-              className={`px-6 py-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-200 border ${
+              className={`rounded-full border px-6 py-2 whitespace-nowrap text-sm font-semibold transition-all duration-200 ${
                 activeCategory === cat
-                  ? "bg-[#163B63] text-white border-gray-900 shadow-md transform"
-                  : "bg-white border-gray-200 text-gray-600 hover:border-[#122E4E] hover:bg-gray-50 hover:text-[#163B63]"
+                  ? "transform border-gray-900 bg-[#163B63] text-white shadow-md"
+                  : "border-gray-200 bg-white text-gray-600 hover:border-[#122E4E] hover:bg-gray-50 hover:text-[#163B63]"
               }`}
             >
               {cat}
@@ -216,7 +259,7 @@ export default function CustomerDealsClient() {
       )}
 
       {!errorMessage && filteredDeals.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6 md:gap-7 bg-[#f5f5f5]">
+        <div className="grid grid-cols-1 gap-6 bg-[#f5f5f5] md:grid-cols-2 md:gap-7 lg:grid-cols-4 xl:grid-cols-4">
           {filteredDeals.map((deal) => (
             <DealCard key={deal.id} {...deal} />
           ))}
@@ -233,9 +276,7 @@ export default function CustomerDealsClient() {
       {!errorMessage && allDeals.length > 0 && filteredDeals.length === 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center">
           <h3 className="text-lg font-semibold text-slate-900">No matching deals found</h3>
-          <p className="mt-2 text-sm text-slate-500">
-            Try another search term or switch to a different category.
-          </p>
+          <p className="mt-2 text-sm text-slate-500">Try another search term or switch to a different category.</p>
         </div>
       )}
     </div>

@@ -26,7 +26,7 @@ export interface Ad {
   slots_remaining: number;
   slots_sold: number;
   status: string;
-  images: string[];
+  images: string[] | null;
   description: string;
   terms: string;
   valid_from: string;
@@ -61,13 +61,23 @@ function extractErrorMessage(data: unknown, fallback: string) {
   return fallback;
 }
 
-export async function getAds(): Promise<Ad[]> {
+function buildAdsHeaders(accessToken?: string | null) {
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
+  });
+
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  return headers;
+}
+
+export async function getAds(accessToken?: string | null): Promise<Ad[]> {
   const response = await fetch(`${resolveBaseUrl()}/api/v1/ads`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "ngrok-skip-browser-warning": "true",
-    },
+    headers: buildAdsHeaders(accessToken),
     cache: "no-store",
   });
 
@@ -90,17 +100,14 @@ export async function getAds(): Promise<Ad[]> {
   return Array.isArray(parsed.data) ? parsed.data : [];
 }
 
-export async function getAdById(adId: string | number): Promise<Ad | null> {
+export async function getAdById(adId: string | number, accessToken?: string | null): Promise<Ad | null> {
   if (adId === "" || adId === null || adId === undefined) {
     throw new Error("Ad id is required");
   }
 
   const response = await fetch(`${resolveBaseUrl()}/api/v1/ads/${encodeURIComponent(String(adId))}`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "ngrok-skip-browser-warning": "true",
-    },
+    headers: buildAdsHeaders(accessToken),
     cache: "no-store",
   });
 
