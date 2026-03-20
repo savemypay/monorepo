@@ -52,8 +52,13 @@ export async function apiRequest<T>(
   }
 
   const requestHeaders = new Headers(headers);
-  requestHeaders.set("Content-Type", "application/json");
   requestHeaders.set("ngrok-skip-browser-warning", "true");
+
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+
+  if (!isFormData) {
+    requestHeaders.set("Content-Type", "application/json");
+  }
 
   if (auth) {
     const token = getAccessTokenFromStorage();
@@ -67,7 +72,12 @@ export async function apiRequest<T>(
   const response = await fetch(buildUrl(endpoint, query), {
     method,
     headers: requestHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body:
+      body === undefined
+        ? undefined
+        : isFormData
+          ? (body as FormData)
+          : JSON.stringify(body),
   });
 
   let data: unknown;

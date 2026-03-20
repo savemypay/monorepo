@@ -4,10 +4,9 @@ import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { Plus, Trash2, Upload, Image as ImageIcon, Calendar, Layers, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useVendorStore } from '@/lib/store/authStore';
-import { createDeal } from '@/lib/api/deals';
+import { createDealWithImages } from '@/lib/api/deals';
 import Image from 'next/image';
 
-// --- Interfaces ---
 interface DiscountTier {
   quantity: string;
   discount: string;
@@ -78,15 +77,6 @@ export default function CreatePoolForm() {
       previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview));
     };
   }, []);
-
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -215,8 +205,6 @@ export default function CreatePoolForm() {
         throw new Error("Vendor not found. Please login again.");
       }
 
-      const imageStrings = await Promise.all(images.map(file => fileToBase64(file)));
-
       const formattedTiers = tiers.map((tier, index) => ({
         seq: index + 1,
         qty: Number(tier.quantity),
@@ -224,25 +212,22 @@ export default function CreatePoolForm() {
         label: `Tier ${index + 1}`
       }));
 
-      const payload = {
+      await createDealWithImages({
         title: form.title,
         product_name: form.productName,
         category: form.category,
         original_price: Number(form.originalPrice),
         total_qty: Number(form.minBuyers),
         tiers: formattedTiers,
-        images: imageStrings,
+        images,
         description: form.description,
         terms: form.terms,
         valid_from: new Date(form.startDate).toISOString(),
         valid_to: new Date(form.endDate).toISOString(),
         vendor_id: vendorId,
         token_amount: Number(form.tokenAmount)
-      };
-
-      await createDeal(payload);
+      });
       setIsSubmitted(true);
-
     } catch (err: unknown) {
       setGlobalError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -290,47 +275,47 @@ export default function CreatePoolForm() {
               <Layers size={16} className="text-[#1CA7A6]" /> Basic Details
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Offer Title <span className="text-red-500">*</span></label>
-                  <input name="title" value={form.title} onChange={handleInputChange} type="text" className={getInputClass(!!errors.title)} placeholder="e.g. Bulk purchase offer" />
-                  {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Offer Title <span className="text-red-500">*</span></label>
+                <input name="title" value={form.title} onChange={handleInputChange} type="text" className={getInputClass(!!errors.title)} placeholder="e.g. Bulk purchase offer" />
+                {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Product Name <span className="text-red-500">*</span></label>
+                <input name="productName" value={form.productName} onChange={handleInputChange} type="text" className={getInputClass(!!errors.productName)} placeholder="e.g. 2024 Tesla Model Y" />
+                {errors.productName && <p className="text-xs text-red-500 mt-1">{errors.productName}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
+                <select name="category" value={form.category} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-2.5 bg-white outline-none focus:border-[#168F8E] transition-all">
+                  <option>Automotive</option>
+                  <option>Real Estate</option>
+                  <option>Electronics</option>
+                  <option>Insurance</option>
+                  <option>Travel</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Original Price <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
+                  <input name="originalPrice" value={form.originalPrice} onChange={handleInputChange} type="text" inputMode="numeric" pattern="[0-9]*" className={`${getInputClass(!!errors.originalPrice)} pl-8`} placeholder="50000" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Product Name <span className="text-red-500">*</span></label>
-                  <input name="productName" value={form.productName} onChange={handleInputChange} type="text" className={getInputClass(!!errors.productName)} placeholder="e.g. 2024 Tesla Model Y" />
-                  {errors.productName && <p className="text-xs text-red-500 mt-1">{errors.productName}</p>}
+                {errors.originalPrice && <p className="text-xs text-red-500 mt-1">{errors.originalPrice}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Token Amount <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
+                  <input name="tokenAmount" value={form.tokenAmount} onChange={handleInputChange} type="text" inputMode="numeric" pattern="[0-9]*" className={`${getInputClass(!!errors.tokenAmount)} pl-8`} placeholder="5000" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
-                  <select name="category" value={form.category} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-2.5 bg-white outline-none focus:border-[#168F8E] transition-all">
-                    <option>Automotive</option>
-                    <option>Real Estate</option>
-                    <option>Electronics</option>
-                    <option>Insurance</option>
-                    <option>Travel</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Original Price <span className="text-red-500">*</span></label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
-                    <input name="originalPrice" value={form.originalPrice} onChange={handleInputChange} type="text" inputMode="numeric" pattern="[0-9]*" className={`${getInputClass(!!errors.originalPrice)} pl-8`} placeholder="50000" />
-                  </div>
-                  {errors.originalPrice && <p className="text-xs text-red-500 mt-1">{errors.originalPrice}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Token Amount <span className="text-red-500">*</span></label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
-                    <input name="tokenAmount" value={form.tokenAmount} onChange={handleInputChange} type="text" inputMode="numeric" pattern="[0-9]*" className={`${getInputClass(!!errors.tokenAmount)} pl-8`} placeholder="5000" />
-                  </div>
-                  {errors.tokenAmount && <p className="text-xs text-red-500 mt-1">{errors.tokenAmount}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Total Qty (Min Buyers) <span className="text-red-500">*</span></label>
-                  <input name="minBuyers" value={form.minBuyers} onChange={handleInputChange} type="text" inputMode="numeric" pattern="[0-9]*" className={getInputClass(!!errors.minBuyers)} placeholder="10" />
-                  {errors.minBuyers && <p className="text-xs text-red-500 mt-1">{errors.minBuyers}</p>}
-                </div>
+                {errors.tokenAmount && <p className="text-xs text-red-500 mt-1">{errors.tokenAmount}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Total Qty (Min Buyers) <span className="text-red-500">*</span></label>
+                <input name="minBuyers" value={form.minBuyers} onChange={handleInputChange} type="text" inputMode="numeric" pattern="[0-9]*" className={getInputClass(!!errors.minBuyers)} placeholder="10" />
+                {errors.minBuyers && <p className="text-xs text-red-500 mt-1">{errors.minBuyers}</p>}
+              </div>
             </div>
           </section>
 
@@ -345,28 +330,28 @@ export default function CreatePoolForm() {
             </div>
             {errors.tiers && <div className="bg-red-50 text-red-600 text-xs p-2 rounded mb-2 border border-red-100">{errors.tiers}</div>}
             <div className={`bg-[#E7F6F6]/40 rounded-xl border overflow-hidden ${errors.tiers ? 'border-red-300' : 'border-[#E7F6F6]'}`}>
-               <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-[#E7F6F6] text-xs font-bold text-[#1CA7A6] uppercase">
-                 <div className="col-span-1 text-center">#</div>
-                 <div className="col-span-5">Target Qty</div>
-                 <div className="col-span-5">Discount %</div>
-                 <div className="col-span-1"></div>
-               </div>
-               <div className="divide-y divide-[#E7F6F6]">
-                 {tiers.map((tier, index) => (
-                   <div key={index} className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-white transition-colors">
-                     <div className="col-span-1 text-center text-gray-500 text-sm">{index + 1}</div>
-                     <div className="col-span-5">
-                       <input value={tier.quantity} onChange={(e) => updateTier(index, 'quantity', e.target.value)} type="text" inputMode="numeric" pattern="[0-9]*" className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-[#168F8E]" placeholder="Qty" />
-                     </div>
-                     <div className="col-span-5">
-                       <input value={tier.discount} onChange={(e) => updateTier(index, 'discount', e.target.value)} type="text" inputMode="numeric" pattern="[0-9]*" className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-[#168F8E]" placeholder="%" />
-                     </div>
-                     <div className="col-span-1 flex justify-center">
-                       {tiers.length > 1 && <button type="button" onClick={() => removeTier(index)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>}
-                     </div>
-                   </div>
-                 ))}
-               </div>
+              <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-[#E7F6F6] text-xs font-bold text-[#1CA7A6] uppercase">
+                <div className="col-span-1 text-center">#</div>
+                <div className="col-span-5">Target Qty</div>
+                <div className="col-span-5">Discount %</div>
+                <div className="col-span-1"></div>
+              </div>
+              <div className="divide-y divide-[#E7F6F6]">
+                {tiers.map((tier, index) => (
+                  <div key={index} className="grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-white transition-colors">
+                    <div className="col-span-1 text-center text-gray-500 text-sm">{index + 1}</div>
+                    <div className="col-span-5">
+                      <input value={tier.quantity} onChange={(e) => updateTier(index, 'quantity', e.target.value)} type="text" inputMode="numeric" pattern="[0-9]*" className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-[#168F8E]" placeholder="Qty" />
+                    </div>
+                    <div className="col-span-5">
+                      <input value={tier.discount} onChange={(e) => updateTier(index, 'discount', e.target.value)} type="text" inputMode="numeric" pattern="[0-9]*" className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-[#168F8E]" placeholder="%" />
+                    </div>
+                    <div className="col-span-1 flex justify-center">
+                      {tiers.length > 1 && <button type="button" onClick={() => removeTier(index)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 
@@ -407,17 +392,17 @@ export default function CreatePoolForm() {
           </section>
 
           <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-             <div className="space-y-4">
-               <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Description <span className="text-red-500">*</span></label>
-                  <textarea name="description" value={form.description} onChange={handleInputChange} rows={3} className={`${getInputClass(!!errors.description)} resize-none`} />
-                  {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description}</p>}
-               </div>
-               <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Terms & Conditions</label>
-                  <textarea name="terms" value={form.terms} onChange={handleInputChange} rows={2} className="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:border-[#168F8E] resize-none" />
-               </div>
-             </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Description <span className="text-red-500">*</span></label>
+                <textarea name="description" value={form.description} onChange={handleInputChange} rows={3} className={`${getInputClass(!!errors.description)} resize-none`} />
+                {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Terms & Conditions</label>
+                <textarea name="terms" value={form.terms} onChange={handleInputChange} rows={2} className="w-full border border-gray-300 rounded-xl px-4 py-2.5 outline-none focus:border-[#168F8E] resize-none" />
+              </div>
+            </div>
           </section>
 
           <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
@@ -425,11 +410,11 @@ export default function CreatePoolForm() {
               <ImageIcon size={16} className="text-[#1CA7A6]" /> Gallery <span className="text-red-500">*</span>
             </h4>
             <div onClick={() => fileInputRef.current?.click()} className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer ${errors.images ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:bg-gray-50'}`}>
-               <input type="file" multiple accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
-               <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${errors.images ? 'bg-red-100 text-red-500' : 'bg-[#E7F6F6] text-[#1CA7A6]'}`}>
-                 <Upload size={24} />
-               </div>
-               <p className={`text-sm font-medium ${errors.images ? 'text-red-600' : 'text-gray-900'}`}>{errors.images ? errors.images : 'Click to upload images'}</p>
+              <input type="file" multiple accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${errors.images ? 'bg-red-100 text-red-500' : 'bg-[#E7F6F6] text-[#1CA7A6]'}`}>
+                <Upload size={24} />
+              </div>
+              <p className={`text-sm font-medium ${errors.images ? 'text-red-600' : 'text-gray-900'}`}>{errors.images ? errors.images : 'Click to upload images'}</p>
             </div>
             {previews.length > 0 && (
               <div className="flex flex-wrap gap-3 mt-4">
