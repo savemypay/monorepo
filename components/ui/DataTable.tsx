@@ -60,7 +60,7 @@ export default function DataTable<T extends { id: string | number }>({
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
             <tr>
               {columns.map((col, idx) => (
-                <th key={idx} className={`px-6 py-4 ${col.className || ''}`}>
+                <th key={idx} className={`px-6 py-4 text-[#163B63] ${col.className || ''}`}>
                   {col.header}
                 </th>
               ))}

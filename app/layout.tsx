@@ -2,16 +2,16 @@ import localFont from "next/font/local";
 import "./globals.css";
 import type { Metadata } from "next";
 
-const satoshi = localFont({
-  src: "./fonts/Satoshi-Variable.ttf",
+const sofiaPro = localFont({
+  src: [
+    { path: "./fonts/sofia-pro/Sofia Pro Regular Az.otf", weight: "400", style: "normal" },
+    { path: "./fonts/sofia-pro/Sofia Pro Medium Az.otf", weight: "500", style: "normal" },
+    { path: "./fonts/sofia-pro/Sofia Pro Semi Bold Az.otf", weight: "700", style: "normal" },
+    { path: "./fonts/sofia-pro/Sofia Pro Regular Italic Az.otf", weight: "400", style: "italic" },
+  ],
   display: "swap",
-  variable: "--font-satoshi",
-});
-const satoshi_italic = localFont({
-  src: "./fonts/Satoshi-VariableItalic.ttf",
-  display: "swap",
-  variable: "--font-satoshi-i",
-});
+  fallback: ["Inter", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+})
 
 export const metadata: Metadata = {
   title: "Save My Pay",
@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${satoshi.variable} ${satoshi_italic.variable} antialiased`}
+        className={`${sofiaPro.className} antialiased`}
       >
         <main className="relative z-0 h-full w-full">{children}</main>
       </body>

@@ -52,8 +52,8 @@ function LeadsContent() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl border border-gray-200 md:border-none md:p-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Customer Leads</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-[#163B63]">Customer Leads</h1>
+          <p className="text-base text-[#7A8CA3]">
             {adIdFromUrl ? `Showing leads for Deal #${adIdFromUrl}` : "Manage and track all customer purchases."}
           </p>
         </div>

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Clock, ChevronRight } from 'lucide-react'; // Added ChevronRight
 import Link from 'next/link';
-import CreatePoolModal from '@/components/CreatePoolModal';
 import DataTable, { Column } from '@/components/ui/DataTable';
 import { Deal, getMaxDiscount, getTimeLeft } from '@/lib/dealHelpers';
 import { useVendorStore } from '@/lib/store/authStore';
@@ -16,12 +15,12 @@ const getStatusColor = (status: string) => {
     case 'draft': return 'bg-gray-100 text-gray-700 border-gray-200';
     case 'expired': return 'bg-red-100 text-red-800 border-red-200';
     case 'filled': return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'canceled': return 'bg-gray-100 text-gray-700 border-gray-200';
     default: return 'bg-blue-50 text-blue-700 border-blue-200';
   }
 };
 
 export default function MyPoolsPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter] = useState('All');
    
   const vendorId = useVendorStore(state=>state.vendor?.id)
@@ -34,7 +33,9 @@ export default function MyPoolsPage() {
     if (!vendorId) return;
     const fetchDeals = async () => {
       try {
-        const json = await getVendorDeals(vendorId);
+        setLoading(true);
+        const status = filter === 'All' ? undefined : filter.toLowerCase();
+        const json = await getVendorDeals(vendorId, status);
         if (json.success) setDeals(json.data);
       } catch (error) {
         console.error("Failed to fetch deals", error);
@@ -43,7 +44,7 @@ export default function MyPoolsPage() {
       }
     };
     fetchDeals();
-  }, [vendorId]);
+  }, [vendorId, filter]);
 
   // 2. Desktop Columns
   const columns: Column<Deal>[] = [
@@ -107,7 +108,7 @@ export default function MyPoolsPage() {
       render: (deal) => (
         <Link 
           href={`/my-deals/${deal.id}`} 
-          className="text-blue-600 hover:text-blue-800 font-medium text-sm hover:underline"
+          className="text-[#1CA7A6] hover:text-[#168F8E] font-medium text-sm hover:underline"
         >
           Manage
         </Link>
@@ -120,8 +121,8 @@ export default function MyPoolsPage() {
     const percentage = Math.min((deal.slots_sold / deal.total_qty) * 100, 100);
     
     return (
-      <Link href={`/my-deals/${deal.id}`} className="block">
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm active:scale-[0.98] transition-transform">
+      <Link href={`/my-deals/${deal.id}`} className="block w-full">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm active:scale-[0.98] transition-transform overflow-hidden max-w-full">
           
           {/* Top Row: Status + Time */}
           <div className="flex justify-between items-start mb-3">
@@ -134,9 +135,9 @@ export default function MyPoolsPage() {
           </div>
 
           {/* Title Area */}
-          <div className="mb-4">
-             <h3 className="font-bold text-gray-900 text-lg leading-tight">{deal.title}</h3>
-             <p className="text-sm text-gray-500 mt-0.5">{deal.product_name}</p>
+          <div className="mb-4 min-w-0">
+             <h3 className="font-bold text-gray-900 text-lg leading-tight break-words">{deal.title}</h3>
+             <p className="text-sm text-gray-500 mt-0.5 break-words">{deal.product_name}</p>
           </div>
 
           {/* Progress Bar */}
@@ -161,7 +162,7 @@ export default function MyPoolsPage() {
              <span className="text-green-700 bg-green-50 px-2 py-1 rounded-md text-xs font-bold">
                 Max {getMaxDiscount(deal.tiers)} OFF
              </span>
-             <div className="flex items-center text-blue-600 text-sm font-semibold">
+             <div className="flex items-center text-[#1CA7A6] text-sm font-semibold">
                 Manage <ChevronRight size={16} />
              </div>
           </div>
@@ -171,38 +172,33 @@ export default function MyPoolsPage() {
     );
   };
 
-  // 4. Filtering
-  const filteredDeals = filter === 'All' 
-    ? deals 
-    : deals.filter(d => d.status.toLowerCase() === filter.toLowerCase());
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-           <h1 className="text-2xl font-bold text-gray-800">My Deals</h1>
-           <p className="text-sm text-gray-500">Manage your active and past group offers.</p>
+          <h1 className="text-2xl font-bold text-[#163B63]">My Deals</h1>
+          <p className="text-[#7A8CA3] text-base">Manage your active and past group offers.</p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all w-full md:w-auto justify-center"
+        <Link
+          href="/my-deals/new"
+          className="bg-[#1CA7A6] hover:bg-[#168F8E] text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-all w-full md:w-auto justify-center"
         >
           <Plus size={18} />
           <span className="md:hidden">New Deal</span>
           <span className="hidden md:inline">Create New Deal</span>
-        </button>
+        </Link>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-gray-200 pb-2 overflow-x-auto no-scrollbar">
-          {['All', 'Draft', 'Active', 'Filled', 'Expired'].map((f) => (
+          {['All', 'Draft', 'Active', 'Filled', 'Expired', 'Canceled'].map((f) => (
             <button 
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
-                filter === f ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-100'
+                filter === f ? 'bg-[#E7F6F6] text-[#1CA7A6]' : 'text-[#1E2F46] hover:bg-gray-100'
               }`}
             >
               {f}
@@ -213,12 +209,11 @@ export default function MyPoolsPage() {
       {/* Table with Mobile Card Support */}
       <DataTable 
         columns={columns} 
-        data={filteredDeals} 
+        data={deals} 
         isLoading={loading}
         renderMobileCard={renderMobileDealCard} // Pass the card renderer here
       />
 
-      {isModalOpen && <CreatePoolModal onClose={() => setIsModalOpen(false)} />}
     </div>
   );
 }
