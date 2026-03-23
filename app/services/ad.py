@@ -16,6 +16,22 @@ def _annotate_slots(ad: Ad):
     ad.slots_sold = ad.total_qty - ad.slots_remaining
 
 
+def _annotate_favorite(db: Session, ad: Ad, customer_user_id: int | None) -> None:
+    ad.is_favorite = False
+    if customer_user_id is None:
+        return
+
+    favorite = (
+        db.query(AdFavorite.id)
+        .filter(
+            AdFavorite.ad_id == ad.id,
+            AdFavorite.user_id == customer_user_id,
+        )
+        .first()
+    )
+    ad.is_favorite = favorite is not None
+
+
 def _validate_publishable(ad: Ad):
     if ad.status != "draft":
         raise HTTPException(
@@ -126,6 +142,13 @@ def get_ad(db: Session, ad_id: int, vendor_id: int | None) -> Ad | None:
         ad = AdRepository.get_with_tiers(db, ad_id, vendor_id)
     if ad:
         _annotate_slots(ad)
+    return ad
+
+
+def get_ad_for_customer(db: Session, ad_id: int, customer_user_id: int) -> Ad | None:
+    ad = get_ad(db, ad_id, vendor_id=None)
+    if ad:
+        _annotate_favorite(db, ad, customer_user_id)
     return ad
 
 

@@ -17,7 +17,7 @@ from app.api.security import (
 from app.entities.ad import Ad
 from app.entities.ad_tier import AdTier
 from app.models.ad import AdCreate, AdListResponse, AdResponse, ImageAttachRequest, FavoriteUpdateRequest
-from app.services.ad import create_ad, list_ads, get_ad, publish_ad, reject_ad, set_ad_favorite
+from app.services.ad import create_ad, list_ads, get_ad, get_ad_for_customer, publish_ad, reject_ad, set_ad_favorite
 from app.services.s3 import delete_s3_objects, generate_presigned_upload, upload_fileobj
 from app.utils.response import error_response, success_response
 
@@ -348,6 +348,11 @@ def get_ad_by_id_endpoint(
     if role == "vendor":
         vendor_id = int(actor.get("vendor_id") or actor.get("sub"))
         ad = get_ad(db, ad_id, vendor_id=vendor_id)
+    elif role == "customer":
+        customer_user_id = int(actor.get("user_id") or actor.get("sub"))
+        ad = get_ad_for_customer(db, ad_id, customer_user_id)
+        if ad and ad.status != "active":
+            ad = None
     else:
         ad = get_ad(db, ad_id, vendor_id=None)
         if role != "admin" and ad and ad.status != "active":
