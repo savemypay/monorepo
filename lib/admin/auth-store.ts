@@ -25,10 +25,16 @@ export const useAdminAuthStore = create<AdminAuthStore>()(
       hydrated: false,
       profile: DEFAULT_ADMIN_PROFILE,
       session: null,
-      setAuth: (profile, session) => set({ profile, session }),
+      setAuth: (profile, session) =>
+        set({
+          hydrated: true,
+          profile,
+          session,
+        }),
       updateProfile: (profile) => set({ profile }),
       clearAuth: () =>
         set({
+          hydrated: true,
           profile: buildAdminProfile({}),
           session: null,
         }),
