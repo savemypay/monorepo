@@ -91,7 +91,7 @@ export default function DealCard({
 
         {/* Top row */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-          <span className="bg-[#F2B705] text-[#122E4E] text-[11px] font-extrabold tracking-wider uppercase px-3 py-1 rounded-full shadow-sm">
+          <span className="bg-[#F2B705]/90 text-[#122E4E] text-[11px] font-extrabold tracking-wider uppercase px-3 py-1 rounded-full shadow-sm">
             {discount} OFF
           </span>
 
@@ -174,7 +174,7 @@ export default function DealCard({
               Group Price
             </p>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              <span className="text-2xl font-extrabold text-[#1E2F46] tracking-tight">
                 {price}
               </span>
               {originalPrice && (

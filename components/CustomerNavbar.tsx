@@ -11,6 +11,7 @@ import {
   X,
   ChevronDown,
   Settings,
+  Heart,
   History,
   Gift,
   Users,
@@ -24,7 +25,9 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
 import { getProfile, type Profile } from "@/lib/api/profile";
-import { getCustomerEarnings } from "@/lib/api/account";
+import { unbindNotificationInstallation } from "@/lib/api/notifications";
+import { registerBrowserPushToken } from "@/lib/notifications/firebase";
+import { getStoredInstallationId } from "@/lib/notifications/installation";
 import Image from "next/image";
 import {
   CUSTOMER_ACCOUNT_SECTIONS,
@@ -35,6 +38,7 @@ import {
 const ICON_MAP: Record<CustomerAccountIconKey, LucideIcon> = {
   settings: Settings,
   orders: ShoppingBag,
+  heart: Heart,
   earnings: Wallet,
   payments: CreditCard,
   history: History,
@@ -68,7 +72,6 @@ export default function CustomerNavbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [searchInput, setSearchInput] = useState(() => searchParams.get("q") || "");
-  const [earnings, setEarnings] = useState({ total_cashback: 0, total_rewards: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const hasSession = Boolean(isAuthenticated && accessToken);
@@ -172,10 +175,20 @@ export default function CustomerNavbar() {
     setIsMenuOpen(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     closeMenus();
-    logout();
-    router.push("/login");
+    try {
+      const installationId = getStoredInstallationId();
+      if (installationId && accessToken) {
+        await unbindNotificationInstallation(installationId, accessToken);
+      }
+      await registerBrowserPushToken(undefined, { forceSync: true }).catch(() => null);
+    } catch {
+      // Logout should still succeed even if unbind fails.
+    } finally {
+      logout();
+      router.push("/login");
+    }
   };
 
   return (
@@ -249,7 +262,7 @@ export default function CustomerNavbar() {
                           </div>
                           <div className="rounded-xl bg-gray-100 px-3 py-3">
                             <p className="text-sm text-gray-700">Total Rewards</p>
-                            <p className="text-xl font-bold text-gray-900">{formatInr(earnings.total_rewards)}</p>
+                            <p className="text-xl font-bold text-gray-900">{formatInr(0)}</p>
                           </div>
                         </div> */}
                       </div>
@@ -345,7 +358,7 @@ export default function CustomerNavbar() {
                     </div> */}
                     <div className="rounded-lg bg-white px-2 py-2 border border-blue-100">
                       <p className="text-xs text-gray-600">Total Rewards</p>
-                      <p className="text-base font-bold text-gray-900">{formatInr(earnings.total_rewards)}</p>
+                      <p className="text-base font-bold text-gray-900">{formatInr(0)}</p>
                     </div>
                   </div>
                 </div>

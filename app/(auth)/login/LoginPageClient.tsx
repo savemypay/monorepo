@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Edit2, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { AuthData, sendLoginOtp, verifyLoginOtp } from '@/lib/api/auth';
+import { bindNotificationInstallation } from '@/lib/api/notifications';
+import { registerBrowserPushToken } from '@/lib/notifications/firebase';
+import { getOrCreateInstallationId } from '@/lib/notifications/installation';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,6 +27,18 @@ export default function LoginPage() {
   
   // Temporary storage for auth token before name is entered
   const [tempAuthData, setTempAuthData] = useState<AuthData | null>(null);
+
+  const bindNotificationsAfterLogin = (accessTokenToBind: string) => {
+    const installationId = getOrCreateInstallationId();
+    void (async () => {
+      try {
+        await bindNotificationInstallation(installationId, accessTokenToBind);
+        await registerBrowserPushToken(accessTokenToBind).catch(() => null);
+      } catch {
+        // Notification binding should not block login completion.
+      }
+    })();
+  };
 
   // Focus Refs
   const inputRef = useRef<HTMLInputElement>(null);
@@ -129,6 +144,7 @@ export default function LoginPage() {
         if (!authData.is_new_user) {
              // User exists and has flag -> Login immediately
              setAuth(authData.access_token, authData.refresh_token, authData.user);
+             bindNotificationsAfterLogin(authData.access_token);
              router.push(safeRedirectUrl);
         } else {
              // User is new -> Go to Name step
@@ -175,6 +191,7 @@ export default function LoginPage() {
         tempAuthData.refresh_token,
         finalUser
       );
+      bindNotificationsAfterLogin(tempAuthData.access_token);
 
       // Redirect
       router.push(safeRedirectUrl);

@@ -5,6 +5,8 @@ import {
 } from "@/lib/api/authenticatedRequest";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+export const FALLBACK_AD_IMAGE = "/assets/travel.jpg";
+const DEFAULT_ADS_LIMIT = 100;
 
 export interface AdTier {
   id: number;
@@ -26,7 +28,7 @@ export interface Ad {
   slots_remaining: number;
   slots_sold: number;
   status: string;
-  images: string[];
+  images: string[] | null;
   description: string;
   terms: string;
   valid_from: string;
@@ -61,13 +63,48 @@ function extractErrorMessage(data: unknown, fallback: string) {
   return fallback;
 }
 
-export async function getAds(): Promise<Ad[]> {
-  const response = await fetch(`${resolveBaseUrl()}/api/v1/ads`, {
+function buildAdsHeaders(accessToken?: string | null) {
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
+  });
+
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  return headers;
+}
+
+export function getRenderableAdImages(images: string[] | null | undefined): string[] {
+  if (!Array.isArray(images) || images.length === 0) {
+    return [FALLBACK_AD_IMAGE];
+  }
+
+  const validImages = images
+    .map((image) => image?.trim())
+    .filter(
+      (image): image is string =>
+        Boolean(image) &&
+        !image.startsWith("data:image/") &&
+        (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/"))
+    );
+
+  return validImages.length > 0 ? validImages : [FALLBACK_AD_IMAGE];
+}
+
+export function getPrimaryAdImage(images: string[] | null | undefined): string {
+  return getRenderableAdImages(images)[0] ?? FALLBACK_AD_IMAGE;
+}
+
+export async function getAds(accessToken?: string | null, limit = DEFAULT_ADS_LIMIT): Promise<Ad[]> {
+  const params = new URLSearchParams({
+    limit: String(Math.max(1, Math.floor(limit))),
+  });
+
+  const response = await fetch(`${resolveBaseUrl()}/api/v1/ads?${params.toString()}`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "ngrok-skip-browser-warning": "true",
-    },
+    headers: buildAdsHeaders(accessToken),
     cache: "no-store",
   });
 
@@ -90,17 +127,14 @@ export async function getAds(): Promise<Ad[]> {
   return Array.isArray(parsed.data) ? parsed.data : [];
 }
 
-export async function getAdById(adId: string | number): Promise<Ad | null> {
+export async function getAdById(adId: string | number, accessToken?: string | null): Promise<Ad | null> {
   if (adId === "" || adId === null || adId === undefined) {
     throw new Error("Ad id is required");
   }
 
   const response = await fetch(`${resolveBaseUrl()}/api/v1/ads/${encodeURIComponent(String(adId))}`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "ngrok-skip-browser-warning": "true",
-    },
+    headers: buildAdsHeaders(accessToken),
     cache: "no-store",
   });
 
