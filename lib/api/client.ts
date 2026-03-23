@@ -1,5 +1,7 @@
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
+import { clearVendorSession } from "@/lib/store/authStore";
+
 interface ApiRequestOptions {
   method?: HttpMethod;
   query?: Record<string, string | number | boolean | undefined | null>;
@@ -26,6 +28,23 @@ function buildUrl(
   }
 
   return url.toString();
+}
+
+function redirectToLogin() {
+  if (typeof window === "undefined") return;
+  if (window.location.pathname !== "/login") {
+    window.location.replace("/login");
+  }
+}
+
+function handleUnauthorized() {
+  clearVendorSession();
+
+  if (typeof window !== "undefined") {
+    sessionStorage.setItem("vendor-session-expired", "1");
+  }
+
+  redirectToLogin();
 }
 
 function getAccessTokenFromStorage() {
@@ -63,6 +82,7 @@ export async function apiRequest<T>(
   if (auth) {
     const token = getAccessTokenFromStorage();
     if (!token) {
+      handleUnauthorized();
       throw new Error("Unauthorized. Please login again.");
     }
     requestHeaders.set("Authorization", `Bearer ${token}`);
@@ -88,6 +108,11 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
+    if (response.status === 401) {
+      handleUnauthorized();
+      throw new Error("Session expired. Please login again.");
+    }
+
     if (typeof data === "object" && data !== null) {
       const maybeError = data as { message?: string; error?: string };
       throw new Error(maybeError.message || maybeError.error || "Request failed");

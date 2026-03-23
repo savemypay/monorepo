@@ -7,6 +7,12 @@ import { useVendorStore } from '@/lib/store/authStore';
 import { createDealWithImages } from '@/lib/api/deals';
 import Image from 'next/image';
 
+const MAX_IMAGE_COUNT = 5;
+const MAX_TOTAL_IMAGE_BYTES = 1024 * 1024;
+const MAX_IMAGE_DIMENSION = 1600;
+const TARGET_IMAGE_BYTES = 180 * 1024;
+const MIN_IMAGE_QUALITY = 0.5;
+
 interface DiscountTier {
   quantity: string;
   discount: string;
@@ -78,6 +84,70 @@ export default function CreatePoolForm() {
     };
   }, []);
 
+  const getTotalImageSize = (files: File[]) =>
+    files.reduce((total, file) => total + file.size, 0);
+
+  const loadImageElement = (file: File): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const image = new window.Image();
+
+      image.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(image);
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error(`Unable to read image: ${file.name}`));
+      };
+
+      image.src = objectUrl;
+    });
+
+  const canvasToBlob = (canvas: HTMLCanvasElement, quality: number): Promise<Blob> =>
+    new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Image compression failed."));
+          return;
+        }
+        resolve(blob);
+      }, "image/jpeg", quality);
+    });
+
+  const compressImage = async (file: File): Promise<File> => {
+    // Resize large images first so normal phone photos have a chance to fit backend limits.
+    const image = await loadImageElement(file);
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      throw new Error("Image processing is not supported in this browser.");
+    }
+
+    const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(image.width, image.height));
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    // Step quality down until we get close to our per-image budget for the 1 MB total cap.
+    let quality = 0.85;
+    let blob = await canvasToBlob(canvas, quality);
+
+    while (blob.size > TARGET_IMAGE_BYTES && quality > MIN_IMAGE_QUALITY) {
+      quality = Math.max(MIN_IMAGE_QUALITY, quality - 0.1);
+      blob = await canvasToBlob(canvas, quality);
+      if (quality === MIN_IMAGE_QUALITY) break;
+    }
+
+    const compressedName = file.name.replace(/\.[^.]+$/, '') || 'image';
+    return new File([blob], `${compressedName}.jpg`, {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    });
+  };
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     let isValid = true;
@@ -117,6 +187,10 @@ export default function CreatePoolForm() {
 
     if (images.length === 0) {
       newErrors.images = "At least one product image is required";
+    } else if (images.length > MAX_IMAGE_COUNT) {
+      newErrors.images = `You can upload a maximum of ${MAX_IMAGE_COUNT} images.`;
+    } else if (getTotalImageSize(images) >= MAX_TOTAL_IMAGE_BYTES) {
+      newErrors.images = "Total image size must be less than 1 MB for up to 5 images.";
     }
 
     const totalTierQty = tiers.reduce((sum, t) => sum + Number(t.quantity || 0), 0);
@@ -174,12 +248,46 @@ export default function CreatePoolForm() {
     if (errors.tiers) setErrors(prev => ({ ...prev, tiers: undefined }));
   };
 
-  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setImages(prev => [...prev, ...newFiles]);
-      setPreviews(prev => [...prev, ...newFiles.map(file => URL.createObjectURL(file))]);
-      if (errors.images) setErrors(prev => ({ ...prev, images: undefined }));
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files ? Array.from(e.target.files) : [];
+    if (selectedFiles.length === 0) return;
+
+    setGlobalError(null);
+
+    const totalCount = images.length + selectedFiles.length;
+    if (totalCount > MAX_IMAGE_COUNT) {
+      setErrors(prev => ({
+        ...prev,
+        images: `You can upload a maximum of ${MAX_IMAGE_COUNT} images.`,
+      }));
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      const compressedFiles = await Promise.all(selectedFiles.map((file) => compressImage(file)));
+      const nextImages = [...images, ...compressedFiles];
+      const totalSize = getTotalImageSize(nextImages);
+
+      if (totalSize >= MAX_TOTAL_IMAGE_BYTES) {
+        setErrors(prev => ({
+          ...prev,
+          images: "Total image size must be less than 1 MB for up to 5 images.",
+        }));
+        e.target.value = '';
+        return;
+      }
+
+      setImages(nextImages);
+      setPreviews(prev => [...prev, ...compressedFiles.map((file) => URL.createObjectURL(file))]);
+
+      if (errors.images) {
+        setErrors(prev => ({ ...prev, images: undefined }));
+      }
+    } catch (err: unknown) {
+      setGlobalError(err instanceof Error ? err.message : "Failed to process selected images.");
+    } finally {
+      e.target.value = '';
     }
   };
 
@@ -187,6 +295,10 @@ export default function CreatePoolForm() {
     URL.revokeObjectURL(previews[index]);
     setImages(prev => prev.filter((_, i) => i !== index));
     setPreviews(prev => prev.filter((_, i) => i !== index));
+
+    if (errors.images) {
+      setErrors(prev => ({ ...prev, images: undefined }));
+    }
   };
 
   const handleSubmit = async () => {
