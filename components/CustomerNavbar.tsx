@@ -26,7 +26,7 @@ import {
 import { useAuthStore } from "@/lib/store/authStore";
 import { getProfile, type Profile } from "@/lib/api/profile";
 import { unbindNotificationInstallation } from "@/lib/api/notifications";
-import { unregisterBrowserPushToken } from "@/lib/notifications/firebase";
+import { registerBrowserPushToken } from "@/lib/notifications/firebase";
 import { getStoredInstallationId } from "@/lib/notifications/installation";
 import Image from "next/image";
 import {
@@ -179,12 +179,10 @@ export default function CustomerNavbar() {
     closeMenus();
     try {
       const installationId = getStoredInstallationId();
-      if (accessToken) {
-        await unregisterBrowserPushToken(accessToken).catch(() => false);
-      }
       if (installationId && accessToken) {
         await unbindNotificationInstallation(installationId, accessToken);
       }
+      await registerBrowserPushToken(undefined, { forceSync: true }).catch(() => null);
     } catch {
       // Logout should still succeed even if unbind fails.
     } finally {

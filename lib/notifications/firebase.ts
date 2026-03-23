@@ -102,12 +102,12 @@ export function clearStoredPushToken() {
 }
 
 export async function registerBrowserPushToken(
-  accessToken: string,
-  { promptForPermission = false }: { promptForPermission?: boolean } = {}
+  accessToken?: string | null,
+  {
+    promptForPermission = false,
+    forceSync = false,
+  }: { promptForPermission?: boolean; forceSync?: boolean } = {}
 ) {
-  if (!accessToken) {
-    throw new Error("Access token is required to register browser notifications.");
-  }
   if (!hasRequiredFirebaseConfig()) {
     throw new Error("Firebase messaging is not configured.");
   }
@@ -144,7 +144,7 @@ export async function registerBrowserPushToken(
   const installationId = getOrCreateInstallationId();
   const previousToken = getStoredPushToken();
 
-  if (previousToken === token) {
+  if (previousToken === token && !forceSync) {
     return { token, isNewToken: false };
   }
 
@@ -155,7 +155,7 @@ export async function registerBrowserPushToken(
       provider: "firebase",
       channel: "push",
     },
-    accessToken
+    accessToken || undefined
   );
 
   setStoredPushToken(token);

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Heart, Loader2 } from "lucide-react";
 import DealCard from "@/components/DealCard";
-import { getAds, type Ad } from "@/lib/api/ads";
+import { getAds, getPrimaryAdImage, type Ad } from "@/lib/api/ads";
 import { useAuthStore } from "@/lib/store/authStore";
 
 type SavedDealViewModel = {
@@ -19,7 +19,6 @@ type SavedDealViewModel = {
   isFavorite: boolean;
 };
 
-const FALLBACK_IMAGE = "/assets/Tesla-Model-Y-1-1160x652.webp";
 
 function formatPrice(value: number) {
   return `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(value)}`;
@@ -47,28 +46,11 @@ function formatTimeLeft(validTo: string) {
   return `${totalDays} days`;
 }
 
-function formatImage(images: string[] | null | undefined) {
-  if (!Array.isArray(images) || images.length === 0) return FALLBACK_IMAGE;
-
-  const image = images[0]?.trim();
-  if (!image) return FALLBACK_IMAGE;
-
-  if (image.startsWith("data:image/")) {
-    return FALLBACK_IMAGE;
-  }
-
-  if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/")) {
-    return image;
-  }
-
-  return FALLBACK_IMAGE;
-}
-
 function mapAdToCard(ad: Ad): SavedDealViewModel {
   return {
     id: ad.id,
     title: ad.product_name || ad.title,
-    image: formatImage(ad.images),
+    image: getPrimaryAdImage(ad.images),
     discount: formatDiscount(ad),
     price: formatPrice(Number(ad.original_price) || 0),
     joined: Number(ad.slots_sold) || 0,

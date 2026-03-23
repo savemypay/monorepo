@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DealCard from "@/components/DealCard";
-import { Ad, getAds } from "@/lib/api/ads";
+import { Ad, getAds, getPrimaryAdImage } from "@/lib/api/ads";
 import { useAuthStore } from "@/lib/store/authStore";
 import {
   getBrowserNotificationPermission,
@@ -24,7 +24,6 @@ type DealViewModel = {
   isFavorite: boolean;
 };
 
-const FALLBACK_IMAGE = "/assets/Tesla-Model-Y-1-1160x652.webp";
 const CUSTOMER_NOTIFICATION_PROMPT_KEY = "customer-notification-prompted";
 
 function formatPrice(value: number) {
@@ -53,28 +52,11 @@ function formatTimeLeft(validTo: string) {
   return `${totalDays} days`;
 }
 
-function formatImage(images: string[] | null | undefined) {
-  if (!Array.isArray(images) || images.length === 0) return FALLBACK_IMAGE;
-
-  const image = images[0]?.trim();
-  if (!image) return FALLBACK_IMAGE;
-
-  if (image.startsWith("data:image/")) {
-    return FALLBACK_IMAGE;
-  }
-
-  if (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/")) {
-    return image;
-  }
-
-  return FALLBACK_IMAGE;
-}
-
 function mapAdToCard(ad: Ad): DealViewModel {
   return {
     id: ad.id,
     title: ad.product_name || ad.title,
-    image: formatImage(ad.images),
+    image: getPrimaryAdImage(ad.images),
     discount: formatDiscount(ad),
     price: formatPrice(Number(ad.original_price) || 0),
     joined: Number(ad.slots_sold) || 0,
@@ -179,14 +161,14 @@ export default function CustomerDealsClient() {
         if (permission === "default" && !hasPrompted) {
           window.sessionStorage.setItem(CUSTOMER_NOTIFICATION_PROMPT_KEY, "true");
           const nextPermission = await requestBrowserNotificationPermission();
-          if (nextPermission === "granted" && accessToken) {
-            await registerBrowserPushToken(accessToken);
+          if (nextPermission === "granted") {
+            await registerBrowserPushToken(accessToken || undefined);
           }
           return;
         }
 
-        if (permission === "granted" && accessToken) {
-          await registerBrowserPushToken(accessToken).catch(() => null);
+        if (permission === "granted") {
+          await registerBrowserPushToken(accessToken || undefined).catch(() => null);
         }
       } catch {
         // Permission prompt should not block customer deals browsing.

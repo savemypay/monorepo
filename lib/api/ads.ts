@@ -5,6 +5,8 @@ import {
 } from "@/lib/api/authenticatedRequest";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+export const FALLBACK_AD_IMAGE = "/assets/travel.jpg";
+const DEFAULT_ADS_LIMIT = 100;
 
 export interface AdTier {
   id: number;
@@ -74,8 +76,33 @@ function buildAdsHeaders(accessToken?: string | null) {
   return headers;
 }
 
-export async function getAds(accessToken?: string | null): Promise<Ad[]> {
-  const response = await fetch(`${resolveBaseUrl()}/api/v1/ads`, {
+export function getRenderableAdImages(images: string[] | null | undefined): string[] {
+  if (!Array.isArray(images) || images.length === 0) {
+    return [FALLBACK_AD_IMAGE];
+  }
+
+  const validImages = images
+    .map((image) => image?.trim())
+    .filter(
+      (image): image is string =>
+        Boolean(image) &&
+        !image.startsWith("data:image/") &&
+        (image.startsWith("http://") || image.startsWith("https://") || image.startsWith("/"))
+    );
+
+  return validImages.length > 0 ? validImages : [FALLBACK_AD_IMAGE];
+}
+
+export function getPrimaryAdImage(images: string[] | null | undefined): string {
+  return getRenderableAdImages(images)[0] ?? FALLBACK_AD_IMAGE;
+}
+
+export async function getAds(accessToken?: string | null, limit = DEFAULT_ADS_LIMIT): Promise<Ad[]> {
+  const params = new URLSearchParams({
+    limit: String(Math.max(1, Math.floor(limit))),
+  });
+
+  const response = await fetch(`${resolveBaseUrl()}/api/v1/ads?${params.toString()}`, {
     method: "GET",
     headers: buildAdsHeaders(accessToken),
     cache: "no-store",

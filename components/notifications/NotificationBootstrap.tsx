@@ -24,6 +24,8 @@ export default function NotificationBootstrap() {
         if (accessToken) {
           await bindNotificationInstallation(payload.installation_id, accessToken);
           await registerBrowserPushToken(accessToken).catch(() => null);
+        } else {
+          await registerBrowserPushToken(undefined).catch(() => null);
         }
       } catch {
         // Notification installation bootstrap should never block page rendering.

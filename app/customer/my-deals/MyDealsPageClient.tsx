@@ -7,7 +7,7 @@ import { getMyDeals, PurchasedDealOrder } from "@/lib/api/myDeals";
 import { useAuthStore } from '@/lib/store/authStore';
 import Image from "next/image";
 
-const FALLBACK_IMAGE = "/assets/Tesla-Model-Y-1-1160x652.webp";
+const FALLBACK_IMAGE = "/assets/health.jpg";
 
 function toRecord(value: unknown): Record<string, unknown> {
   if (typeof value === "object" && value !== null) {
@@ -217,7 +217,7 @@ export default function MyDealsPage() {
                 <tr className="border-b border-gray-200 text-left">
                   <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Deal</th>
                   <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Order ID</th>
-                  <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Deal Ref</th>
+                  {/* <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Deal Ref</th> */}
                   <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Amount</th>
                   <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Purchased On</th>
                   <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
@@ -259,9 +259,9 @@ export default function MyDealsPage() {
                           {order.order_id || "-"}
                         </p>
                       </td>
-                      <td className="px-5 py-4 align-top">
+                      {/* <td className="px-5 py-4 align-top">
                         <p className="max-w-[140px] truncate text-sm text-slate-700">{order.deal_ref || "-"}</p>
-                      </td>
+                      </td> */}
                       <td className="px-5 py-4 align-top">
                         <p className="text-sm font-semibold text-slate-900">{amountLabel}</p>
                       </td>

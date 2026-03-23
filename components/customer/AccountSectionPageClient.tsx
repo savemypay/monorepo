@@ -281,6 +281,15 @@ function ProfileSettingsSection() {
           />
         </label>
       </div>
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={isSaving}
+        className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold bg-[#1CA7A6] text-[#ffffff] hover:bg-[#168F8E] disabled:opacity-60"
+      >
+        {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+        Save Changes
+      </button>
 
       <div className={`rounded-2xl border p-4 ${notificationStatus.tone}`}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -319,16 +328,6 @@ function ProfileSettingsSection() {
           </div>
         ) : null}
       </div>
-
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={isSaving}
-        className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold bg-[#1CA7A6] text-[#ffffff] hover:bg-[#168F8E] disabled:opacity-60"
-      >
-        {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-        Save Changes
-      </button>
     </div>
   );
 }
