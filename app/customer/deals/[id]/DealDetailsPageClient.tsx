@@ -1,31 +1,28 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  ArrowLeft, 
-  Clock, 
-  Tag, 
-  Calendar, 
+import {
   AlertCircle,
-  ShieldCheck,
-  Loader2,
+  ArrowLeft,
+  Calendar,
   CheckCircle2,
-  XCircle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
   Heart,
+  Loader2,
+  ShieldCheck,
+  Tag,
+  XCircle,
 } from "lucide-react";
-import { useAuthStore } from '@/lib/store/authStore';
-import { Ad, getAdById, setAdFavorite } from '@/lib/api/ads';
-import { initiateTokenPayment } from '@/lib/api/payments';
-import { isApiAuthError } from '@/lib/api/authenticatedRequest';
-import { buildIdempotencyKey, openRazorpayCheckout } from '@/lib/payments/razorpay';
-
-// Brand palette (for reference):
-// Primary Blue : #163B63
-// Navy Blue    : #122E4E
-// Gold         : #F2B705
-// Teal         : #1CA7A6
+import { useAuthStore } from "@/lib/store/authStore";
+import { Ad, AdTier, getAdById, getRenderableAdImages, setAdFavorite } from "@/lib/api/ads";
+import { initiateTokenPayment } from "@/lib/api/payments";
+import { isApiAuthError } from "@/lib/api/authenticatedRequest";
+import { buildIdempotencyKey, openRazorpayCheckout } from "@/lib/payments/razorpay";
 
 type DealDetailsPageClientProps = {
   id: string;
@@ -46,12 +43,16 @@ type PaymentResultModal =
     }
   | null;
 
+type CumulativeTier = AdTier & {
+  unlockQty: number;
+};
+
 const SUCCESS_REDIRECT_SECONDS = 10;
 
 export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps) {
   const router = useRouter();
-
   const { user, accessToken } = useAuthStore();
+
   const [deal, setDeal] = useState<Ad | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
   const [redirectCountdown, setRedirectCountdown] = useState(SUCCESS_REDIRECT_SECONDS);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     let isCancelled = false;
@@ -71,7 +73,7 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
       setErrorMessage(null);
 
       try {
-        const selected = await getAdById(id);
+        const selected = await getAdById(id, accessToken);
 
         if (!isCancelled) {
           if (!selected) {
@@ -93,9 +95,24 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
       }
     }
 
-    loadDeal();
-    return () => { isCancelled = true; };
-  }, [id]);
+    void loadDeal();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [id, accessToken]);
+
+  const galleryImages = useMemo(() => getRenderableAdImages(deal?.images), [deal?.images]);
+
+  useEffect(() => {
+    setSelectedImageIndex(0);
+  }, [deal?.id]);
+
+  useEffect(() => {
+    if (selectedImageIndex > galleryImages.length - 1) {
+      setSelectedImageIndex(0);
+    }
+  }, [galleryImages.length, selectedImageIndex]);
 
   useEffect(() => {
     if (paymentResultModal?.status !== "success") return;
@@ -150,11 +167,6 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
     return `${Math.max(1, totalMinutes)} Mins`;
   }, [deal]);
 
-  const maxDiscount = useMemo(() => {
-    if (!deal?.tiers?.length) return 0;
-    return Math.max(...deal.tiers.map((tier) => Number(tier.discount_pct) || 0));
-  }, [deal]);
-
   const progress = useMemo(() => {
     if (!deal || !deal.total_qty) return 0;
     return Math.min((deal.slots_sold / deal.total_qty) * 100, 100);
@@ -168,10 +180,69 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
     return deal.total_qty > 0 && deal.slots_sold >= deal.total_qty;
   }, [deal]);
 
+  const sortedTiers = useMemo(() => {
+    if (!deal?.tiers?.length) return [];
+    return [...deal.tiers].sort((left, right) => Number(left.seq) - Number(right.seq));
+  }, [deal]);
+
+  const cumulativeTiers = useMemo<CumulativeTier[]>(() => {
+    let cumulativeQty = 0;
+    return sortedTiers.map((tier) => {
+      cumulativeQty += Number(tier.qty) || 0;
+      return {
+        ...tier,
+        unlockQty: cumulativeQty,
+      };
+    });
+  }, [sortedTiers]);
+
+  const activeTier = useMemo(() => {
+    if (!deal) return null;
+    return cumulativeTiers.reduce<CumulativeTier | null>((current, tier) => {
+      if (deal.slots_sold >= tier.unlockQty) {
+        return tier;
+      }
+      return current;
+    }, null);
+  }, [deal, cumulativeTiers]);
+
+  const nextTier = useMemo(() => {
+    if (!deal) return null;
+    return cumulativeTiers.find((tier) => deal.slots_sold < tier.unlockQty) ?? null;
+  }, [deal, cumulativeTiers]);
+
+  const currentUnlockedDiscount = activeTier?.discount_pct ?? 0;
+  const maxAvailableDiscount = cumulativeTiers[cumulativeTiers.length - 1]?.discount_pct ?? 0;
+
+  const tierTrackMax = useMemo(() => {
+    const tierMaxQty = cumulativeTiers[cumulativeTiers.length - 1]?.unlockQty ?? 0;
+    return Math.max(tierMaxQty, Number(deal?.total_qty) || 0, Number(deal?.slots_sold) || 0, 1);
+  }, [cumulativeTiers, deal]);
+
+  const tierOverallProgress = useMemo(() => {
+    if (!deal) return 0;
+    return Math.min((deal.slots_sold / tierTrackMax) * 100, 100);
+  }, [deal, tierTrackMax]);
+
+  const buyersNeededForNextTier = useMemo(() => {
+    if (!deal || !nextTier) return 0;
+    return Math.max(nextTier.unlockQty - deal.slots_sold, 0);
+  }, [deal, nextTier]);
+
   const successRedirectProgress = useMemo(() => {
     if (paymentResultModal?.status !== "success") return 0;
     return ((SUCCESS_REDIRECT_SECONDS - redirectCountdown) / SUCCESS_REDIRECT_SECONDS) * 100;
   }, [paymentResultModal, redirectCountdown]);
+
+  const currentImage = galleryImages[selectedImageIndex] ?? galleryImages[0];
+
+  const goToPreviousImage = () => {
+    setSelectedImageIndex((current) => (current === 0 ? galleryImages.length - 1 : current - 1));
+  };
+
+  const goToNextImage = () => {
+    setSelectedImageIndex((current) => (current === galleryImages.length - 1 ? 0 : current + 1));
+  };
 
   const handleFavorite = async () => {
     if (!user || !accessToken) {
@@ -253,7 +324,7 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
           ad_id: String(deal.id),
           "Idempotency-Key": idempotencyKey,
         },
-        themeColor: "#163B63", // ← updated to brand Primary Blue
+        themeColor: "#163B63",
       });
 
       if (checkoutResult.status === "success") {
@@ -308,24 +379,29 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
     }
   };
 
-  // ── Loading skeleton ──────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="space-y-6 max-w-6xl mx-auto animate-pulse">
-        <div className="h-6 w-40 bg-slate-200 rounded" />
-        <div className="h-64 bg-slate-200 rounded-2xl" />
-        <div className="h-56 bg-slate-200 rounded-2xl" />
+      <div className="mx-auto max-w-6xl animate-pulse space-y-6">
+        <div className="h-6 w-40 rounded bg-slate-200" />
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <div className="aspect-[4/3] rounded-3xl bg-slate-200" />
+          <div className="space-y-4 rounded-3xl bg-slate-200/70 p-8">
+            <div className="h-6 w-32 rounded bg-slate-200" />
+            <div className="h-12 w-3/4 rounded bg-slate-200" />
+            <div className="h-24 rounded bg-slate-200" />
+          </div>
+        </div>
+        <div className="h-56 rounded-2xl bg-slate-200" />
       </div>
     );
   }
 
-  // ── Error state ───────────────────────────────────────────────────────────
   if (errorMessage || !deal) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6">
         <Link
           href="/customer"
-          className="inline-flex items-center text-slate-500 hover:text-[#163B63] transition-colors font-medium text-sm"
+          className="inline-flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-[#163B63]"
         >
           <ArrowLeft size={16} className="mr-2" /> Back to All Deals
         </Link>
@@ -339,33 +415,99 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
 
   return (
     <>
-      <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto">
+      <div className="mx-auto max-w-6xl space-y-6 sm:space-y-8">
+        <Link
+          href="/customer"
+          className="inline-flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-[#163B63]"
+        >
+          <ArrowLeft size={16} className="mr-2" /> Back to All Deals
+        </Link>
 
-      {/* Back Navigation */}
-      <Link
-        href="/customer"
-        className="inline-flex items-center text-slate-500 hover:text-[#163B63] transition-colors font-medium text-sm"
-      >
-        <ArrowLeft size={16} className="mr-2" /> Back to All Deals
-      </Link>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-slate-100">
+              <Image
+                src={currentImage}
+                alt={deal.product_name || deal.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 60vw"
+                priority
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/55 via-slate-900/10 to-transparent p-5">
+                <div className="text-right gap-4">
+                  <span className="rounded-full border border-white/20 bg-white/40 px-3 py-1 text-xs font-semibold text-slate-950/55 backdrop-blur-md">
+                    {selectedImageIndex + 1}/{galleryImages.length}
+                  </span>
+                </div>
+              </div>
 
-      {/* ── Header Card ── */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 md:p-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
+              {galleryImages.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={goToPreviousImage}
+                    className="absolute left-3 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-slate-950/35 text-white backdrop-blur-md transition hover:bg-slate-950/55"
+                    aria-label="Show previous deal image"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goToNextImage}
+                    className="absolute right-3 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-slate-950/35 text-white backdrop-blur-md transition hover:bg-slate-950/55"
+                    aria-label="Show next deal image"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </>
+              )}
+            </div>
 
-          {/* Left: title + meta */}
-          <div className="space-y-4 flex-1">
-            <div className="flex items-center gap-3 flex-wrap">
-              {/* Status badge — green kept for semantic "active" meaning */}
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+            {galleryImages.length > 1 && (
+              <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+                {galleryImages.map((image, index) => {
+                  const isSelected = index === selectedImageIndex;
+                  return (
+                    <button
+                      key={`${image}-${index}`}
+                      type="button"
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-2xl border transition ${
+                        isSelected
+                          ? "border-[#163B63] ring-2 ring-[#163B63]/15"
+                          : "border-slate-200 hover:border-slate-300"
+                      }`}
+                      aria-label={`Show deal image ${index + 1}`}
+                    >
+                      <Image
+                        src={image}
+                        alt={`${deal.product_name || deal.title} preview ${index + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="96px"
+                      />
+                      <span
+                        className={`absolute inset-0 transition ${
+                          isSelected ? "bg-[#163B63]/10" : "bg-slate-950/10 hover:bg-transparent"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6 md:p-8">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-green-700">
                 {deal.status}
               </span>
-              {/* Category — brand gold accent */}
-              <span className="bg-[#F2B705]/15 text-[#122E4E] px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+              <span className="rounded-full bg-[#F2B705]/15 px-3 py-1 text-xs font-medium uppercase tracking-wide text-[#122E4E]">
                 {deal.category}
               </span>
-              {/* Verified — brand teal */}
-              <span className="flex items-center gap-1 text-slate-500 text-xs font-medium">
+              <span className="flex items-center gap-1 text-xs font-medium text-slate-500">
                 <ShieldCheck size={14} className="text-[#1CA7A6]" /> Verified Vendor
               </span>
               {isDealFulfilled && (
@@ -377,7 +519,7 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
                 type="button"
                 onClick={handleFavorite}
                 disabled={isUpdatingFavorite}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                   isFavorite
                     ? "border-red-200 bg-red-50 text-red-600"
                     : "border-slate-200 bg-white text-slate-600 hover:border-red-200 hover:text-red-600"
@@ -392,239 +534,313 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
               </button>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-bold text-[#122E4E]">
-              {deal.product_name || deal.title}
-            </h1>
-            <p className="text-slate-500 leading-relaxed text-base sm:text-lg max-w-3xl">
-              {deal.description}
-            </p>
-          </div>
+            <h1 className="mt-4 text-2xl font-bold text-[#122E4E] md:text-3xl">{deal.product_name || deal.title}</h1>
 
-          {/* Right: countdown — brand navy bg */}
-          <div className="bg-[#E7F6F6] px-5 sm:px-8 py-5 sm:py-6 rounded-2xl text-center w-full sm:w-auto sm:min-w-[220px] border border-[#1CA7A6]">
-            <p className="text-[#F2B705] text-xs font-bold uppercase mb-2 tracking-wider">Offer Ends In</p>
-            <div className="flex items-center justify-center gap-2 text-[#122E4E] font-bold text-xl sm:text-2xl">
-              <Clock size={20} className="text-[#F2B705]" />
-              {timeLeft}
-            </div>
-          </div>
-        </div>
-
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mt-8 pt-8 border-t border-slate-100">
-
-          {/* Target Goal */}
-          <div className="rounded-xl border border-[#1CA7A6]/30 bg-[#1CA7A6]/5 p-4">
-            <p className="text-slate-500 text-xs font-semibold uppercase mb-2 tracking-wide">Target Goal</p>
-            <p className="text-2xl md:text-3xl font-bold text-[#1CA7A6]">
-              {deal.total_qty}{" "}
-              <span className="text-lg text-slate-400 font-medium">Buyers</span>
-            </p>
-          </div>
-
-          {/* Deal Price */}
-          <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-            <p className="text-slate-500 text-xs font-semibold uppercase mb-2 tracking-wide">Deal Price</p>
-            <p className="text-2xl md:text-3xl font-bold text-[#122E4E]">
-              {formatCurrency(deal.original_price)}
-            </p>
-          </div>
-
-          {/* Discount — gold accent */}
-          <div className="rounded-xl border border-[#F2B705]/30 bg-[#F2B705]/5 p-4">
-            <p className="text-slate-500 text-xs font-semibold uppercase mb-2 tracking-wide">Your Discount</p>
-            <div className="flex items-center gap-2">
-              <Tag size={20} className="text-[#F2B705]" />
-              <p className="text-2xl md:text-3xl font-bold text-[#122E4E]">{maxDiscount}%</p>
-            </div>
-          </div>
-
-          {/* Token Advance — teal accent */}
-          <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4 flex flex-col justify-end">
-            <p className="text-slate-500 text-xs font-semibold uppercase mb-2 tracking-wide">Token Advance</p>
-            <p className="text-2xl md:text-3xl font-bold text-[#122E4E]">
-              {formatCurrency(deal.token_amount)}
-            </p>
-          </div>
-        </div>
-
-        {/* CTA Button */}
-        <div className="mt-5">
-          {isDealFulfilled && (
-            <p className="mb-3 text-sm font-medium text-emerald-700">
-              This deal is fulfilled. All available spots have already been taken.
-            </p>
-          )}
-          <button
-            onClick={handleAction}
-            disabled={isProcessingPayment || isDealFulfilled}
-            className="w-full sm:w-auto sm:min-w-[260px] sm:ml-auto bg-[#163B63] hover:bg-[#122E4E] disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
-          >
-            {isProcessingPayment ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                Processing...
-              </>
-            ) : isDealFulfilled ? (
-              "All Spots Filled"
-            ) : user ? (
-              "Pay Token Now"
-            ) : (
-              "Login to Pay"
-            )}
-          </button>
-        </div>
-
-        {/* Payment Notice */}
-        {paymentNotice && (
-          <div
-            className={`mt-3 rounded-xl border px-3 py-2 text-sm ${
-              paymentNotice.type === "success"
-                ? "border-[#1CA7A6]/30 bg-[#1CA7A6]/5 text-[#0e6b6a]"
-                : paymentNotice.type === "error"
-                ? "border-red-200 bg-red-50 text-red-700"
-                : "border-[#163B63]/20 bg-[#163B63]/5 text-[#163B63]"
-            }`}
-          >
-            <div className="flex items-start gap-2">
-              {paymentNotice.type === "success" ? (
-                <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-[#1CA7A6]" />
-              ) : paymentNotice.type === "error" ? (
-                <XCircle size={16} className="mt-0.5 shrink-0" />
-              ) : (
-                <AlertCircle size={16} className="mt-0.5 shrink-0 text-[#163B63]" />
-              )}
-              <div>
-                <p>{paymentNotice.message}</p>
-                {paymentReferenceId && (
-                  <p className="mt-1 text-xs opacity-70">Reference: {paymentReferenceId}</p>
-                )}
+            <div className="mt-6 rounded-2xl border border-[#1CA7A6] bg-[#E7F6F6] px-5 py-5 text-center sm:text-left">
+              <p className="text-xs font-medium uppercase tracking-wider text-[#F2B705]">Offer Ends In</p>
+              <div className="mt-2 flex items-center justify-center gap-2 text-xl font-medium text-[#122E4E] sm:justify-start sm:text-2xl">
+                <Clock size={20} className="text-[#F2B705]" />
+                {timeLeft}
               </div>
             </div>
-          </div>
-        )}
-      </div>
 
-      {/* ── Pool Progress Card ── */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 md:p-8">
-        <h3 className="font-bold text-lg text-[#122E4E] mb-6">Pool Progress</h3>
-
-        <div className="relative mb-8">
-          <div className="flex justify-between text-sm font-medium text-slate-600 mb-2">
-            <span>{deal.slots_sold} Joined</span>
-            <span>Goal: {deal.total_qty}</span>
-          </div>
-          <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-            <div
-              className="h-3 rounded-full transition-all duration-1000 ease-out bg-[#163B63]"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm border-t border-slate-50 pt-6">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Calendar size={18} className="text-[#1CA7A6]" />
-            Started:{" "}
-            <span className="font-medium text-[#122E4E]">{formatDate(deal.valid_from)}</span>
-          </div>
-          <div className="flex items-center gap-2 text-slate-600">
-            <AlertCircle size={18} className="text-[#F2B705]" />
-            Ends:{" "}
-            <span className="font-medium text-[#122E4E]">{formatDate(deal.valid_to)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Discount Tiers Card ── */}
-      {/* <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-5 sm:p-6 border-b border-slate-100 bg-[#163B63]/5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-          <h3 className="font-bold text-lg text-[#122E4E]">
-            Discount Tiers ({deal.tiers.length})
-          </h3>
-          <span className="text-xs text-slate-500">
-            Progressive discounts unlock as more buyers join
-          </span>
-        </div>
-
-        <div className="p-5 sm:p-6">
-          {sortedTiers.length === 0 ? (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-600">
-              No discount tiers configured for this deal yet.
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Deal price</p>
+                <p className="mt-2 text-2xl font-medium text-[#122E4E]">{formatCurrency(deal.original_price)}</p>
+              </div>
+              <div className="rounded-2xl border border-[#F2B705]/30 bg-[#F2B705]/5 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Token advance</p>
+                <p className="mt-2 text-2xl font-medium text-[#122E4E]">{formatCurrency(deal.token_amount)}</p>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-4">
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-                <div className="flex items-center justify-between text-xs font-medium text-slate-600">
-                  <span>{deal.slots_sold} joined</span>
-                  <span>{tierGoalQty} for max discount</span>
+            <div className="mt-6">
+              {isDealFulfilled && (
+                <p className="mb-3 text-sm font-medium text-emerald-700">
+                  This deal is fulfilled. All available spots have already been taken.
+                </p>
+              )}
+              <button
+                onClick={handleAction}
+                disabled={isProcessingPayment || isDealFulfilled}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#163B63] px-8 py-3 font-bold text-white shadow-md transition-all hover:bg-[#122E4E] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Processing...
+                  </>
+                ) : isDealFulfilled ? (
+                  "All Spots Filled"
+                ) : user ? (
+                  "Pay Token Now"
+                ) : (
+                  "Login to Pay"
+                )}
+              </button>
+            </div>
+
+            {paymentNotice && (
+              <div
+                className={`mt-3 rounded-xl border px-3 py-2 text-sm ${
+                  paymentNotice.type === "success"
+                    ? "border-[#1CA7A6]/30 bg-[#1CA7A6]/5 text-[#0e6b6a]"
+                    : paymentNotice.type === "error"
+                      ? "border-red-200 bg-red-50 text-red-700"
+                      : "border-[#163B63]/20 bg-[#163B63]/5 text-[#163B63]"
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {paymentNotice.type === "success" ? (
+                    <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-[#1CA7A6]" />
+                  ) : paymentNotice.type === "error" ? (
+                    <XCircle size={16} className="mt-0.5 shrink-0" />
+                  ) : (
+                    <AlertCircle size={16} className="mt-0.5 shrink-0 text-[#163B63]" />
+                  )}
+                  <div>
+                    <p>{paymentNotice.message}</p>
+                    {paymentReferenceId && <p className="mt-1 text-xs opacity-70">Reference: {paymentReferenceId}</p>}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl border border-[#1CA7A6]/30 bg-[#1CA7A6]/5 p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Target goal</p>
+            <p className="text-2xl font-bold text-[#1CA7A6] md:text-3xl">
+              {deal.total_qty} <span className="text-lg font-medium text-slate-400">Buyers</span>
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-[#B8C4D3] bg-[#E8F0F8] p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Current participation</p>
+            <p className="text-2xl font-bold text-[#122E4E] md:text-3xl">{deal.slots_sold}</p>
+          </div>
+
+          <div className="rounded-2xl border border-[#F2B705]/30 bg-[#F2B705]/5 p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Current unlocked discount</p>
+            <div className="flex items-center gap-2">
+              <Tag size={20} className="text-[#F2B705]" />
+              <p className="text-2xl font-bold text-[#122E4E] md:text-3xl">{currentUnlockedDiscount}%</p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[#1CA7A6]/50 bg-[#E7F6F6] p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Slots remaining</p>
+            <p className="text-2xl font-bold text-[#122E4E] md:text-3xl">{Math.max(deal.slots_remaining ?? 0, 0)}</p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 md:p-8">
+          <div className="flex items-start justify-between gap-4">
+            {/* <div> */}
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Deal description</p>
+              {/* <h2 className="mt-2 text-xl font-bold text-[#122E4E]">What buyers should know</h2> */}
+            {/* </div> */}
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+              {deal.category}
+            </span>
+          </div>
+          <p className="mt-4 text-base leading-8 text-slate-600">{deal.description}</p>
+          {deal.terms && deal.terms !== "NA" && (
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-600">
+              <span className="font-semibold text-[#122E4E]">Terms:</span> {deal.terms}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 md:p-8">
+          <h3 className="mb-6 text-lg font-bold text-[#122E4E]">Deal Progress</h3>
+
+          <div className="relative mb-8">
+            <div className="mb-2 flex justify-between text-sm font-medium text-slate-600">
+              <span>{deal.slots_sold} Joined</span>
+              <span>Goal: {deal.total_qty}</span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-3 rounded-full bg-[#163B63] transition-all duration-1000 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-x-8 gap-y-3 border-t border-slate-50 pt-6 text-sm">
+            <div className="flex items-center gap-2 text-slate-600">
+              <Calendar size={18} className="text-[#1CA7A6]" />
+              Started: <span className="font-medium text-[#122E4E]">{formatDate(deal.valid_from)}</span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-600">
+              <AlertCircle size={18} className="text-[#F2B705]" />
+              Ends: <span className="font-medium text-[#122E4E]">{formatDate(deal.valid_to)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-2 border-b border-slate-100 bg-[#163B63]/5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div>
+              <h3 className="text-lg font-bold text-[#122E4E]">Discount Journey</h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Tier quantities are cumulative by sequence, so each new milestone builds on the previous one.
+              </p>
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Up to {maxAvailableDiscount}% off
+            </span>
+          </div>
+
+          <div className="p-5 sm:p-6">
+            {cumulativeTiers.length === 0 ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-600">
+                No discount tiers configured for this deal yet.
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <span>{deal.slots_sold} buyers joined</span>
+                      <span>{tierTrackMax} buyers across all tier milestones</span>
+                    </div>
+
+                    <div className="relative mt-10">
+                      <div className="h-4 overflow-hidden rounded-full bg-white shadow-inner ring-1 ring-slate-200">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#163B63] via-[#1CA7A6] to-[#F2B705] transition-all duration-700"
+                          style={{ width: `${tierOverallProgress}%` }}
+                        />
+                      </div>
+
+                      {cumulativeTiers.map((tier) => {
+                        const markerLeft = Math.min((tier.unlockQty / tierTrackMax) * 100, 100);
+                        const unlocked = deal.slots_sold >= tier.unlockQty;
+
+                        return (
+                          <div
+                            key={tier.id}
+                            className="absolute top-0"
+                            style={{ left: `calc(${markerLeft}% - 1px)` }}
+                          >
+                            <div className="absolute -top-8 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 shadow-sm sm:block">
+                              {tier.discount_pct}%
+                            </div>
+                            <div className={`mt-1 h-4 w-0.5 ${unlocked ? "bg-[#1CA7A6]" : "bg-slate-300"}`} />
+                            <span
+                              className={`absolute top-2 left-1/2 h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-white shadow ${
+                                unlocked ? "bg-[#1CA7A6]" : "bg-slate-300"
+                              }`}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+                      <span>{tierOverallProgress.toFixed(0)}% of the discount journey completed</span>
+                      <span className="font-semibold text-[#122E4E]">
+                        {activeTier ? `${activeTier.discount_pct}% currently unlocked` : "No discount unlocked yet"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Current unlock</p>
+                      <p className="mt-2 text-2xl font-bold text-emerald-800">
+                        {activeTier ? `${activeTier.discount_pct}% off` : "0% off"}
+                      </p>
+                      <p className="mt-1 text-sm text-emerald-700">
+                        {activeTier
+                          ? `${activeTier.label || `Tier ${activeTier.seq}`} is active after ${activeTier.unlockQty} buyers.`
+                          : "Get more buyers in to unlock the first discount tier."}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-[#F2B705]/30 bg-[#F2B705]/10 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#8a6b00]">Next milestone</p>
+                      <p className="mt-2 text-2xl font-bold text-[#122E4E]">
+                        {nextTier ? `${buyersNeededForNextTier} more buyers` : "All tiers unlocked"}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {nextTier
+                          ? `Reach ${nextTier.unlockQty} total buyers to unlock ${nextTier.discount_pct}% on ${nextTier.label || `Tier ${nextTier.seq}`}.`
+                          : "The final discount milestone is already active."}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Top available discount</p>
+                      <p className="mt-2 text-2xl font-bold text-[#122E4E]">{maxAvailableDiscount}% off</p>
+                      <p className="mt-1 text-sm text-slate-600">Maximum price benefit available after all cumulative tiers are reached.</p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="relative mt-2 h-4 rounded-full bg-white border border-slate-200 overflow-hidden">
-                  <div
-                    className="h-full bg-[#163B63] transition-all duration-700"
-                    style={{ width: `${tierOverallProgress}%` }}
-                  />
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {cumulativeTiers.map((tier) => {
+                    const unlocked = deal.slots_sold >= tier.unlockQty;
+                    const isCurrentTier = activeTier?.id === tier.id;
+                    const isUpcomingTier = nextTier?.id === tier.id;
+                    const buyersNeeded = Math.max(tier.unlockQty - deal.slots_sold, 0);
 
-                  {sortedTiers.map((tier) => {
-                    const markerLeft =
-                      tierGoalQty > 0 ? Math.min((tier.qty / tierGoalQty) * 100, 100) : 0;
                     return (
                       <div
                         key={tier.id}
-                        className="absolute inset-y-0"
-                        style={{ left: `calc(${markerLeft}% - 1px)` }}
+                        className={`rounded-2xl border p-4 transition-colors ${
+                          unlocked
+                            ? "border-emerald-200 bg-emerald-50"
+                            : isUpcomingTier
+                              ? "border-[#F2B705]/40 bg-[#FFF8DD]"
+                              : "border-slate-200 bg-white"
+                        }`}
                       >
-                        <div className="h-full w-px bg-white/70" />
-                        <span className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded px-1.5 py-0.5 text-[10px] font-bold text-white/95 border border-[#163B63]/20">
-                          {tier.discount_pct}%
-                        </span>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                              {tier.label || `Tier ${tier.seq}`}
+                            </p>
+                            <p className="mt-2 text-2xl font-bold text-[#122E4E]">{tier.discount_pct}% off</p>
+                          </div>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${
+                              unlocked
+                                ? "bg-emerald-100 text-emerald-700"
+                                : isUpcomingTier
+                                  ? "bg-[#F2B705]/15 text-[#8a6b00]"
+                                  : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            {unlocked ? (isCurrentTier ? "Current" : "Unlocked") : isUpcomingTier ? "Next" : "Locked"}
+                          </span>
+                        </div>
+
+                        <div className="mt-4 space-y-2 text-sm text-slate-600">
+                          {/* <p>
+                            Adds <span className="font-semibold text-[#122E4E]">{tier.qty}</span> buyers at this stage
+                          </p> */}
+                          <p>
+                            Unlocks at <span className="font-semibold text-[#122E4E]">{tier.unlockQty}</span> total buyers
+                          </p>
+                          <p>
+                            {unlocked
+                              ? "This discount is already active in the cumulative journey."
+                              : `${buyersNeeded} more buyer${buyersNeeded === 1 ? "" : "s"} needed to unlock this tier.`}
+                          </p>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-
-                <div className="mt-2 flex items-center justify-between text-xs">
-                  <span className="text-slate-600">{tierOverallProgress.toFixed(0)}% complete</span>
-                  <span className={activeTier ? "text-[#1CA7A6] font-semibold" : "text-slate-600"}>
-                    {activeTier ? `${activeTier.discount_pct}% unlocked` : "No tier unlocked yet"}
-                  </span>
-                </div>
               </div>
-
-              <div className="grid gap-2 sm:grid-cols-2">
-                {sortedTiers.map((tier) => {
-                  const isUnlocked = deal.slots_sold >= tier.qty;
-                  const buyersNeeded = Math.max(tier.qty - deal.slots_sold, 0);
-
-                  return (
-                    <div
-                      key={tier.id}
-                      className={`rounded-lg border px-3 py-2 text-xs transition-colors ${
-                        isUnlocked
-                          ? "border-[#1CA7A6]/30 bg-[#1CA7A6]/5 text-[#0e6b6a]"
-                          : "border-slate-200 bg-white text-slate-700"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-semibold">{tier.label || `Tier ${tier.seq}`}</span>
-                        <span className={`font-bold ${isUnlocked ? "text-[#1CA7A6]" : "text-[#163B63]"}`}>
-                          {tier.discount_pct}% OFF
-                        </span>
-                      </div>
-                      <p className="mt-1 text-[11px] opacity-80">
-                        {isUnlocked ? "✓ Unlocked" : `${buyersNeeded} buyers left`} • Unlock at {tier.qty}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div> */}
-
       </div>
 
       {paymentResultModal && (

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { buildMetadata, getSiteUrl } from "@/lib/seo";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import NotificationBootstrap from "@/components/notifications/NotificationBootstrap";
 
 const sofiaPro = localFont({
   src: [
@@ -14,18 +15,14 @@ const sofiaPro = localFont({
   ],
   display: "swap",
   fallback: ["Inter", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
-})
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   icons: {
-    icon: [
-      { url: "/assets/Logo-icon.png", type: "image/png" },
-    ],
+    icon: [{ url: "/assets/Logo-icon.png", type: "image/png" }],
     shortcut: ["/assets/Logo-icon.png"],
-    apple: [
-      { url: "/assets/Logo-icon.png", type: "image/png" },
-    ],
+    apple: [{ url: "/assets/Logo-icon.png", type: "image/png" }],
   },
   ...buildMetadata({
     title: "SaveMyPay | Group Buying Deals & Bulk Savings",
@@ -73,6 +70,7 @@ export default function RootLayout({
           }}
         />
         <main className="relative z-0 h-full w-full">{children}</main>
+        <NotificationBootstrap />
         <Suspense fallback={null}>
           <GoogleAnalytics measurementId={gaMeasurementId} />
         </Suspense>
