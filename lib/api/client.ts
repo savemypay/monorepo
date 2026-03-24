@@ -1,5 +1,7 @@
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
+import { clearVendorSession } from "@/lib/store/authStore";
+
 interface ApiRequestOptions {
   method?: HttpMethod;
   query?: Record<string, string | number | boolean | undefined | null>;
@@ -28,6 +30,23 @@ function buildUrl(
   return url.toString();
 }
 
+function redirectToLogin() {
+  if (typeof window === "undefined") return;
+  if (window.location.pathname !== "/login") {
+    window.location.replace("/login");
+  }
+}
+
+function handleUnauthorized() {
+  clearVendorSession();
+
+  if (typeof window !== "undefined") {
+    sessionStorage.setItem("vendor-session-expired", "1");
+  }
+
+  redirectToLogin();
+}
+
 function getAccessTokenFromStorage() {
   if (typeof window === "undefined") return null;
   const storageData = localStorage.getItem("vendor-storage");
@@ -52,12 +71,18 @@ export async function apiRequest<T>(
   }
 
   const requestHeaders = new Headers(headers);
-  requestHeaders.set("Content-Type", "application/json");
   requestHeaders.set("ngrok-skip-browser-warning", "true");
+
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+
+  if (!isFormData) {
+    requestHeaders.set("Content-Type", "application/json");
+  }
 
   if (auth) {
     const token = getAccessTokenFromStorage();
     if (!token) {
+      handleUnauthorized();
       throw new Error("Unauthorized. Please login again.");
     }
     requestHeaders.set("Authorization", `Bearer ${token}`);
@@ -67,7 +92,12 @@ export async function apiRequest<T>(
   const response = await fetch(buildUrl(endpoint, query), {
     method,
     headers: requestHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body:
+      body === undefined
+        ? undefined
+        : isFormData
+          ? (body as FormData)
+          : JSON.stringify(body),
   });
 
   let data: unknown;
@@ -78,6 +108,11 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
+    if (response.status === 401) {
+      handleUnauthorized();
+      throw new Error("Session expired. Please login again.");
+    }
+
     if (typeof data === "object" && data !== null) {
       const maybeError = data as { message?: string; error?: string };
       throw new Error(maybeError.message || maybeError.error || "Request failed");

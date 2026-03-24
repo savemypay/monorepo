@@ -1,15 +1,13 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-// 1. Matches your API "vendor" object
 export interface VendorProfile {
   id: number;
   phone_number: string;
   email: string | null;
   is_active: boolean;
-  // These might be added after the registration step
-  owner_name?: string; 
-  business_name?: string; 
+  owner_name?: string;
+  business_name?: string;
 }
 
 interface VendorState {
@@ -20,6 +18,23 @@ interface VendorState {
 
   setAuth: (access: string, refresh: string, vendor: VendorProfile) => void;
   logout: () => void;
+}
+
+export function clearVendorSession() {
+  useVendorStore.setState({
+    accessToken: null,
+    refreshToken: null,
+    vendor: null,
+    isAuthenticated: false,
+  });
+
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('vendor-storage');
+  }
+
+  if (typeof document !== 'undefined') {
+    document.cookie = 'vendor_authenticated=; Path=/; Max-Age=0; SameSite=Lax';
+  }
 }
 
 export const useVendorStore = create<VendorState>()(
@@ -35,14 +50,13 @@ export const useVendorStore = create<VendorState>()(
       },
 
       logout: () => {
-        set({ accessToken: null, refreshToken: null, vendor: null, isAuthenticated: false });
-        localStorage.removeItem('vendor-storage');
+        clearVendorSession();
       },
     }),
     {
-      name: 'vendor-storage', // Unique key for Vendor Portal
+      name: 'vendor-storage',
       storage: createJSONStorage(() => localStorage),
-      skipHydration: true, // IMPORTANT: Prevents Next.js hydration mismatch
+      skipHydration: true,
     }
   )
 );
