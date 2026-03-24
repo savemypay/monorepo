@@ -1,12 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { getAds, publishAd, type AdListItem } from "@/lib/admin/api";
-import { readStoredAdminSession } from "@/lib/admin/auth";
-import { formatCurrency } from "@/lib/admin/mock-data";
+import { getAdById, publishAd, rejectAd } from "@/lib/admin/api";
+import { useAdminAuthStore } from "@/lib/admin/auth-store";
+import { formatCurrency } from "@/lib/admin/presentation";
+import type { AdListItem } from "@/lib/admin/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function formatDate(dateTime: string) {
   const parsed = new Date(dateTime);
@@ -26,28 +36,23 @@ export default function DealDetailPage() {
   const params = useParams<{ id: string }>();
   const dealId = Number(params.id);
   const invalidDealId = !Number.isFinite(dealId);
-  const [accessToken, setAccessToken] = useState<string | null | undefined>(undefined);
+  const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
+  const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [deal, setDeal] = useState<AdListItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const sessionReady = accessToken !== undefined;
-  const resolvedError = sessionReady && !accessToken ? "Admin session not found" : error;
-
-  useEffect(() => {
-    void Promise.resolve().then(() => {
-      setAccessToken(readStoredAdminSession()?.accessToken ?? null);
-    });
-  }, []);
+  const [actionDialog, setActionDialog] = useState<"publish" | "reject" | null>(null);
+  const resolvedError = hydrated && !accessToken ? "Admin session not found" : error;
 
   useEffect(() => {
     if (invalidDealId) {
       return;
     }
 
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -62,19 +67,23 @@ export default function DealDetailPage() {
         setLoading(true);
         setError(null);
         setMissing(false);
-        return getAds({ accessToken });
+        return getAdById(accessToken, dealId);
       })
       .then((data) => {
         if (!data || isCancelled) {
           return;
         }
 
-        const matchedDeal = data.find((item) => item.id === dealId) ?? null;
-        setDeal(matchedDeal);
-        setMissing(!matchedDeal);
+        setDeal(data);
+        setMissing(false);
       })
       .catch((fetchError: unknown) => {
         if (isCancelled || (fetchError instanceof Error && fetchError.message === "cancelled")) {
+          return;
+        }
+
+        if (fetchError instanceof Error && /not found/i.test(fetchError.message)) {
+          setMissing(true);
           return;
         }
 
@@ -89,7 +98,7 @@ export default function DealDetailPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, dealId, invalidDealId, sessionReady]);
+  }, [accessToken, dealId, hydrated, invalidDealId]);
 
   if (invalidDealId || missing) {
     notFound();
@@ -113,8 +122,8 @@ export default function DealDetailPage() {
 
   const isDraftDeal = deal.status.toLowerCase() === "draft";
 
-  const handlePublish = async () => {
-    if (!accessToken || !isDraftDeal || actionLoading) {
+  const handleConfirmAction = async () => {
+    if (!accessToken || !isDraftDeal || actionLoading || !actionDialog) {
       return;
     }
 
@@ -122,11 +131,18 @@ export default function DealDetailPage() {
     setActionMessage(null);
 
     try {
-      const publishedDeal = await publishAd(accessToken, deal.id);
-      setDeal(publishedDeal);
-      setActionMessage("Deal published successfully.");
-    } catch (publishError: unknown) {
-      setActionMessage(publishError instanceof Error ? publishError.message : "Failed to publish deal");
+      const updatedDeal =
+        actionDialog === "publish"
+          ? await publishAd(accessToken, deal.id)
+          : await rejectAd(accessToken, deal.id);
+
+      setDeal(updatedDeal);
+      setActionMessage(
+        actionDialog === "publish" ? "Deal published successfully." : "Deal rejected successfully."
+      );
+      setActionDialog(null);
+    } catch (actionError: unknown) {
+      setActionMessage(actionError instanceof Error ? actionError.message : "Failed to update deal status");
     } finally {
       setActionLoading(false);
     }
@@ -138,6 +154,15 @@ export default function DealDetailPage() {
         eyebrow="Deal Review"
         title={deal.title}
         description="Inspect pricing, inventory, timing, and the commercial structure before taking an admin action."
+        actionClassName="text-[#7A8CA3] hover:text-[#163B63] hover:underline transition"
+        action={
+          <Link
+            href="/deals"
+            className="text-base font-medium"
+          >
+            ⬅ Back to deals
+          </Link>
+        }
       />
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -197,7 +222,7 @@ export default function DealDetailPage() {
               <div className="mt-4 grid gap-3">
                 <button
                   type="button"
-                  onClick={handlePublish}
+                  onClick={() => setActionDialog("publish")}
                   disabled={actionLoading}
                   className="rounded-full bg-brand px-4 py-3 text-sm font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
                 >
@@ -205,10 +230,11 @@ export default function DealDetailPage() {
                 </button>
                 <button
                   type="button"
-                  disabled
-                  className="rounded-full border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 opacity-60"
+                  onClick={() => setActionDialog("reject")}
+                  disabled={actionLoading}
+                  className="rounded-full border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Reject Deal
+                  {actionLoading ? "Processing..." : "Reject Deal"}
                 </button>
               </div>
               {actionMessage ? <p className="mt-4 text-sm font-medium text-slate-700">{actionMessage}</p> : null}
@@ -251,6 +277,40 @@ export default function DealDetailPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={actionDialog !== null} onOpenChange={(open) => setActionDialog(open ? actionDialog : null)}>
+        <DialogContent className="max-w-md rounded-3xl border border-line bg-panel p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-brand">
+              {actionDialog === "reject" ? "Reject this deal?" : "Publish this deal?"}
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-6 text-muted">
+              {actionDialog === "reject"
+                ? "This deal will be marked as canceled and removed from approval."
+                : "This deal will go live for customers once published."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-2 gap-3 sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setActionDialog(null)}
+              className="rounded-full border border-line bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmAction}
+              disabled={actionLoading}
+              className={`rounded-full px-5 py-2.5 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-70 ${
+                actionDialog === "reject" ? "bg-rose-600 hover:bg-rose-700" : "bg-brand hover:opacity-95"
+              }`}
+            >
+              {actionDialog === "reject" ? "Reject Deal" : "Publish Deal"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

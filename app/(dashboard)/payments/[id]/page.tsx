@@ -8,12 +8,13 @@ export default async function PaymentDetailPage({ params }: { params: Promise<{ 
       <PageHeader
         eyebrow="Payment Review"
         title={`Payment ${id}`}
-        description="Detailed payment drill-down can be expanded here once a payment-by-id endpoint is available."
+        description="Payment drill-down is reserved here while the main payments table stays live on the paid-users API."
       />
 
       <div className="admin-panel p-6">
         <p className="text-sm leading-6 text-slate-700">
-          Comming Soon
+          The payments list is live and API-backed. This detail route is intentionally lightweight until a dedicated
+          payment-by-id backend endpoint is available.
         </p>
       </div>
     </div>

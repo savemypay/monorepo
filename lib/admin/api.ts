@@ -1,295 +1,35 @@
-type AdminLoginPayload = {
-  username?: string;
-  email?: string;
-  password: string;
-};
-
-type UserOnboardingTrendRole = "customer" | "vendor";
-type UserOnboardingTrendGranularity = "day" | "week" | "month" | "year";
-type TransactionTrendGranularity = "day" | "week" | "month" | "year";
-
-type AdminLoginItem = {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  role: string;
-  user_id: string;
-};
-
-type AdminLoginResponse = {
-  success: boolean;
-  message: string;
-  data: AdminLoginItem[];
-  error: string | null;
-};
-
-type UserOnboardingTrendRequest = {
-  accessToken: string;
-  granularity: UserOnboardingTrendGranularity;
-  role: UserOnboardingTrendRole;
-  dateFrom?: string;
-  dateTo?: string;
-};
-
-type UserOnboardingTrendPoint = {
-  period_start: string;
-  period_end: string;
-  new_users: number;
-  cumulative_users: number;
-};
-
-type UserOnboardingTrendItem = {
-  granularity: UserOnboardingTrendGranularity;
-  role: UserOnboardingTrendRole;
-  date_from: string;
-  date_to: string;
-  total_new_users: number;
-  total_users_till_to_date: number;
-  trend: UserOnboardingTrendPoint[];
-};
-
-type UserOnboardingTrendResponse = {
-  success: boolean;
-  message: string;
-  data: UserOnboardingTrendItem[];
-  error: string | null;
-};
-
-type TransactionTrendRequest = {
-  accessToken: string;
-  granularity: TransactionTrendGranularity;
-  dateFrom?: string;
-  dateTo?: string;
-  vendorId?: string;
-};
-
-type TransactionTrendPoint = {
-  period_start: string;
-  period_end: string;
-  transactions_count: number;
-  unique_paying_users: number;
-  paid_amount: number;
-  cumulative_paid_amount: number;
-};
-
-type TransactionTrendItem = {
-  granularity: TransactionTrendGranularity;
-  date_from: string;
-  date_to: string;
-  vendor_id: string | null;
-  total_transactions: number;
-  total_unique_paying_users: number;
-  total_paid_amount: number;
-  trend: TransactionTrendPoint[];
-};
-
-type TransactionTrendResponse = {
-  success: boolean;
-  message: string;
-  data: TransactionTrendItem[];
-  error: string | null;
-};
-
-type AdsByCategoryRequest = {
-  accessToken: string;
-  category?: string;
-  vendorId?: string;
-};
-
-type AdsByCategoryPoint = {
-  category: string;
-  ads_count: number;
-};
-
-type AdsByCategoryItem = {
-  category_filter: string | null;
-  vendor_id: string | null;
-  total_ads: number;
-  by_category: AdsByCategoryPoint[];
-};
-
-type AdsByCategoryResponse = {
-  success: boolean;
-  message: string;
-  data: AdsByCategoryItem[];
-  error: string | null;
-};
-
-type DashboardOverviewItem = {
-  live_deals: number;
-  pending_approval: number;
-  collections_today: number;
-  active_vendors: number;
-  new_customers: number;
-  failed_payments: number;
-  new_customers_window_days: number;
-};
-
-type DashboardOverviewResponse = {
-  success: boolean;
-  message: string;
-  data: DashboardOverviewItem[];
-  error: string | null;
-};
-
-type AdsListRequest = {
-  accessToken: string;
-  status?: string;
-  vendorId?: string;
-};
-
-export type AdTierItem = {
-  id: number;
-  seq: number;
-  qty: number;
-  discount_pct: number;
-  label: string;
-};
-
-export type AdListItem = {
-  id: number;
-  vendor_id: number;
-  title: string;
-  product_name: string;
-  category: string;
-  token_amount: number;
-  original_price: number;
-  total_qty: number;
-  slots_remaining: number;
-  slots_sold: number;
-  status: string;
-  images: string[];
-  description: string;
-  terms: string;
-  valid_from: string;
-  valid_to: string;
-  is_favorite: boolean;
-  tiers: AdTierItem[];
-};
-
-type AdsListResponse = {
-  success: boolean;
-  message: string;
-  data: AdListItem[];
-  error: {
-    code?: string;
-    details?: string;
-  } | null;
-};
-
-type PublishAdResponse = {
-  success: boolean;
-  message: string;
-  data: AdListItem[];
-  error: {
-    code?: string;
-    details?: string;
-  } | null;
-};
-
-export type PaidUserItem = {
-  payment_id: number;
-  order_id: string;
-  deal_ref: string;
-  customer_ref: string;
-  amount: number;
-  currency: string;
-  status: string;
-  created_at: string;
-  ad: Record<string, unknown>;
-  user_email: string;
-  user_phone_number: string;
-  user_name: string;
-};
-
-type PaidUsersResponse = {
-  success: boolean;
-  message: string;
-  data: PaidUserItem[];
-  error: {
-    code?: string;
-    details?: string;
-  } | null;
-};
-
-type AdminUsersRole = "all" | "customer" | "vendor";
-
-type AdminUsersRequest = {
-  accessToken: string;
-  role?: AdminUsersRole;
-  search?: string;
-};
-
-export type AdminUserItem = {
-  id: number;
-  role: "customer" | "vendor";
-  name: string;
-  email: string;
-  phone_number: string;
-  is_active: boolean;
-  created_at: string;
-};
-
-type AdminUsersSummaryItem = {
-  role_filter: AdminUsersRole;
-  total_customers: number;
-  total_vendors: number;
-  total_count: number;
-  customers: AdminUserItem[];
-  vendors: AdminUserItem[];
-};
-
-type AdminUsersResponse = {
-  success: boolean;
-  message: string;
-  data: AdminUsersSummaryItem[];
-  error: {
-    code?: string;
-    details?: string;
-  } | null;
-};
-
-export type VendorRevenueAdItem = {
-  id: number;
-  vendor_id: number;
-  title: string;
-  product_name: string;
-  category: string;
-  token_amount: number;
-  original_price: number;
-  total_qty: number;
-  slots_remaining: number;
-  slots_sold: number;
-  status: string;
-  description: string;
-  terms: string;
-  valid_from: string;
-  valid_to: string;
-  is_favorite: boolean;
-  tiers: AdTierItem[];
-  revenue_generated: number;
-  successful_payments: number;
-};
-
-export type VendorAdsRevenueItem = {
-  vendor_id: number;
-  vendor_name: string | null;
-  vendor_email: string | null;
-  vendor_phone_number: string | null;
-  total_ads: number;
-  vendor_total_revenue: number;
-  ads: VendorRevenueAdItem[];
-};
-
-type VendorAdsRevenueResponse = {
-  success: boolean;
-  message: string;
-  data: VendorAdsRevenueItem[];
-  error: {
-    code?: string;
-    details?: string;
-  } | null;
-};
+import type {
+  AdDetailResponse,
+  AdminLoginItem,
+  AdminLoginPayload,
+  AdminLoginResponse,
+  AdminUsersRequest,
+  AdminUsersResponse,
+  AdminUsersSummaryItem,
+  AdListItem,
+  AdsByCategoryItem,
+  AdsByCategoryRequest,
+  AdsByCategoryResponse,
+  AdsListRequest,
+  AdsListResponse,
+  CustomerTransactionItem,
+  CustomerTransactionsResponse,
+  DashboardOverviewItem,
+  DashboardOverviewResponse,
+  PaidUserItem,
+  PaidUsersResponse,
+  PaidUsersStatus,
+  PublishAdResponse,
+  RejectAdResponse,
+  TransactionTrendItem,
+  TransactionTrendRequest,
+  TransactionTrendResponse,
+  UserOnboardingTrendItem,
+  UserOnboardingTrendRequest,
+  UserOnboardingTrendResponse,
+  VendorAdsRevenueItem,
+  VendorAdsRevenueResponse,
+} from "@/lib/admin/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
 
@@ -299,6 +39,43 @@ function resolveBaseUrl() {
   }
 
   return API_BASE_URL.replace(/\/+$/, "");
+}
+
+async function readJson(response: Response) {
+  try {
+    return (await response.json()) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function extractErrorMessage(data: unknown, fallback: string) {
+  return typeof data === "object" &&
+    data !== null &&
+    "message" in data &&
+    typeof (data as { message?: unknown }).message === "string"
+    ? (data as { message: string }).message
+    : fallback;
+}
+
+async function handleUnauthorizedSession() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const { logoutAdminSession } = await import("@/lib/admin/auth-store");
+  logoutAdminSession();
+}
+
+async function assertProtectedResponse(response: Response, data: unknown, fallback: string) {
+  if (response.status === 401) {
+    await handleUnauthorizedSession();
+    throw new Error("Admin session expired");
+  }
+
+  if (!response.ok) {
+    throw new Error(extractErrorMessage(data, fallback));
+  }
 }
 
 export async function adminLogin(payload: AdminLoginPayload): Promise<AdminLoginItem> {
@@ -314,23 +91,10 @@ export async function adminLogin(payload: AdminLoginPayload): Promise<AdminLogin
     body: JSON.stringify(payload),
   });
 
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
+  const data = await readJson(response);
 
   if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof (data as { message?: unknown }).message === "string"
-        ? (data as { message: string }).message
-        : "Admin login failed";
-
-    throw new Error(message);
+    throw new Error(extractErrorMessage(data, "Admin login failed"));
   }
 
   const parsed = data as AdminLoginResponse;
@@ -341,6 +105,7 @@ export async function adminLogin(payload: AdminLoginPayload): Promise<AdminLogin
   return parsed.data[0];
 }
 
+// Fetch customer or vendor onboarding growth for the overview trend chart.
 export async function getUserOnboardingTrend(
   payload: UserOnboardingTrendRequest,
 ): Promise<UserOnboardingTrendItem> {
@@ -364,24 +129,8 @@ export async function getUserOnboardingTrend(
     cache: "no-store",
   });
 
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof (data as { message?: unknown }).message === "string"
-        ? (data as { message: string }).message
-        : "Failed to fetch onboarding trend";
-
-    throw new Error(message);
-  }
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch onboarding trend");
 
   const parsed = data as UserOnboardingTrendResponse;
   if (!parsed.success || !parsed.data?.length) {
@@ -391,6 +140,7 @@ export async function getUserOnboardingTrend(
   return parsed.data[0];
 }
 
+// Fetch payment collection trend data for revenue and transaction analytics.
 export async function getTransactionTrend(
   payload: TransactionTrendRequest,
 ): Promise<TransactionTrendItem> {
@@ -417,24 +167,8 @@ export async function getTransactionTrend(
     cache: "no-store",
   });
 
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof (data as { message?: unknown }).message === "string"
-        ? (data as { message: string }).message
-        : "Failed to fetch transaction trend";
-
-    throw new Error(message);
-  }
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch transaction trend");
 
   const parsed = data as TransactionTrendResponse;
   if (!parsed.success || !parsed.data?.length) {
@@ -444,6 +178,7 @@ export async function getTransactionTrend(
   return parsed.data[0];
 }
 
+// Fetch ads with optional status or vendor filtering for list and queue views.
 export async function getAds(payload: AdsListRequest): Promise<AdListItem[]> {
   const searchParams = new URLSearchParams();
 
@@ -455,6 +190,14 @@ export async function getAds(payload: AdsListRequest): Promise<AdListItem[]> {
     searchParams.set("vendor_id", payload.vendorId);
   }
 
+  if (payload.page) {
+    searchParams.set("page", String(payload.page));
+  }
+
+  if (payload.limit) {
+    searchParams.set("limit", String(payload.limit));
+  }
+
   const query = searchParams.toString();
   const endpoint = `${resolveBaseUrl()}/api/v1/ads${query ? `?${query}` : ""}`;
   const response = await fetch(endpoint, {
@@ -464,24 +207,8 @@ export async function getAds(payload: AdsListRequest): Promise<AdListItem[]> {
     cache: "no-store",
   });
 
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof (data as { message?: unknown }).message === "string"
-        ? (data as { message: string }).message
-        : "Failed to fetch ads";
-
-    throw new Error(message);
-  }
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch ads");
 
   const parsed = data as AdsListResponse;
   if (!parsed.success) {
@@ -491,6 +218,27 @@ export async function getAds(payload: AdsListRequest): Promise<AdListItem[]> {
   return parsed.data ?? [];
 }
 
+// Fetch a single ad by id for the deal detail page.
+export async function getAdById(accessToken: string, adId: number): Promise<AdListItem> {
+  const response = await fetch(`${resolveBaseUrl()}/api/v1/ads/${adId}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch ad");
+
+  const parsed = data as AdDetailResponse;
+  if (!parsed.success || !parsed.data?.length) {
+    throw new Error(parsed.message || parsed.error?.details || "Failed to fetch ad");
+  }
+
+  return parsed.data[0];
+}
+
+// Publish a draft ad and return the updated deal payload.
 export async function publishAd(accessToken: string, adId: number): Promise<AdListItem> {
   const response = await fetch(`${resolveBaseUrl()}/api/v1/ads/${adId}/publish`, {
     method: "POST",
@@ -500,24 +248,8 @@ export async function publishAd(accessToken: string, adId: number): Promise<AdLi
     cache: "no-store",
   });
 
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof (data as { message?: unknown }).message === "string"
-        ? (data as { message: string }).message
-        : "Failed to publish ad";
-
-    throw new Error(message);
-  }
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to publish ad");
 
   const parsed = data as PublishAdResponse;
   if (!parsed.success || !parsed.data?.length) {
@@ -527,32 +259,57 @@ export async function publishAd(accessToken: string, adId: number): Promise<AdLi
   return parsed.data[0];
 }
 
-export async function getPaidUsers(accessToken: string): Promise<PaidUserItem[]> {
-  const response = await fetch(`${resolveBaseUrl()}/api/v1/payments/paid-users`, {
+// Reject a draft ad and return the updated deal payload.
+export async function rejectAd(accessToken: string, adId: number): Promise<AdListItem> {
+  const response = await fetch(`${resolveBaseUrl()}/api/v1/ads/${adId}/reject`, {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
     cache: "no-store",
   });
 
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to reject ad");
+
+  const parsed = data as RejectAdResponse;
+  if (!parsed.success || !parsed.data?.length) {
+    throw new Error(parsed.message || parsed.error?.details || "Failed to reject ad");
   }
 
-  if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof (data as { message?: unknown }).message === "string"
-        ? (data as { message: string }).message
-        : "Failed to fetch recent payments";
+  return parsed.data[0];
+}
 
-    throw new Error(message);
+// Fetch recent successful paid-user transactions for payments and overview cards.
+export async function getPaidUsers(
+  accessToken: string,
+  params?: { status?: PaidUsersStatus; customerSearch?: string; customerId?: string }
+): Promise<PaidUserItem[]> {
+  const searchParams = new URLSearchParams();
+
+  if (params?.status) {
+    searchParams.set("status", params.status);
   }
+
+  if (params?.customerSearch?.trim()) {
+    searchParams.set("customer_search", params.customerSearch.trim());
+  }
+
+  if (params?.customerId) {
+    searchParams.set("customer_id", params.customerId);
+  }
+
+  const query = searchParams.toString();
+  const endpoint = `${resolveBaseUrl()}/api/v1/payments/paid-users${query ? `?${query}` : ""}`;
+  const response = await fetch(endpoint, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch recent payments");
 
   const parsed = data as PaidUsersResponse;
   if (!parsed.success) {
@@ -562,6 +319,34 @@ export async function getPaidUsers(accessToken: string): Promise<PaidUserItem[]>
   return parsed.data ?? [];
 }
 
+// Fetch all transactions for a single customer.
+export async function getCustomerTransactions(
+  accessToken: string,
+  customerId: string
+): Promise<CustomerTransactionItem[]> {
+  const searchParams = new URLSearchParams({ customer_id: customerId });
+  const response = await fetch(
+    `${resolveBaseUrl()}/api/v1/payments/customer-transactions?${searchParams.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      cache: "no-store",
+    }
+  );
+
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch customer transactions");
+
+  const parsed = data as CustomerTransactionsResponse;
+  if (!parsed.success) {
+    throw new Error(parsed.message || parsed.error?.details || "Failed to fetch customer transactions");
+  }
+
+  return parsed.data ?? [];
+}
+
+// Fetch admin-visible customer or vendor user records with optional search.
 export async function getAdminUsers(payload: AdminUsersRequest): Promise<AdminUsersSummaryItem> {
   const searchParams = new URLSearchParams({
     role: payload.role ?? "all",
@@ -571,6 +356,14 @@ export async function getAdminUsers(payload: AdminUsersRequest): Promise<AdminUs
     searchParams.set("search", payload.search.trim());
   }
 
+  if (payload.page) {
+    searchParams.set("page", String(payload.page));
+  }
+
+  if (payload.limit) {
+    searchParams.set("limit", String(payload.limit));
+  }
+
   const response = await fetch(`${resolveBaseUrl()}/api/v1/auth/admin/users?${searchParams.toString()}`, {
     headers: {
       Authorization: `Bearer ${payload.accessToken}`,
@@ -578,24 +371,8 @@ export async function getAdminUsers(payload: AdminUsersRequest): Promise<AdminUs
     cache: "no-store",
   });
 
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof (data as { message?: unknown }).message === "string"
-        ? (data as { message: string }).message
-        : "Failed to fetch admin users";
-
-    throw new Error(message);
-  }
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch admin users");
 
   const parsed = data as AdminUsersResponse;
   if (!parsed.success || !parsed.data?.length) {
@@ -605,6 +382,7 @@ export async function getAdminUsers(payload: AdminUsersRequest): Promise<AdminUs
   return parsed.data[0];
 }
 
+// Fetch vendor revenue summary and ad-level performance for vendor detail pages.
 export async function getVendorAdsRevenue(accessToken: string, vendorId: number): Promise<VendorAdsRevenueItem> {
   const response = await fetch(`${resolveBaseUrl()}/api/v1/auth/admin/vendors/${vendorId}/ads-revenue`, {
     headers: {
@@ -613,24 +391,8 @@ export async function getVendorAdsRevenue(accessToken: string, vendorId: number)
     cache: "no-store",
   });
 
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof (data as { message?: unknown }).message === "string"
-        ? (data as { message: string }).message
-        : "Failed to fetch vendor revenue";
-
-    throw new Error(message);
-  }
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch vendor revenue");
 
   const parsed = data as VendorAdsRevenueResponse;
   if (!parsed.success || !parsed.data?.length) {
@@ -640,6 +402,7 @@ export async function getVendorAdsRevenue(accessToken: string, vendorId: number)
   return parsed.data[0];
 }
 
+// Fetch category contribution counts for the overview donut chart.
 export async function getAdsByCategory(payload: AdsByCategoryRequest): Promise<AdsByCategoryItem> {
   const searchParams = new URLSearchParams();
 
@@ -660,24 +423,8 @@ export async function getAdsByCategory(payload: AdsByCategoryRequest): Promise<A
     cache: "no-store",
   });
 
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof (data as { message?: unknown }).message === "string"
-        ? (data as { message: string }).message
-        : "Failed to fetch category analytics";
-
-    throw new Error(message);
-  }
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch category analytics");
 
   const parsed = data as AdsByCategoryResponse;
   if (!parsed.success || !parsed.data?.length) {
@@ -687,6 +434,7 @@ export async function getAdsByCategory(payload: AdsByCategoryRequest): Promise<A
   return parsed.data[0];
 }
 
+// Fetch top-level dashboard KPI metrics for the admin overview.
 export async function getDashboardOverview(accessToken: string): Promise<DashboardOverviewItem> {
   const response = await fetch(`${resolveBaseUrl()}/api/v1/analytics/dashboard-overview`, {
     headers: {
@@ -695,24 +443,8 @@ export async function getDashboardOverview(accessToken: string): Promise<Dashboa
     cache: "no-store",
   });
 
-  let data: unknown;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "message" in data &&
-      typeof (data as { message?: unknown }).message === "string"
-        ? (data as { message: string }).message
-        : "Failed to fetch dashboard overview";
-
-    throw new Error(message);
-  }
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch dashboard overview");
 
   const parsed = data as DashboardOverviewResponse;
   if (!parsed.success || !parsed.data?.length) {

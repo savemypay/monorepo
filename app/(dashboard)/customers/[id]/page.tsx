@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { notFound, useParams } from "next/navigation";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { getAdminUsers, type AdminUserItem } from "@/lib/admin/api";
-import { readStoredAdminSession } from "@/lib/admin/auth";
+import { getAdminUsers } from "@/lib/admin/api";
+import { useAdminAuthStore } from "@/lib/admin/auth-store";
+import type { AdminUserItem } from "@/lib/admin/types";
 
 function formatDate(dateTime: string) {
   const parsed = new Date(dateTime);
@@ -25,22 +26,16 @@ export default function CustomerDetailPage() {
   const params = useParams<{ id: string }>();
   const customerId = Number(params.id);
   const invalidCustomerId = !Number.isFinite(customerId);
-  const [accessToken, setAccessToken] = useState<string | null | undefined>(undefined);
+  const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
+  const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [customer, setCustomer] = useState<AdminUserItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
-  const sessionReady = accessToken !== undefined;
-  const resolvedError = sessionReady && !accessToken ? "Admin session not found" : error;
+  const resolvedError = hydrated && !accessToken ? "Admin session not found" : error;
 
   useEffect(() => {
-    void Promise.resolve().then(() => {
-      setAccessToken(readStoredAdminSession()?.accessToken ?? null);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (invalidCustomerId || !sessionReady || !accessToken) {
+    if (invalidCustomerId || !hydrated || !accessToken) {
       return;
     }
 
@@ -82,7 +77,7 @@ export default function CustomerDetailPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, customerId, invalidCustomerId, sessionReady]);
+  }, [accessToken, customerId, hydrated, invalidCustomerId]);
 
   if (invalidCustomerId || missing) {
     notFound();

@@ -3,9 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { LogoutConfirmDialog } from "@/components/admin/LogoutConfirmDialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ADMIN_COOKIE, clearAdminAuth } from "@/lib/admin/auth";
 import { NAV_ITEMS } from "@/lib/admin/navigation";
 
 type AdminSidebarProps = {
@@ -15,15 +15,7 @@ type AdminSidebarProps = {
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const router = useRouter();
   const groups = ["Workspace", "Account"] as const;
-
-  const handleLogout = () => {
-    document.cookie = `${ADMIN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
-    clearAdminAuth();
-    onNavigate?.();
-    router.replace("/login");
-  };
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -31,9 +23,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <Link href="/" onClick={onNavigate} className="inline-flex items-center">
           <Image src="/logo.svg" alt="logo" height={80} width={180} />
         </Link>
-        <h2 className="hidden md:block mt-3 text-2xl font-semibold text-brand">Admin Console</h2>
+        <h2 className="mt-3 hidden text-2xl font-semibold text-brand md:block">Admin Dashboard</h2>
         <p className="hidden md:block mt-2 text-sm leading-6 text-slate-500">
-          Marketplace operations, approvals, finance visibility, and business control.
+          Marketplace approvals, finance visibility, vendors, customers, and day-to-day operations.
         </p>
       </div>
 
@@ -76,16 +68,17 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       <div className="border-t border-line p-4">
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-50"
-        >
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
-            <LogOut size={14} />
-          </span>
-          <span>Logout</span>
-        </button>
+        <LogoutConfirmDialog onAfterLogout={onNavigate}>
+          <button
+            type="button"
+            className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-50"
+          >
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+              <LogOut size={14} />
+            </span>
+            <span>Logout</span>
+          </button>
+        </LogoutConfirmDialog>
       </div>
     </div>
   );
@@ -94,7 +87,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 export function AdminSidebar({ mobileOpen = false, onMobileOpenChange }: AdminSidebarProps) {
   return (
     <>
-      <aside className="hidden xl:block xl:w-[290px] xl:shrink-0">
+      <aside className="hidden lg:block lg:w-[290px] lg:shrink-0">
         <div className="admin-panel sticky top-6 flex h-[calc(100vh-3rem)] flex-col overflow-hidden">
           <SidebarContent />
         </div>

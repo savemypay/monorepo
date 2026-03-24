@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { adminLogin } from "@/lib/admin/api";
-import { ADMIN_COOKIE, buildAdminProfile, persistAdminAuth } from "@/lib/admin/auth";
+import { buildAdminProfile } from "@/lib/admin/auth";
+import { useAdminAuthStore } from "@/lib/admin/auth-store";
 import Image from "next/image";
 
 type LoginFormProps = {
@@ -13,6 +14,9 @@ type LoginFormProps = {
 
 export default function LoginForm({ redirectPath }: LoginFormProps) {
   const router = useRouter();
+  const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
+  const hydrated = useAdminAuthStore((state) => state.hydrated);
+  const setAuth = useAdminAuthStore((state) => state.setAuth);
 
   const [form, setForm] = useState({
     identifier: "",
@@ -21,13 +25,19 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (hydrated && accessToken) {
+      router.replace(redirectPath === "/login" ? "/" : redirectPath);
+    }
+  }, [accessToken, hydrated, redirectPath, router]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
 
     const trimmedIdentifier = form.identifier.trim();
-    const isEmail = trimmedIdentifier.includes("@");
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedIdentifier);
 
     if (!trimmedIdentifier || !form.password.trim()) {
       setError("Username or email and password are required.");
@@ -45,7 +55,7 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
       const username = isEmail ? trimmedIdentifier.split("@")[0] : trimmedIdentifier;
       const email = isEmail ? trimmedIdentifier : "";
 
-      persistAdminAuth(
+      setAuth(
         buildAdminProfile({
           username,
           email,
@@ -61,8 +71,6 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
           email,
         }
       );
-
-      document.cookie = `${ADMIN_COOKIE}=1; Path=/; Max-Age=28800; SameSite=Lax`;
       router.replace(redirectPath);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Admin login failed");

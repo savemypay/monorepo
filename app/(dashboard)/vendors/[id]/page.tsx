@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { notFound, useParams } from "next/navigation";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { getVendorAdsRevenue, type VendorAdsRevenueItem } from "@/lib/admin/api";
-import { readStoredAdminSession } from "@/lib/admin/auth";
-import { formatCurrency } from "@/lib/admin/mock-data";
+import { getVendorAdsRevenue } from "@/lib/admin/api";
+import { useAdminAuthStore } from "@/lib/admin/auth-store";
+import { formatCurrency } from "@/lib/admin/presentation";
+import type { VendorAdsRevenueItem } from "@/lib/admin/types";
 
 function formatDate(dateTime: string) {
   const parsed = new Date(dateTime);
@@ -26,22 +27,16 @@ export default function VendorDetailPage() {
   const params = useParams<{ id: string }>();
   const vendorId = Number(params.id);
   const invalidVendorId = !Number.isFinite(vendorId);
-  const [accessToken, setAccessToken] = useState<string | null | undefined>(undefined);
+  const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
+  const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [vendorData, setVendorData] = useState<VendorAdsRevenueItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
-  const sessionReady = accessToken !== undefined;
-  const resolvedError = sessionReady && !accessToken ? "Admin session not found" : error;
+  const resolvedError = hydrated && !accessToken ? "Admin session not found" : error;
 
   useEffect(() => {
-    void Promise.resolve().then(() => {
-      setAccessToken(readStoredAdminSession()?.accessToken ?? null);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (invalidVendorId || !sessionReady || !accessToken) {
+    if (invalidVendorId || !hydrated || !accessToken) {
       return;
     }
 
@@ -87,7 +82,7 @@ export default function VendorDetailPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, invalidVendorId, sessionReady, vendorId]);
+  }, [accessToken, hydrated, invalidVendorId, vendorId]);
 
   if (invalidVendorId || missing) {
     notFound();

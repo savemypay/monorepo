@@ -1,5 +1,4 @@
 import {
-  ChartColumnIncreasing,
   LayoutDashboard,
   Store,
   Tags,
@@ -15,6 +14,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Vendors", href: "/vendors", group: "Workspace", icon: Store },
   { label: "Customers", href: "/customers", group: "Workspace", icon: Users },
   { label: "Payments", href: "/payments", group: "Workspace", icon: WalletCards },
-  { label: "Analytics", href: "/analytics", group: "Workspace", icon: ChartColumnIncreasing },
+  // { label: "Analytics", href: "/analytics", group: "Workspace", icon: ChartColumnIncreasing },
   { label: "Profile", href: "/profile", group: "Account", icon: UserRound },
 ];

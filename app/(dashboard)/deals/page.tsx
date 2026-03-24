@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { getAds, type AdListItem } from "@/lib/admin/api";
-import { readStoredAdminSession } from "@/lib/admin/auth";
-import { formatCurrency } from "@/lib/admin/mock-data";
+import { getAds } from "@/lib/admin/api";
+import { useAdminAuthStore } from "@/lib/admin/auth-store";
+import { formatCurrency } from "@/lib/admin/presentation";
+import type { AdListItem } from "@/lib/admin/types";
 
 type DealStatusFilter = "all" | "draft" | "active" | "filled" | "expired" | "canceled";
 
@@ -34,22 +35,19 @@ function formatDate(dateTime: string) {
 }
 
 export default function DealsPage() {
-  const [accessToken, setAccessToken] = useState<string | null | undefined>(undefined);
+  const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
+  const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [activeFilter, setActiveFilter] = useState<DealStatusFilter>("all");
+  const [page, setPage] = useState(1);
+  const limit = 10;
   const [deals, setDeals] = useState<AdListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const sessionReady = accessToken !== undefined;
-  const resolvedError = sessionReady && !accessToken ? "Admin session not found" : error;
+  const resolvedError = hydrated && !accessToken ? "Admin session not found" : error;
+  const hasNextPage = deals.length === limit;
 
   useEffect(() => {
-    void Promise.resolve().then(() => {
-      setAccessToken(readStoredAdminSession()?.accessToken ?? null);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!sessionReady || !accessToken) {
+    if (!hydrated || !accessToken) {
       return;
     }
 
@@ -65,22 +63,17 @@ export default function DealsPage() {
         setError(null);
 
         if (activeFilter === "all") {
-          return Promise.all(
-            DEAL_STATUS_FILTERS.filter((filter) => filter.value !== "all").map((filter) =>
-              getAds({ accessToken, status: filter.value }),
-            ),
-          ).then((responses) => responses.flat());
+          return getAds({ accessToken, page, limit });
         }
 
-        return getAds({ accessToken, status: activeFilter });
+        return getAds({ accessToken, status: activeFilter, page, limit });
       })
       .then((data) => {
         if (!data || isCancelled) {
           return;
         }
 
-        const uniqueDeals = Array.from(new Map(data.map((deal) => [deal.id, deal])).values());
-        setDeals(uniqueDeals);
+        setDeals(data);
       })
       .catch((fetchError: unknown) => {
         if (isCancelled || (fetchError instanceof Error && fetchError.message === "cancelled")) {
@@ -98,7 +91,7 @@ export default function DealsPage() {
     return () => {
       isCancelled = true;
     };
-  }, [accessToken, activeFilter, sessionReady]);
+  }, [accessToken, activeFilter, hydrated, limit, page]);
 
   return (
     <div className="space-y-6">
@@ -106,9 +99,10 @@ export default function DealsPage() {
         eyebrow="Deal Governance"
         title="Deals"
         description="Review deal quality, monitor performance, and move campaigns through their approval lifecycle."
+        actionClassName="text-[#D9A304] hover:underline transition"
         action={
-          <Link href="/deals/new" className="rounded-full bg-accent px-4 py-2.5 text-sm font-bold text-white">
-            New Deal
+          <Link href="/deals/new" className="text-base font-bold">
+            + New Deal
           </Link>
         }
       />
@@ -119,10 +113,13 @@ export default function DealsPage() {
             const isActive = filter.value === activeFilter;
 
             return (
-              <button
-                key={filter.value}
-                type="button"
-                onClick={() => setActiveFilter(filter.value)}
+                <button
+                  key={filter.value}
+                  type="button"
+                  onClick={() => {
+                    setActiveFilter(filter.value);
+                    setPage(1);
+                  }}
                 className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
                   isActive
                     ? "border-brand bg-brand text-white"
@@ -192,6 +189,28 @@ export default function DealsPage() {
               </tbody>
             </table>
           )}
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
+          <span>Page {page}</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page <= 1}
+              className="rounded-full border border-line bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage((current) => current + 1)}
+              disabled={!hasNextPage}
+              className="rounded-full border border-line bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -5,9 +5,9 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Admin Identity"
+        eyebrow="Admin Account"
         title="Profile"
-        description="Manage the current admin profile. This scaffold persists locally and is ready for backend integration."
+        description="View the current single-admin account details used for this dashboard session."
       />
       <ProfileForm />
     </div>
