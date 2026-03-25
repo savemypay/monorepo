@@ -83,7 +83,7 @@ export default function DealCard({
           src={image}
           alt={title}
           fill
-          className="object-cover transition-transform duration-500"
+          className="object-fill transition-transform duration-500"
         />
 
         {/* Scrim */}
