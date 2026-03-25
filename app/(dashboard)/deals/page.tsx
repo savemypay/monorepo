@@ -101,7 +101,7 @@ export default function DealsPage() {
         description="Review deal quality, monitor performance, and move campaigns through their approval lifecycle."
         actionClassName="text-[#D9A304] hover:underline transition"
         action={
-          <Link href="/deals/new" className="text-base font-bold">
+          <Link href="/deals/new" prefetch={false} className="text-base font-bold">
             + New Deal
           </Link>
         }
@@ -180,7 +180,7 @@ export default function DealsPage() {
                     <td>{deal.slots_sold.toLocaleString("en-IN")}</td>
                     <td>{formatDate(deal.valid_to)}</td>
                     <td>
-                      <Link href={`/deals/${deal.id}`} className="text-sm font-bold text-brand">
+                      <Link href={`/deals/${deal.id}`} prefetch={false} className="text-sm font-bold text-brand">
                         Review
                       </Link>
                     </td>

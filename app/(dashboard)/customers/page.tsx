@@ -154,7 +154,7 @@ export default function CustomersPage() {
                     </td>
                     <td>{formatDate(customer.created_at)}</td>
                   <td>
-                    <Link href={`/customers/${customer.id}/transactions`} className="text-sm font-bold text-brand">
+                    <Link href={`/customers/${customer.id}/transactions`} prefetch={false} className="text-sm font-bold text-brand">
                       Transactions
                     </Link>
                   </td>

@@ -20,7 +20,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="border-b border-line px-4 py-5">
-        <Link href="/" onClick={onNavigate} className="inline-flex items-center">
+        <Link href="/" prefetch={false} onClick={onNavigate} className="inline-flex items-center">
           <Image src="/logo.svg" alt="logo" height={80} width={180} />
         </Link>
         <h2 className="mt-3 hidden text-2xl font-semibold text-brand md:block">Admin Dashboard</h2>
@@ -43,6 +43,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                     <Link
                       key={item.href}
                       href={item.href}
+                      prefetch={false}
                       onClick={onNavigate}
                       className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-semibold transition-colors ${
                         isActive

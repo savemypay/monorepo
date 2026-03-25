@@ -1064,6 +1064,7 @@ export default function OverviewPage() {
               <CardDescription className="mt-1 text-sm text-gray-500">Deals currently waiting for review or changes.</CardDescription>
             </div>
             <Link
+              prefetch={false}
               href="/deals"
               className="inline-flex h-10 items-center justify-center rounded-full border border-[#163B63]/15 px-4 text-sm font-bold text-[#163B63] transition hover:bg-[#163B63]/5"
             >
@@ -1116,6 +1117,7 @@ export default function OverviewPage() {
                       </TableCell>
                       <TableCell className="px-6 py-4 text-right">
                         <Link
+                          prefetch={false}
                           href={`/deals/${item.id}`}
                           className="inline-flex items-center justify-center text-sm font-medium text-[#163B63] transition hover:underline"
                         >
@@ -1139,7 +1141,7 @@ export default function OverviewPage() {
                 <CardTitle className="text-lg font-bold text-gray-900">Live and Pending Deals</CardTitle>
                 <CardDescription className="mt-1 text-sm text-gray-500">Current deal performance snapshot.</CardDescription>
               </div>
-              <Link href="/deals" className="text-sm font-bold text-[#163B63] hover:underline">
+              <Link href="/deals" prefetch={false} className="text-sm font-bold text-[#163B63] hover:underline">
                 Open Deals
               </Link>
             </div>
@@ -1196,7 +1198,7 @@ export default function OverviewPage() {
                 <CardTitle className="text-lg font-bold text-gray-900">Recent Payments</CardTitle>
                 <CardDescription className="mt-1 text-sm text-gray-500">Pending, failed, and refunded transactions that need context.</CardDescription>
               </div>
-              <Link href="/payments" className="text-sm font-bold text-[#163B63] hover:underline">
+              <Link href="/payments" prefetch={false} className="text-sm font-bold text-[#163B63] hover:underline">
                 Open Payments
               </Link>
             </div>

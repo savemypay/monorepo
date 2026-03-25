@@ -94,7 +94,7 @@ export default function CustomerTransactionsPage() {
         title={`Customer #${customerId}`}
         description="Review all payments tied to this customer."
         action={
-          <Link href="/customers" className="text-sm font-bold text-gray-400 hover:text-slate-700 transition">
+          <Link href="/customers" prefetch={false} className="text-sm font-bold text-gray-400 hover:text-slate-700 transition">
             ← Back to customers
           </Link>
         }
