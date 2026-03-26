@@ -1,0 +1,20 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo "Install phase"
+  pre_build:
+    commands:
+      - echo Installing
+  build:
+    commands:
+      - echo Build started
+  post_build:
+    commands:
+      - build completed.
+artifacts:
+  files:
+    - '**/*'
+    - '/*'

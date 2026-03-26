@@ -4,12 +4,15 @@ __pycache__/
 *$py.class
 *.so
 .Python
+.vscode/
+# app/db/migrations/versions/*
 
 # Virtual environments
 venv/
 env/
 ENV/
 .venv
+.venv/
 .env
 
 # FastAPI / Uvicorn
