@@ -1,5 +1,7 @@
 import type {
   AdDetailResponse,
+  CreateAdResponse,
+  CreateAdWithImagesPayload,
   AdminLoginItem,
   AdminLoginPayload,
   AdminLoginResponse,
@@ -16,6 +18,8 @@ import type {
   CustomerTransactionsResponse,
   DashboardOverviewItem,
   DashboardOverviewResponse,
+  CategoriesResponse,
+  CategoryItem,
   PaidUserItem,
   PaidUsersResponse,
   PaidUsersStatus,
@@ -178,6 +182,26 @@ export async function getTransactionTrend(
   return parsed.data[0];
 }
 
+// Fetch available deal categories for the create-deal form.
+export async function getCategories(accessToken: string): Promise<CategoryItem[]> {
+  const response = await fetch(`${resolveBaseUrl()}/api/v1/categories`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to fetch categories");
+
+  const parsed = data as CategoriesResponse;
+  if (!parsed.success) {
+    throw new Error(parsed.message || parsed.error?.details || "Failed to fetch categories");
+  }
+
+  return parsed.data ?? [];
+}
+
 // Fetch ads with optional status or vendor filtering for list and queue views.
 export async function getAds(payload: AdsListRequest): Promise<AdListItem[]> {
   const searchParams = new URLSearchParams();
@@ -233,6 +257,48 @@ export async function getAdById(accessToken: string, adId: number): Promise<AdLi
   const parsed = data as AdDetailResponse;
   if (!parsed.success || !parsed.data?.length) {
     throw new Error(parsed.message || parsed.error?.details || "Failed to fetch ad");
+  }
+
+  return parsed.data[0];
+}
+
+// Create a new ad with image uploads using the same multipart contract as the vendor portal.
+export async function createAdWithImages(payload: CreateAdWithImagesPayload): Promise<AdListItem> {
+  const formData = new FormData();
+
+  formData.append("title", payload.title);
+  formData.append("product_name", payload.product_name);
+  formData.append("category", payload.category);
+  formData.append("original_price", String(payload.original_price));
+  formData.append("total_qty", String(payload.total_qty));
+  formData.append("tiers", JSON.stringify(payload.tiers));
+  formData.append("description", payload.description);
+  formData.append("terms", payload.terms);
+  formData.append("valid_from", payload.valid_from);
+  formData.append("valid_to", payload.valid_to);
+  formData.append("vendor_id", String(payload.vendor_id));
+  formData.append("token_amount", String(payload.token_amount));
+
+  payload.images.forEach((image) => {
+    formData.append("images", image, image.name);
+  });
+
+  const response = await fetch(`${resolveBaseUrl()}/api/v1/ads/with-images`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${payload.accessToken}`,
+      access_token: payload.accessToken,
+      "ngrok-skip-browser-warning": "true",
+    },
+    body: formData,
+  });
+
+  const data = await readJson(response);
+  await assertProtectedResponse(response, data, "Failed to create ad");
+
+  const parsed = data as CreateAdResponse;
+  if (!parsed.success || !parsed.data?.length) {
+    throw new Error(parsed.message || parsed.error?.details || "Failed to create ad");
   }
 
   return parsed.data[0];
@@ -312,11 +378,11 @@ export async function getPaidUsers(
   await assertProtectedResponse(response, data, "Failed to fetch recent payments");
 
   const parsed = data as PaidUsersResponse;
-  if (!parsed.success) {
+  if (!parsed.success || !parsed.data?.length) {
     throw new Error(parsed.message || parsed.error?.details || "Failed to fetch recent payments");
   }
 
-  return parsed.data ?? [];
+  return parsed.data[0]?.entries ?? [];
 }
 
 // Fetch all transactions for a single customer.

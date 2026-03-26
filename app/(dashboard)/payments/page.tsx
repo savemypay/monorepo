@@ -19,13 +19,13 @@ import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { formatCurrency } from "@/lib/admin/presentation";
 import type { PaidUserItem, PaidUsersStatus } from "@/lib/admin/types";
 
-const PAYMENT_STATUS_FILTERS: Array<{ label: string; value: PaidUsersStatus | "all" }> = [
-  { label: "All", value: "all" },
-  { label: "Pending", value: "pending" },
-  { label: "Requires Action", value: "requires_action" },
-  { label: "Succeeded", value: "succeeded" },
-  { label: "Failed", value: "failed" },
-  { label: "Canceled", value: "canceled" },
+const PAYMENT_STATUS_FILTERS: Array<{id:number; label: string; value: PaidUsersStatus | "all" }> = [
+  {id:1, label: "All", value: "all" },
+  {id:2, label: "Pending", value: "pending" },
+  {id:3, label: "Requires Action", value: "requires_action" },
+  {id:4, label: "Succeeded", value: "succeeded" },
+  {id:5, label: "Failed", value: "failed" },
+  {id:6, label: "Canceled", value: "canceled" },
 ];
 
 function formatDateTime(dateTime: string) {
@@ -121,7 +121,7 @@ export default function PaymentsPage() {
               </SelectTrigger>
               <SelectContent>
                 {PAYMENT_STATUS_FILTERS.map((filter) => (
-                  <SelectItem key={filter.value} value={filter.value}>
+                  <SelectItem key={filter.id} value={filter.value}>
                     {filter.label}
                   </SelectItem>
                 ))}
@@ -206,7 +206,7 @@ export default function PaymentsPage() {
                   <td>
                     <StatusBadge status={payment.status} />
                   </td>
-                  <td>{formatCurrency(payment.amount)}</td>
+                  <td>{formatCurrency(payment.amount_major)}</td>
                   <td>{formatDateTime(payment.created_at)}</td>
                 </tr>
               ))}

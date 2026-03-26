@@ -211,6 +211,19 @@ export type DashboardOverviewResponse = {
   error: string | null;
 };
 
+export type CategoryItem = {
+  id: number;
+  name: string;
+  description: string;
+};
+
+export type CategoriesResponse = {
+  success: boolean;
+  message: string;
+  data: CategoryItem[];
+  error: ApiErrorDetails;
+};
+
 export type AdsListRequest = {
   accessToken: string;
   status?: string;
@@ -281,25 +294,64 @@ export type AdDetailResponse = {
   error: ApiErrorDetails;
 };
 
+export type CreateAdTierPayload = {
+  seq: number;
+  qty: number;
+  discount_pct: number;
+  label: string;
+};
+
+export type CreateAdWithImagesPayload = {
+  accessToken: string;
+  title: string;
+  product_name: string;
+  category: string;
+  original_price: number;
+  total_qty: number;
+  tiers: CreateAdTierPayload[];
+  images: File[];
+  description: string;
+  terms: string;
+  valid_from: string;
+  valid_to: string;
+  vendor_id: number;
+  token_amount: number;
+};
+
+export type CreateAdResponse = {
+  success: boolean;
+  message: string;
+  data: AdListItem[];
+  error: ApiErrorDetails;
+};
+
 export type PaidUserItem = {
   payment_id: number;
   order_id: string;
   deal_ref: string;
   customer_ref: string;
   amount: number;
+  amount_major: number;
   currency: string;
-  status: string;
+  status: string | null;
   created_at: string;
-  ad: Record<string, unknown>;
-  user_email: string;
-  user_phone_number: string;
-  user_name: string;
+  ad: Record<string, unknown> | null;
+  user_email: string | null;
+  user_phone_number: string | null;
+  user_name: string | null;
+};
+
+export type PaidUsersPage = {
+  page: number;
+  limit: number;
+  total_count: number;
+  entries: PaidUserItem[];
 };
 
 export type PaidUsersResponse = {
   success: boolean;
   message: string;
-  data: PaidUserItem[];
+  data: PaidUsersPage[];
   error: ApiErrorDetails;
 };
 
@@ -355,9 +407,9 @@ export type AdminUsersRequest = {
 export type AdminUserItem = {
   id: number;
   role: "customer" | "vendor";
-  name: string;
-  email: string;
-  phone_number: string;
+  name: string | null;
+  email: string | null;
+  phone_number: string | null;
   is_active: boolean;
   created_at: string;
 };
