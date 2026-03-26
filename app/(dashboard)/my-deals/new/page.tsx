@@ -1,6 +1,6 @@
 "use client";
 
-import CreatePoolForm from "@/components/CreatePoolForm";
+import CreateDealForm from "@/components/CreateDealForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -16,7 +16,7 @@ export default function NewDealPage() {
           <p className="text-sm text-gray-500">Set up a new group deal with pricing, tiers, and timeline.</p>
         </div>
       </div>
-      <CreatePoolForm />
+      <CreateDealForm />
     </div>
   );
 }

@@ -20,7 +20,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export default function MyPoolsPage() {
+export default function MyDealsPage() {
   const [filter, setFilter] = useState('All');
    
   const vendorId = useVendorStore(state=>state.vendor?.id)
