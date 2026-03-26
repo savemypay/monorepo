@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { getAds } from "@/lib/admin/api";
@@ -35,6 +36,7 @@ function formatDate(dateTime: string) {
 }
 
 export default function DealsPage() {
+  const searchParams = useSearchParams();
   const accessToken = useAdminAuthStore((state) => state.session?.accessToken ?? null);
   const hydrated = useAdminAuthStore((state) => state.hydrated);
   const [activeFilter, setActiveFilter] = useState<DealStatusFilter>("all");
@@ -45,6 +47,7 @@ export default function DealsPage() {
   const [error, setError] = useState<string | null>(null);
   const resolvedError = hydrated && !accessToken ? "Admin session not found" : error;
   const hasNextPage = deals.length === limit;
+  const createdStatus = searchParams.get("created");
 
   useEffect(() => {
     if (!hydrated || !accessToken) {
@@ -101,13 +104,18 @@ export default function DealsPage() {
         description="Review deal quality, monitor performance, and move campaigns through their approval lifecycle."
         actionClassName="text-[#D9A304] hover:underline transition"
         action={
-          <Link href="/deals/new" className="text-base font-bold">
+          <Link href="/deals/new" prefetch={false} className="text-base font-bold">
             + New Deal
           </Link>
         }
       />
 
       <div className="admin-panel p-5">
+        {createdStatus === "draft" ? (
+          <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+            Deal created successfully. It is currently in draft status. Verify and publish it from the deals page.
+          </div>
+        ) : null}
         <div className="flex flex-wrap gap-3">
           {DEAL_STATUS_FILTERS.map((filter) => {
             const isActive = filter.value === activeFilter;
@@ -180,7 +188,7 @@ export default function DealsPage() {
                     <td>{deal.slots_sold.toLocaleString("en-IN")}</td>
                     <td>{formatDate(deal.valid_to)}</td>
                     <td>
-                      <Link href={`/deals/${deal.id}`} className="text-sm font-bold text-brand">
+                      <Link href={`/deals/${deal.id}`} prefetch={false} className="text-sm font-bold text-brand">
                         Review
                       </Link>
                     </td>

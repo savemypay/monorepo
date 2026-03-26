@@ -1,5 +1,5 @@
 type StatusBadgeProps = {
-  status: string;
+  status?: string | null;
 };
 
 const toneByStatus: Record<string, string> = {
@@ -28,7 +28,8 @@ const toneByStatus: Record<string, string> = {
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  const tone = toneByStatus[status.toLowerCase()] ?? "bg-slate-100 text-slate-700";
+  const normalizedStatus = (status ?? "unknown").toLowerCase();
+  const tone = toneByStatus[normalizedStatus] ?? "bg-slate-100 text-slate-700";
 
-  return <span className={`status-chip ${tone}`}>{status}</span>;
+  return <span className={`status-chip ${tone}`}>{status ?? "Unknown"}</span>;
 }

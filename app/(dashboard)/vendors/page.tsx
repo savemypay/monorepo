@@ -155,7 +155,7 @@ export default function VendorsPage() {
                     </td>
                     <td>{formatDate(vendor.created_at)}</td>
                     <td>
-                      <Link href={`/vendors/${vendor.id}`} className="text-sm font-bold text-brand">
+                      <Link href={`/vendors/${vendor.id}`} prefetch={false} className="text-sm font-bold text-brand">
                         Open
                       </Link>
                     </td>

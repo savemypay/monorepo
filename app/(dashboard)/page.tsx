@@ -481,10 +481,10 @@ export default function OverviewPage() {
           data.slice(0, 4).map((item) => ({
             id: item.payment_id,
             dealRef: item.deal_ref,
-            customerName: item.user_name || item.user_email || item.user_phone_number,
-            status: item.status,
+            customerName: item.user_name || item.user_email || item.user_phone_number || `Customer #${item.customer_ref}`,
+            status: item.status ?? "pending",
             createdAt: formatDateTime(item.created_at),
-            amount: item.amount,
+            amount: item.amount_major,
             orderId:item.order_id,
           })),
         );
@@ -802,7 +802,7 @@ export default function OverviewPage() {
           const theme = METRIC_THEMES[iconKey];
 
           return (
-            <Card key={metric.label} className="admin-panel rounded-3xl border-blue-100">
+            <Card key={`${metric.label}-${index}`} className="admin-panel rounded-3xl border-blue-100">
               <CardContent className="">
                 <div className="mb-4 flex items-start gap-4">
                   <div className={`rounded-xl p-2.5 ${theme.bgClassName} ${theme.iconClassName}`}>
@@ -938,8 +938,8 @@ export default function OverviewPage() {
                           paddingAngle={2}
                           stroke="none"
                         >
-                          {categoryData.map((entry) => (
-                            <Cell key={entry.label} fill={entry.color} />
+                          {categoryData.map((entry, index) => (
+                            <Cell key={`${entry.label}-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
                         <RechartsTooltip content={<DonutTooltip />} />
@@ -947,8 +947,8 @@ export default function OverviewPage() {
                     </ResponsiveContainer>
                   </div>
                   <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-2">
-                    {categoryData.map((entry) => (
-                      <div key={entry.label} className="flex items-center gap-1.5 text-xs font-medium text-gray-600">
+                    {categoryData.map((entry, index) => (
+                      <div key={`${entry.label}-${index}`} className="flex items-center gap-1.5 text-xs font-medium text-gray-600">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
                         {entry.label}
                       </div>
@@ -1064,6 +1064,7 @@ export default function OverviewPage() {
               <CardDescription className="mt-1 text-sm text-gray-500">Deals currently waiting for review or changes.</CardDescription>
             </div>
             <Link
+              prefetch={false}
               href="/deals"
               className="inline-flex h-10 items-center justify-center rounded-full border border-[#163B63]/15 px-4 text-sm font-bold text-[#163B63] transition hover:bg-[#163B63]/5"
             >
@@ -1096,8 +1097,8 @@ export default function OverviewPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {approvalQueueData.map((item) => (
-                    <TableRow key={item.id} className="border-b border-slate-100 transition-colors hover:bg-slate-50/70">
+                  {approvalQueueData.map((item, index) => (
+                    <TableRow key={`${item.id}-${index}`} className="border-b border-slate-100 transition-colors hover:bg-slate-50/70">
                     <TableCell className="px-6 py-5 font-semibold text-slate-900 whitespace-normal">{item.title}</TableCell>
                     <TableCell className="px-6 py-5 text-sm font-medium text-slate-600 whitespace-normal">{item.vendorLabel}</TableCell>
                     <TableCell className="px-6 py-5 text-sm font-semibold text-slate-900 whitespace-nowrap">
@@ -1116,6 +1117,7 @@ export default function OverviewPage() {
                       </TableCell>
                       <TableCell className="px-6 py-4 text-right">
                         <Link
+                          prefetch={false}
                           href={`/deals/${item.id}`}
                           className="inline-flex items-center justify-center text-sm font-medium text-[#163B63] transition hover:underline"
                         >
@@ -1136,10 +1138,10 @@ export default function OverviewPage() {
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-lg font-bold text-gray-900">Live and Pending Deals</CardTitle>
+                <CardTitle className="text-lg font-bold text-gray-900">Live Deals</CardTitle>
                 <CardDescription className="mt-1 text-sm text-gray-500">Current deal performance snapshot.</CardDescription>
               </div>
-              <Link href="/deals" className="text-sm font-bold text-[#163B63] hover:underline">
+              <Link href="/deals" prefetch={false} className="text-sm font-bold text-[#163B63] hover:underline">
                 Open Deals
               </Link>
             </div>
@@ -1158,11 +1160,11 @@ export default function OverviewPage() {
                 No active or draft deals available right now.
               </div>
             ) : (
-              dealsSnapshotData.map((deal) => {
+              dealsSnapshotData.map((deal, index) => {
                 const progressPct = deal.totalQty > 0 ? Math.min((deal.slotsSold / deal.totalQty) * 100, 100) : 0;
 
                 return (
-                  <div key={deal.id} className="rounded-2xl border border-blue-100 p-4">
+                  <div key={`${deal.id}-${index}`} className="rounded-2xl border border-blue-100 p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="font-bold text-gray-900">{deal.title}</p>
@@ -1196,7 +1198,7 @@ export default function OverviewPage() {
                 <CardTitle className="text-lg font-bold text-gray-900">Recent Payments</CardTitle>
                 <CardDescription className="mt-1 text-sm text-gray-500">Pending, failed, and refunded transactions that need context.</CardDescription>
               </div>
-              <Link href="/payments" className="text-sm font-bold text-[#163B63] hover:underline">
+              <Link href="/payments" prefetch={false} className="text-sm font-bold text-[#163B63] hover:underline">
                 Open Payments
               </Link>
             </div>
@@ -1215,8 +1217,8 @@ export default function OverviewPage() {
                 No recent paid users available right now.
               </div>
             ) : (
-              recentPaymentsData.map((payment) => (
-                <div key={payment.id} className="rounded-2xl border border-blue-100 p-4">
+              recentPaymentsData.map((payment, index) => (
+                <div key={`${payment.id}-${index}`} className="rounded-2xl border border-blue-100 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="font-bold text-gray-900">{payment.orderId}</p>

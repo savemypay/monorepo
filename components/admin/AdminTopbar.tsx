@@ -15,7 +15,7 @@ export function AdminTopbar({ onOpenSidebar }: AdminTopbarProps) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="flex items-center justify-between gap-3 lg:hidden">
-            <Link href="/" aria-label="Open dashboard home" className="inline-flex items-center">
+            <Link href="/" prefetch={false} aria-label="Open dashboard home" className="inline-flex items-center">
               <Image src="/logo.svg" alt="SaveMyPay" height={34} width={132} className="h-auto w-[150px]" />
             </Link>
             <button
@@ -36,6 +36,7 @@ export function AdminTopbar({ onOpenSidebar }: AdminTopbarProps) {
 
         <div className="hidden items-center gap-2 lg:flex">
           <Link
+            prefetch={false}
             href="/profile"
             aria-label="Open profile"
             title="Profile"
