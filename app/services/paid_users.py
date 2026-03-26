@@ -11,6 +11,7 @@ from app.entities.ad import Ad
 from app.entities.payment import Payment
 from app.entities.user import User
 from app.payments.base import PaymentStatus
+from app.utils.currency import minor_to_major
 from app.utils.response import error_response
 
 
@@ -38,10 +39,12 @@ def list_paid_users(
     role: str,
     vendor_id: Optional[int],
     ad_id: Optional[int],
+    page: int = 1,
+    limit: int = 10,
     status_filter: Optional[str] = None,
     customer_id: Optional[int] = None,
     customer_search: Optional[str] = None,
-) -> List[dict]:
+) -> dict:
     effective_status = status_filter or PaymentStatus.SUCCEEDED
     q = db.query(Payment).filter(Payment.status == effective_status)
 
@@ -73,7 +76,9 @@ def list_paid_users(
             )
         )
 
-    payments = q.order_by(Payment.created_at.desc()).all()
+    total_count = q.count()
+    offset = (page - 1) * limit
+    payments = q.order_by(Payment.created_at.desc()).offset(offset).limit(limit).all()
 
     # Fetch user details for customer_refs that look like ints
     user_ids = {int(p.customer_ref) for p in payments if p.customer_ref and p.customer_ref.isdigit()}
@@ -86,13 +91,14 @@ def list_paid_users(
     )
     user_map = {u.id: u for u in users}
 
-    return [
+    entries = [
         {
             "payment_id": p.id,
             "order_id": p.provider_order_id,
             "deal_ref": p.deal_ref,
             "customer_ref": p.customer_ref,
             "amount": p.amount,
+            "amount_major": minor_to_major(p.amount, p.currency),
             "currency": p.currency,
             "status": p.status,
             "created_at": p.created_at,
@@ -102,6 +108,13 @@ def list_paid_users(
         }
         for p in payments
     ]
+
+    return {
+        "page": page,
+        "limit": limit,
+        "total_count": total_count,
+        "entries": entries,
+    }
 
 
 def list_customer_successful_transactions(
@@ -158,6 +171,7 @@ def list_customer_successful_transactions(
                 "deal_ref": p.deal_ref,
                 "customer_ref": p.customer_ref,
                 "amount": p.amount,
+                "amount_major": minor_to_major(p.amount, p.currency),
                 "currency": p.currency,
                 "status": p.status,
                 "created_at": p.created_at,

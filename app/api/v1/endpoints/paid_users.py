@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
 from app.api.security import get_current_admin, get_current_admin_or_vendor
-from app.models.payment import DashboardSummaryResponse, PaidUsersResponse
+from app.models.payment import DashboardSummaryResponse, PaginatedPaidUsersResponse, PaidUsersResponse
 from app.services.paid_users import (
     get_dashboard_summary,
     list_customer_successful_transactions,
@@ -19,11 +19,13 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/paid-users", status_code=status.HTTP_200_OK, response_model=PaidUsersResponse)
+@router.get("/paid-users", status_code=status.HTTP_200_OK, response_model=PaginatedPaidUsersResponse)
 def get_paid_users(
     db: Annotated[Session, Depends(get_db)],
     actor: Annotated[dict, Depends(get_current_admin_or_vendor)],
     ad_id: Annotated[Optional[int], Query()] = None,
+    page: Annotated[int, Query(ge=1)] = 1,
+    limit: Annotated[int, Query(ge=1, le=100)] = 10,
     status_filter: Annotated[
         Optional[str],
         Query(alias="status", pattern="^(pending|requires_action|succeeded|failed|canceled)$"),
@@ -38,11 +40,13 @@ def get_paid_users(
         role=role,
         vendor_id=vendor_id,
         ad_id=ad_id,
+        page=page,
+        limit=limit,
         status_filter=status_filter,
         customer_id=customer_id,
         customer_search=customer_search,
     )
-    return success_response(message="Paid users fetched", data=entries)
+    return success_response(message="Paid users fetched", data=[entries])
 
 
 @router.get("/dashboard-summary", status_code=status.HTTP_200_OK, response_model=DashboardSummaryResponse)

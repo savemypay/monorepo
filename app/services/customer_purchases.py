@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.entities.ad import Ad
 from app.entities.payment import Payment
 from app.payments.base import PaymentStatus
+from app.utils.currency import minor_to_major
 
 
 def list_customer_purchases(db: Session, customer_id: str) -> List[dict]:
@@ -39,6 +40,7 @@ def list_customer_purchases(db: Session, customer_id: str) -> List[dict]:
                 "deal_ref": p.deal_ref,
                 "customer_ref": p.customer_ref,
                 "amount": p.amount,
+                "amount_major": minor_to_major(p.amount, p.currency),
                 "currency": p.currency,
                 "status": p.status,
                 "created_at": p.created_at,

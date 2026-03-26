@@ -38,6 +38,7 @@ class PaidUserEntry(BaseModel):
     deal_ref: Optional[str]
     customer_ref: Optional[str]
     amount: int
+    amount_major: float
     currency: str
     status: str
     created_at: datetime
@@ -51,6 +52,17 @@ class PaidUserEntry(BaseModel):
 
 
 class PaidUsersResponse(ApiResponse[PaidUserEntry]):
+    pass
+
+
+class PaidUsersListData(BaseModel):
+    page: int
+    limit: int
+    total_count: int
+    entries: list[PaidUserEntry]
+
+
+class PaginatedPaidUsersResponse(ApiResponse[PaidUsersListData]):
     pass
 
 
