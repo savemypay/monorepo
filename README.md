@@ -1,36 +1,180 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SaveMyPay
+
+SaveMyPay is a Next.js marketplace for group-buying and bulk savings. It includes a public landing site, a customer marketplace, deal detail pages, authentication, account-center pages, notifications, SEO metadata, and payment initiation for token advances.
+
+## What This Portal Does
+
+- Public marketing landing page
+- Customer marketplace with deal cards and deal detail pages
+- Login flow with OTP-based auth
+- Account center for profile, orders, wishlist, earnings, referrals, and support pages
+- Favorite / wishlist actions for deals
+- Token payment initiation through Razorpay
+- Web notification bootstrap, installation binding, and push-token sync
+- SEO metadata, robots.txt, sitemap.xml, Open Graph, and JSON-LD schema
+
+## Tech Stack
+
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Zustand for auth state
+- Firebase Web Messaging
+- Razorpay checkout
+- Radix UI components
+
+## Project Structure
+
+- `app/` - route segments, layouts, metadata, sitemap, and robots
+- `components/` - UI sections, navbar, cards, account portal, notifications, and shared primitives
+- `lib/` - API wrappers, SEO helpers, notification helpers, auth store, and utilities
+- `public/` - images, icons, OG assets, and service worker files
+
+## Main Routes
+
+- `/` - marketing home page
+- `/faq` - FAQ page
+- `/login` - authentication flow
+- `/customer` - public marketplace listing
+- `/customer/deals/[id]` - public deal details page
+- `/customer/my-orders` - purchased deals
+- `/customer/wishlist` - favorite deals
+- `/customer/profile-settings` - profile editor
+- `/customer/my-earnings` - earnings view
+- `/customer/payment-history` - payment history
+- `/customer/refer-earn` - referral sharing page
+- `/customer/my-referrals` - referral list
+- `/customer/help` - support page
+- `/customer/privacy-policy` - privacy page
+- `/category/[slug]` - category detail pages
+
+## Features
+
+### Customer Marketplace
+
+- Fetches ads from the backend
+- Supports authenticated and public requests
+- Shows deal cards with favorite state
+- Uses a responsive deal details page with:
+  - image carousel
+  - discount journey
+  - cumulative tier unlocks
+  - token payment flow
+
+### Account Center
+
+- Sidebar and mobile section switcher
+- Profile settings with editable fields
+- My Orders table
+- Wishlist based on saved deals
+- Rewards and referral sections
+
+### Notifications
+
+- Installation registration on app bootstrap
+- Installation binding after login
+- Anonymous token sync after logout
+- Firebase Web Messaging integration
+
+### SEO and Sharing
+
+- Canonical URLs
+- Open Graph metadata
+- Twitter card metadata
+- JSON-LD Organization and WebSite schema
+- `robots.txt`
+- `sitemap.xml`
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20 or newer
+- npm
+
+### Install
+
+```bash
+npm install
+```
+
+### Run Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000` in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+```
 
-## Learn More
+## Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+Set these in your local `.env` file and in Vercel:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Required
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `NEXT_PUBLIC_SITE_URL` - canonical site URL, for example `https://savemypay.xyz`
+- `NEXT_PUBLIC_API_BASE_URL` - backend API base URL
+- `NEXT_PUBLIC_RAZORPAY_KEY_ID` - Razorpay public key for checkout
 
-## Deploy on Vercel
+### Optional but used by the app
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID` - Google Analytics
+- `NEXT_PUBLIC_HOME_VIDEO_URL` - homepage embedded video URL
+- `NEXT_PUBLIC_APP_VERSION` - sent with notification installation payloads
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Optional API overrides
+
+- `NEXT_PUBLIC_CUSTOMER_EARNINGS_ENDPOINT`
+- `NEXT_PUBLIC_CUSTOMER_PAYMENTS_ENDPOINT`
+- `NEXT_PUBLIC_REFERRALS_ENDPOINT`
+- `NEXT_PUBLIC_REFER_EARN_ENDPOINT`
+- `NEXT_PUBLIC_MISSING_CASHBACK_ENDPOINT`
+- `NEXT_PUBLIC_TOKEN_PAYMENT_ENDPOINT`
+
+### Firebase Web Push
+
+Set these if you want web notifications enabled:
+
+- `NEXT_PUBLIC_FIREBASE_API_KEY`
+- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `NEXT_PUBLIC_FIREBASE_APP_ID`
+- `NEXT_PUBLIC_FIREBASE_VAPID_KEY`
+- `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`
+
+## Deployment Notes
+
+- The app is ready for Vercel deployment.
+- Make sure your backend allows requests from your deployed frontend domain via CORS.
+- Web notifications require HTTPS in production.
+- `robots.txt` and `sitemap.xml` are generated by the app.
+- Public pages are indexed, while protected account pages are blocked from indexing.
+
+## Scripts
+
+- `npm run dev` - start development server
+- `npm run build` - production build
+- `npm run start` - run production server
+- `npm run lint` - run ESLint
+
+## Notes For Developers
+
+- The `/customer` route is public.
+- The deal details route `/customer/deals/[id]` is also public.
+- Token payment still requires a logged-in user.
+- Deal favorite state comes from the ads API and is updated through the backend favorite endpoint.
+- The app uses Sofia Pro as the main font, with fallback fonts configured in the root layout.
+
+## License
+
+No license has been added yet. Add one if this project will be shared publicly.
