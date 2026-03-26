@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -48,6 +48,8 @@ type CumulativeTier = AdTier & {
 };
 
 const SUCCESS_REDIRECT_SECONDS = 10;
+const GALLERY_AUTO_SLIDE_MS = 4000;
+const GALLERY_MANUAL_PAUSE_MS = 5000;
 
 export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps) {
   const router = useRouter();
@@ -64,6 +66,9 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
   const [isFavorite, setIsFavorite] = useState(false);
   const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isGalleryHovered, setIsGalleryHovered] = useState(false);
+  const [isGalleryManuallyPaused, setIsGalleryManuallyPaused] = useState(false);
+  const manualPauseTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     let isCancelled = false;
@@ -113,6 +118,26 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
       setSelectedImageIndex(0);
     }
   }, [galleryImages.length, selectedImageIndex]);
+
+  useEffect(() => {
+    if (galleryImages.length <= 1 || isGalleryHovered || isGalleryManuallyPaused) return;
+
+    const intervalId = window.setInterval(() => {
+      setSelectedImageIndex((current) => (current === galleryImages.length - 1 ? 0 : current + 1));
+    }, GALLERY_AUTO_SLIDE_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [galleryImages.length, isGalleryHovered, isGalleryManuallyPaused]);
+
+  useEffect(() => {
+    return () => {
+      if (manualPauseTimeoutRef.current) {
+        window.clearTimeout(manualPauseTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (paymentResultModal?.status !== "success") return;
@@ -165,11 +190,6 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
     if (days > 0) return `${days} Days ${hours} Hours`;
     if (hours > 0) return `${hours} Hours`;
     return `${Math.max(1, totalMinutes)} Mins`;
-  }, [deal]);
-
-  const progress = useMemo(() => {
-    if (!deal || !deal.total_qty) return 0;
-    return Math.min((deal.slots_sold / deal.total_qty) * 100, 100);
   }, [deal]);
 
   const isDealFulfilled = useMemo(() => {
@@ -234,13 +254,26 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
     return ((SUCCESS_REDIRECT_SECONDS - redirectCountdown) / SUCCESS_REDIRECT_SECONDS) * 100;
   }, [paymentResultModal, redirectCountdown]);
 
-  const currentImage = galleryImages[selectedImageIndex] ?? galleryImages[0];
+  const pauseGalleryAfterManualInteraction = () => {
+    setIsGalleryManuallyPaused(true);
+
+    if (manualPauseTimeoutRef.current) {
+      window.clearTimeout(manualPauseTimeoutRef.current);
+    }
+
+    manualPauseTimeoutRef.current = window.setTimeout(() => {
+      setIsGalleryManuallyPaused(false);
+      manualPauseTimeoutRef.current = null;
+    }, GALLERY_MANUAL_PAUSE_MS);
+  };
 
   const goToPreviousImage = () => {
+    pauseGalleryAfterManualInteraction();
     setSelectedImageIndex((current) => (current === 0 ? galleryImages.length - 1 : current - 1));
   };
 
   const goToNextImage = () => {
+    pauseGalleryAfterManualInteraction();
     setSelectedImageIndex((current) => (current === galleryImages.length - 1 ? 0 : current + 1));
   };
 
@@ -425,20 +458,55 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div className="rounded-[28px] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-slate-100">
-              <Image
-                src={currentImage}
-                alt={deal.product_name || deal.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 60vw"
-                priority
-              />
+            <div
+              className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-slate-100"
+              onMouseEnter={() => setIsGalleryHovered(true)}
+              onMouseLeave={() => setIsGalleryHovered(false)}
+            >
+              <div
+                className="flex h-full transition-transform duration-700 ease-out"
+                style={{ width: `${galleryImages.length * 100}%`, transform: `translateX(-${selectedImageIndex * (100 / galleryImages.length)}%)` }}
+              >
+                {galleryImages.map((image, index) => (
+                  <div key={`${image}-slide-${index}`} className="relative h-full shrink-0" style={{ width: `${100 / galleryImages.length}%` }}>
+                    <Image
+                      src={image}
+                      alt={`${deal.product_name || deal.title} image ${index + 1}`}
+                      fill
+                      className="object-fill"
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      priority={index === 0}
+                    />
+                  </div>
+                ))}
+              </div>
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/55 via-slate-900/10 to-transparent p-5">
-                <div className="text-right gap-4">
+                <div className="flex items-center justify-between gap-4">
                   <span className="rounded-full border border-white/20 bg-white/40 px-3 py-1 text-xs font-semibold text-slate-950/55 backdrop-blur-md">
                     {selectedImageIndex + 1}/{galleryImages.length}
                   </span>
+                  {galleryImages.length > 1 && (
+                    <div className="flex items-center gap-2">
+                      {galleryImages.map((image, index) => {
+                        const isSelected = index === selectedImageIndex;
+
+                        return (
+                          <button
+                            key={`${image}-indicator-${index}`}
+                            type="button"
+                            onClick={() => {
+                              pauseGalleryAfterManualInteraction();
+                              setSelectedImageIndex(index);
+                            }}
+                            className={`h-2.5 w-2.5 rounded-full border border-white/50 transition-all ${
+                              isSelected ? "bg-[#F2B705] shadow-[0_0_0_4px_rgba(242,183,5,0.18)]" : "bg-white/50 hover:bg-white/80"
+                            }`}
+                            aria-label={`Show deal image ${index + 1}`}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -464,39 +532,6 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
               )}
             </div>
 
-            {galleryImages.length > 1 && (
-              <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
-                {galleryImages.map((image, index) => {
-                  const isSelected = index === selectedImageIndex;
-                  return (
-                    <button
-                      key={`${image}-${index}`}
-                      type="button"
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-2xl border transition ${
-                        isSelected
-                          ? "border-[#163B63] ring-2 ring-[#163B63]/15"
-                          : "border-slate-200 hover:border-slate-300"
-                      }`}
-                      aria-label={`Show deal image ${index + 1}`}
-                    >
-                      <Image
-                        src={image}
-                        alt={`${deal.product_name || deal.title} preview ${index + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="96px"
-                      />
-                      <span
-                        className={`absolute inset-0 transition ${
-                          isSelected ? "bg-[#163B63]/10" : "bg-slate-950/10 hover:bg-transparent"
-                        }`}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
 
           <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6 md:p-8">
@@ -608,7 +643,7 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
             )}
           </div>
         </div>
-
+        {/* Stats */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-2xl border border-[#1CA7A6]/30 bg-[#1CA7A6]/5 p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Target goal</p>
@@ -636,52 +671,23 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
           </div>
         </div>
 
+        {/* Deal description */}
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 md:p-8">
           <div className="flex items-start justify-between gap-4">
-            {/* <div> */}
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Deal description</p>
-              {/* <h2 className="mt-2 text-xl font-bold text-[#122E4E]">What buyers should know</h2> */}
-            {/* </div> */}
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Deal description</p>
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
               {deal.category}
             </span>
           </div>
-          <p className="mt-4 text-base leading-8 text-slate-600">{deal.description}</p>
+          <p className="mt-4 break-words text-base leading-8 text-slate-600">{deal.description}</p>
           {deal.terms && deal.terms !== "NA" && (
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-600">
+            <div className="mt-5 break-words rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-600">
               <span className="font-semibold text-[#122E4E]">Terms:</span> {deal.terms}
             </div>
           )}
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 md:p-8">
-          <h3 className="mb-6 text-lg font-bold text-[#122E4E]">Deal Progress</h3>
-
-          <div className="relative mb-8">
-            <div className="mb-2 flex justify-between text-sm font-medium text-slate-600">
-              <span>{deal.slots_sold} Joined</span>
-              <span>Goal: {deal.total_qty}</span>
-            </div>
-            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-3 rounded-full bg-[#163B63] transition-all duration-1000 ease-out"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-x-8 gap-y-3 border-t border-slate-50 pt-6 text-sm">
-            <div className="flex items-center gap-2 text-slate-600">
-              <Calendar size={18} className="text-[#1CA7A6]" />
-              Started: <span className="font-medium text-[#122E4E]">{formatDate(deal.valid_from)}</span>
-            </div>
-            <div className="flex items-center gap-2 text-slate-600">
-              <AlertCircle size={18} className="text-[#F2B705]" />
-              Ends: <span className="font-medium text-[#122E4E]">{formatDate(deal.valid_to)}</span>
-            </div>
-          </div>
-        </div>
-
+        {/* Discount Journey */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex flex-col gap-2 border-b border-slate-100 bg-[#163B63]/5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div>
@@ -706,10 +712,10 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
                   <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
                     <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       <span>{deal.slots_sold} buyers joined</span>
-                      <span>{tierTrackMax} buyers across all tier milestones</span>
+                      <span>Final milestone at {tierTrackMax} buyers</span>
                     </div>
 
-                    <div className="relative mt-10">
+                    <div className="relative mt-10 pb-10 sm:pb-12">
                       <div className="h-4 overflow-hidden rounded-full bg-white shadow-inner ring-1 ring-slate-200">
                         <div
                           className="h-full rounded-full bg-gradient-to-r from-[#163B63] via-[#1CA7A6] to-[#F2B705] transition-all duration-700"
@@ -727,8 +733,11 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
                             className="absolute top-0"
                             style={{ left: `calc(${markerLeft}% - 1px)` }}
                           >
-                            <div className="absolute -top-8 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 shadow-sm sm:block">
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-slate-200 bg-white px-1 sm:px-2 py-1 text-[7px] sm:text-[10px] font-bold text-slate-700 shadow-sm">
                               {tier.discount_pct}%
+                            </div>
+                            <div className="absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-slate-500">
+                              {tier.unlockQty} <span className="hidden sm:block">buyers</span>
                             </div>
                             <div className={`mt-1 h-4 w-0.5 ${unlocked ? "bg-[#1CA7A6]" : "bg-slate-300"}`} />
                             <span
@@ -747,17 +756,27 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
                         {activeTier ? `${activeTier.discount_pct}% currently unlocked` : "No discount unlocked yet"}
                       </span>
                     </div>
+                    <div className="flex flex-wrap gap-x-8 gap-y-3 border-t border-slate-50 pt-6 text-sm">
+                    <div className="flex items-center gap-2 text-slate-600">
+                      <Calendar size={18} className="text-[#1CA7A6]" />
+                      Started: <span className="font-medium text-[#122E4E]">{formatDate(deal.valid_from)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-600">
+                      <AlertCircle size={18} className="text-[#F2B705]" />
+                      Ends: <span className="font-medium text-[#122E4E]">{formatDate(deal.valid_to)}</span>
+                    </div>
+                  </div>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
                     <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Current unlock</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Journey status</p>
                       <p className="mt-2 text-2xl font-bold text-emerald-800">
-                        {activeTier ? `${activeTier.discount_pct}% off` : "0% off"}
+                        {activeTier ? `${activeTier.label || `Tier ${activeTier.seq}`} active` : "No tier active yet"}
                       </p>
                       <p className="mt-1 text-sm text-emerald-700">
                         {activeTier
-                          ? `${activeTier.label || `Tier ${activeTier.seq}`} is active after ${activeTier.unlockQty} buyers.`
+                          ? `${activeTier.discount_pct}% unlocked at ${activeTier.unlockQty} buyers.`
                           : "Get more buyers in to unlock the first discount tier."}
                       </p>
                     </div>
@@ -775,68 +794,16 @@ export default function DealDetailsPageClient({ id }: DealDetailsPageClientProps
                     </div>
 
                     <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Top available discount</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Final milestone</p>
                       <p className="mt-2 text-2xl font-bold text-[#122E4E]">{maxAvailableDiscount}% off</p>
-                      <p className="mt-1 text-sm text-slate-600">Maximum price benefit available after all cumulative tiers are reached.</p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Unlocks at {tierTrackMax} buyers when the full discount journey is completed.
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {cumulativeTiers.map((tier) => {
-                    const unlocked = deal.slots_sold >= tier.unlockQty;
-                    const isCurrentTier = activeTier?.id === tier.id;
-                    const isUpcomingTier = nextTier?.id === tier.id;
-                    const buyersNeeded = Math.max(tier.unlockQty - deal.slots_sold, 0);
-
-                    return (
-                      <div
-                        key={tier.id}
-                        className={`rounded-2xl border p-4 transition-colors ${
-                          unlocked
-                            ? "border-emerald-200 bg-emerald-50"
-                            : isUpcomingTier
-                              ? "border-[#F2B705]/40 bg-[#FFF8DD]"
-                              : "border-slate-200 bg-white"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                              {tier.label || `Tier ${tier.seq}`}
-                            </p>
-                            <p className="mt-2 text-2xl font-bold text-[#122E4E]">{tier.discount_pct}% off</p>
-                          </div>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${
-                              unlocked
-                                ? "bg-emerald-100 text-emerald-700"
-                                : isUpcomingTier
-                                  ? "bg-[#F2B705]/15 text-[#8a6b00]"
-                                  : "bg-slate-100 text-slate-600"
-                            }`}
-                          >
-                            {unlocked ? (isCurrentTier ? "Current" : "Unlocked") : isUpcomingTier ? "Next" : "Locked"}
-                          </span>
-                        </div>
-
-                        <div className="mt-4 space-y-2 text-sm text-slate-600">
-                          {/* <p>
-                            Adds <span className="font-semibold text-[#122E4E]">{tier.qty}</span> buyers at this stage
-                          </p> */}
-                          <p>
-                            Unlocks at <span className="font-semibold text-[#122E4E]">{tier.unlockQty}</span> total buyers
-                          </p>
-                          <p>
-                            {unlocked
-                              ? "This discount is already active in the cumulative journey."
-                              : `${buyersNeeded} more buyer${buyersNeeded === 1 ? "" : "s"} needed to unlock this tier.`}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                
               </div>
             )}
           </div>

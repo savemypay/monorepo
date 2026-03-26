@@ -241,7 +241,7 @@ export default function CustomerDealsClient() {
       )}
 
       {!errorMessage && filteredDeals.length > 0 && (
-        <div className="grid grid-cols-1 gap-6 bg-[#f5f5f5] md:grid-cols-2 md:gap-7 lg:grid-cols-4 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-7 lg:grid-cols-4 xl:grid-cols-4">
           {filteredDeals.map((deal) => (
             <DealCard key={deal.id} {...deal} />
           ))}
