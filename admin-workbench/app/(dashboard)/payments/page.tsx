@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Mail, Phone, UserRound } from "lucide-react";
+import { Mail, Phone, Search, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import {
@@ -105,14 +105,14 @@ export default function PaymentsPage() {
   }, [accessToken, hydrated, statusFilter, debouncedSearch, customerIdFilter]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
         eyebrow="Finance Operations"
         title="Payments"
         description="Track transaction health, reconciliation risk, refunds, and deal-linked revenue in one finance view."
       />
 
-      <div className="admin-panel p-5">
+      <div className="admin-panel py-2">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-3">
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as PaidUsersStatus | "all")}>
@@ -129,12 +129,13 @@ export default function PaymentsPage() {
             </Select>
           </div>
 
-          <div className="w-full max-w-sm">
+          <div className="relative w-full max-w-sm">
+            <Search size={16} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" />
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search customer name, email, or phone"
-              className="h-11 w-full rounded-2xl border border-line bg-white px-4 text-sm outline-none focus:border-brand"
+              className="h-11 w-full rounded-2xl border border-line bg-white pr-4 pl-11 text-sm outline-none focus:border-brand"
             />
           </div>
         </div>
@@ -178,15 +179,15 @@ export default function PaymentsPage() {
               {payments.map((payment) => (
                 <tr key={payment.payment_id}>
                   <td>
-                    <p className="font-bold text-slate-900">{payment.order_id || `PY-${payment.payment_id}`}</p>
-                    <p className="text-sm text-muted"># {payment.deal_ref}</p>
+                    <p className="">{payment.order_id || `PY-${payment.payment_id}`}</p>
+                    {/* <p className="text-sm text-muted"># {payment.deal_ref}</p> */}
                   </td>
                   <td>
-                    <div className="space-y-1 text-sm text-slate-700">
+                    <div className="space-y-1 text-sm">
                       {payment.user_name ? (
                         <div className="flex items-center gap-2">
                           <UserRound size={14} className="text-muted" />
-                          <span className="font-semibold text-slate-900">{payment.user_name}</span>
+                          <span className="text-muted">{payment.user_name}</span>
                         </div>
                       ) : null}
                       {payment.user_email ? (
