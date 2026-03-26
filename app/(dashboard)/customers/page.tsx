@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Mail, Phone, Search, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { getAdminUsers } from "@/lib/admin/api";
@@ -87,14 +88,14 @@ export default function CustomersPage() {
   }, [accessToken, hydrated, debouncedSearch, page, limit]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
         eyebrow="Customer Oversight"
         title="Customers"
         description="Review customer accounts using live admin user records from the platform."
       />
 
-      <div className="admin-panel p-5">
+      <div className="admin-panel py-2">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-3">
             <div className="rounded-2xl bg-blue-50 border border-blue-100 px-4 py-3">
@@ -103,7 +104,8 @@ export default function CustomersPage() {
             </div>
           </div>
 
-          <div className="w-full max-w-sm">
+          <div className="relative w-full max-w-sm">
+            <Search size={16} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" />
             <input
               value={search}
               onChange={(event) => {
@@ -111,7 +113,7 @@ export default function CustomersPage() {
                 setPage(1);
               }}
               placeholder="Search customer name, email, or phone"
-              className="h-11 w-full rounded-2xl border border-line bg-white px-4 text-sm outline-none focus:border-brand"
+              className="h-11 w-full rounded-2xl border border-line bg-white pr-4 pl-11 text-sm outline-none focus:border-brand"
             />
           </div>
         </div>
@@ -133,9 +135,8 @@ export default function CustomersPage() {
             <table className="table-grid">
               <thead>
                 <tr>
-                  <th>Customer</th>
-                  <th>Email</th>
-                  <th>Phone</th>
+                  <th>Customer ID</th>
+                  <th>Contact</th>
                   <th>Status</th>
                   <th>Joined</th>
                   <th>Action</th>
@@ -145,16 +146,40 @@ export default function CustomersPage() {
                 {customers.map((customer) => (
                   <tr key={customer.id}>
                     <td>
-                      <p className="text-sm text-muted">{customer.name || `ID ${customer.id}`}</p>
+                      <p>{customer.id}</p>
                     </td>
-                    <td>{customer.email || "NA"}</td>
-                    <td>{customer.phone_number || "NA"}</td>
+                    <td>
+                      <div className="space-y-1 text-sm text-slate-700">
+                        {customer.name ? (
+                          <div className="flex items-center gap-2">
+                            <UserRound size={14} className="text-muted" />
+                            <span>{customer.name}</span>
+                          </div>
+                        ) : null}
+                        {customer.email ? (
+                          <div className="flex items-center gap-2 text-muted">
+                            <Mail size={14} />
+                            <span>{customer.email}</span>
+                          </div>
+                        ) : null}
+                        {customer.phone_number ? (
+                          <div className="flex items-center gap-2 text-muted">
+                            <Phone size={14} />
+                            <span>{customer.phone_number}</span>
+                          </div>
+                        ) : null}
+                      </div>
+                    </td>
                     <td>
                       <StatusBadge status={customer.is_active ? "Active" : "Inactive"} />
                     </td>
                     <td>{formatDate(customer.created_at)}</td>
                   <td>
-                    <Link href={`/customers/${customer.id}/transactions`} prefetch={false} className="text-sm font-bold text-brand">
+                    <Link
+                      href={`/customers/${customer.id}/transactions`}
+                      prefetch={false}
+                      className="text-sm font-bold text-brand hover:underline"
+                    >
                       Transactions
                     </Link>
                   </td>

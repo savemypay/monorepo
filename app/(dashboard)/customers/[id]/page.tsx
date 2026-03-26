@@ -103,7 +103,7 @@ export default function CustomerDetailPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Customer Profile"
-        title={customer.name}
+        title={customer.name || customer.email || `Customer #${customer.id}`}
         description="Inspect the live customer account record exposed by the admin users API."
       />
 

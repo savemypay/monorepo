@@ -104,17 +104,17 @@ export default function VendorDetailPage() {
     );
   }
 
-  const vendorName = vendorData.vendor_name || `Vendor #${vendorData.vendor_id}`;
+  const vendorName = vendorData.vendor_name || vendorData.vendor_email || `Vendor #${vendorData.vendor_id}`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
         eyebrow="Vendor Revenue"
         title={vendorName}
         description="Inspect vendor contact information, ad volume, total revenue, and per-ad monetization."
       />
 
-        <div className="admin-panel p-6">
+        <div className="admin-panel py-2">
           <div className="flex flex-wrap items-center gap-3">
             <StatusBadge status={vendorData.total_ads > 0 ? "Active" : "Inactive"} />
             <span className="rounded-full bg-panel-strong px-4 py-2 text-sm font-semibold text-slate-700">
@@ -122,7 +122,7 @@ export default function VendorDetailPage() {
             </span>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-4">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Vendor Email</p>
               <p className="mt-2 text-lg font-extrabold text-slate-900">{vendorData.vendor_email || "--"}</p>
@@ -143,7 +143,7 @@ export default function VendorDetailPage() {
             </div>
           </div>
         </div>
-      <div className="admin-panel p-6">
+      <div className="admin-panel py-2">
         <div className="mb-5">
           <h2 className="text-lg font-bold text-brand">Vendor Ads</h2>
           <p className="mt-1 text-sm text-muted">Revenue and payment performance for each ad owned by this vendor.</p>

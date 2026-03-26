@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Mail, Phone, Search, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { getAdminUsers } from "@/lib/admin/api";
@@ -87,14 +88,14 @@ export default function VendorsPage() {
   }, [accessToken, hydrated, debouncedSearch, page, limit]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
         eyebrow="Vendor Operations"
         title="Vendors"
         description="Monitor vendor accounts using live admin user records from the platform."
       />
 
-      <div className="admin-panel p-5">
+      <div className="admin-panel py-2">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-3">
             <div className="rounded-2xl bg-blue-50 border border-blue-100 px-4 py-3">
@@ -103,7 +104,8 @@ export default function VendorsPage() {
             </div>
           </div>
 
-          <div className="w-full max-w-sm">
+          <div className="relative w-full max-w-sm">
+            <Search size={16} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted" />
             <input
               value={search}
               onChange={(event) => {
@@ -111,7 +113,7 @@ export default function VendorsPage() {
                 setPage(1);
               }}
               placeholder="Search vendor name, email, or phone"
-              className="h-11 w-full rounded-2xl border border-line bg-white px-4 text-sm outline-none focus:border-brand"
+              className="h-11 w-full rounded-2xl border border-line bg-white pr-4 pl-11 text-sm outline-none focus:border-brand"
             />
           </div>
         </div>
@@ -133,9 +135,8 @@ export default function VendorsPage() {
             <table className="table-grid">
               <thead>
                 <tr>
-                  <th>Vendor</th>
-                  <th>Email</th>
-                  <th>Phone</th>
+                  <th>Vendor ID</th>
+                  <th>Contact</th>
                   <th>Status</th>
                   <th>Joined</th>
                   <th>Action</th>
@@ -145,17 +146,40 @@ export default function VendorsPage() {
                 {vendors.map((vendor) => (
                   <tr key={vendor.id}>
                     <td>
-                      <p className="font-bold text-slate-900"></p>
-                      <p className="text-sm text-muted">{vendor.name ||`ID ${vendor.id}`}</p>
+                      <p>{vendor.id}</p>
                     </td>
-                    <td>{vendor.email || "NA"}</td>
-                    <td>{vendor.phone_number || "NA"}</td>
+                    <td>
+                      <div className="space-y-1 text-sm text-slate-700">
+                        {vendor.name ? (
+                          <div className="flex items-center gap-2">
+                            <UserRound size={14} className="text-muted" />
+                            <span>{vendor.name}</span>
+                          </div>
+                        ) : null}
+                        {vendor.email ? (
+                          <div className="flex items-center gap-2 text-muted">
+                            <Mail size={14} />
+                            <span>{vendor.email}</span>
+                          </div>
+                        ) : null}
+                        {vendor.phone_number ? (
+                          <div className="flex items-center gap-2 text-muted">
+                            <Phone size={14} />
+                            <span>{vendor.phone_number}</span>
+                          </div>
+                        ) : null}
+                      </div>
+                    </td>
                     <td>
                       <StatusBadge status={vendor.is_active ? "Active" : "Inactive"} />
                     </td>
                     <td>{formatDate(vendor.created_at)}</td>
                     <td>
-                      <Link href={`/vendors/${vendor.id}`} prefetch={false} className="text-sm font-bold text-brand">
+                      <Link
+                        href={`/vendors/${vendor.id}`}
+                        prefetch={false}
+                        className="text-sm font-bold text-brand hover:underline"
+                      >
                         Open
                       </Link>
                     </td>

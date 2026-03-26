@@ -88,7 +88,7 @@ export default function CustomerTransactionsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <PageHeader
         eyebrow="Customer Transactions"
         title={`Customer #${customerId}`}
@@ -100,7 +100,7 @@ export default function CustomerTransactionsPage() {
         }
       />
 
-      <div className="admin-panel overflow-x-auto p-5">
+      <div className="admin-panel overflow-x-auto py-2">
         {resolvedError ? (
           <div className="flex min-h-40 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-6 text-center text-sm font-medium text-rose-700">
             {resolvedError}

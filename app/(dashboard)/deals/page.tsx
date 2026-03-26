@@ -188,7 +188,11 @@ export default function DealsPage() {
                     <td>{deal.slots_sold.toLocaleString("en-IN")}</td>
                     <td>{formatDate(deal.valid_to)}</td>
                     <td>
-                      <Link href={`/deals/${deal.id}`} prefetch={false} className="text-sm font-bold text-brand">
+                      <Link
+                        href={`/deals/${deal.id}`}
+                        prefetch={false}
+                        className="text-sm font-bold text-brand hover:underline"
+                      >
                         Review
                       </Link>
                     </td>
