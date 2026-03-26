@@ -477,11 +477,9 @@ export default function CreateDealForm() {
                 <input
                   name="startDate"
                   value={form.startDate}
-                  onChange={(e) => {
-                    handleInputChange(e);
-                    e.currentTarget.blur();
-                  }}
+                  onChange={handleInputChange}
                   type="date"
+                  min={new Date().toISOString().split("T")[0]}
                   className={getInputClass(!!errors.startDate)}
                 />
                 {errors.startDate && <p className="text-xs text-red-500 mt-1">{errors.startDate}</p>}
@@ -491,11 +489,9 @@ export default function CreateDealForm() {
                 <input
                   name="endDate"
                   value={form.endDate}
-                  onChange={(e) => {
-                    handleInputChange(e);
-                    e.currentTarget.blur();
-                  }}
+                  onChange={handleInputChange}
                   type="date"
+                  min={form.startDate || new Date().toISOString().split("T")[0]}
                   className={getInputClass(!!errors.endDate)}
                 />
                 {errors.endDate && <p className="text-xs text-red-500 mt-1">{errors.endDate}</p>}
