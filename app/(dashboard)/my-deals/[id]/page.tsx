@@ -28,7 +28,7 @@ type TierProgress = NonNullable<Deal["tiers"]>[number] & {
   unlockQty: number;
 };
 
-function PoolDetailsContent({ dealId }: { dealId: string }) {
+function DealDetailsContent({ dealId }: { dealId: string }) {
   const [deal, setDeal] = useState<Deal | null>(null);
   const [customerList, setCustomerList] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -553,7 +553,7 @@ function PoolDetailsContent({ dealId }: { dealId: string }) {
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 md:p-8">
-        <h3 className="mb-6 text-lg font-bold text-[#122E4E]">Pool Progress</h3>
+        <h3 className="mb-6 text-lg font-bold text-[#122E4E]">Deal Progress</h3>
 
         <div className="relative mb-8">
           <div className="mb-2 flex justify-between text-sm font-medium text-slate-600">
@@ -707,7 +707,7 @@ function PoolDetailsContent({ dealId }: { dealId: string }) {
   );
 }
 
-export default function PoolDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default function DealDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const [dealId, setDealId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -723,5 +723,5 @@ export default function PoolDetailsPage({ params }: { params: Promise<{ id: stri
     );
   }
 
-  return <PoolDetailsContent dealId={dealId} />;
+  return <DealDetailsContent dealId={dealId} />;
 }

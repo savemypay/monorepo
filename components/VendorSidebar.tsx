@@ -10,7 +10,7 @@ const sidebarItems = [
   { label: "Overview", href: "/", icon: LayoutDashboard },
   { label: "My Deals", href: "/my-deals", icon: ShoppingBag },
   { label: "Leads", href: "/leads", icon: Users },
-  { label: "Earnings", href: "/earnings", icon: IndianRupeeIcon },
+  // { label: "Earnings", href: "/earnings", icon: IndianRupeeIcon },
   { label: "Profile", href: "/profile", icon: User },
 ];
 

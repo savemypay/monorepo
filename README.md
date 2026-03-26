@@ -116,7 +116,7 @@ Required capabilities from backend:
 - `app/(auth)/login/page.tsx`: OTP login screen
 - `app/(dashboard)/my-deals/page.tsx`: deals list
 - `app/(dashboard)/my-deals/[id]/page.tsx`: deal details + joined customers
-- `components/CreatePoolForm.tsx`: deal creation form
+- `components/CreateDealForm.tsx`: deal creation form
 
 ## Troubleshooting
 

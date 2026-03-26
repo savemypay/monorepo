@@ -44,7 +44,7 @@ interface FormErrors {
   tokenAmount?: string;
 }
 
-export default function CreatePoolForm() {
+export default function CreateDealForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewsRef = useRef<string[]>([]);
